@@ -1,6 +1,7 @@
 import express from "express"
 import path from "path"
-import { PORT, HOSTNAME, PUBLIC_DIR, isProduction } from "./config.js"
+import os from "os"
+import { PORT, HOSTNAME, PUBLIC_DIR, isProduction, MODEL, SMALL_MODEL, AGENT_OPTIONS } from "./config.js"
 import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
 import { startOpenCode, getServer } from "./services/opencode.js"
@@ -29,6 +30,17 @@ app.listen(PORT, HOSTNAME, () => {
   ]
   console.log(banner.join("\n"))
   logger.info(`服务启动成功, 端口: ${PORT}`)
+  logger.info("环境信息", {
+    node_version: process.version,
+    platform: process.platform,
+    arch: process.arch,
+    hostname: os.hostname(),
+    pid: process.pid,
+    model: MODEL,
+    small_model: SMALL_MODEL,
+    agents: AGENT_OPTIONS.map(a => ({ label: a.label, agent: a.agent })),
+    is_production: isProduction,
+  })
 })
 
 // 优雅退出

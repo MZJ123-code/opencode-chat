@@ -6,6 +6,7 @@ import { SessionList } from './components/sidebar/SessionList'
 import { ChatHeader } from './components/chat/ChatHeader'
 import { MessageList } from './components/chat/MessageList'
 import { ChatInput } from './components/chat/ChatInput'
+import { AgentSelector } from './components/chat/AgentSelector'
 import { ErrorBanner } from './components/common/ErrorBanner'
 import { useChatContext } from './contexts/ChatContext'
 
@@ -19,10 +20,11 @@ export default function App() {
     sidebarOpen, setSidebarOpen,
     globalError, setGlobalError,
     createSession, loadHistory, clearMessages, sendMessage, abortMessage,
+    agents, agentsLoading, setSelectedAgent,
   } = useChatContext()
 
-  const handleCreateSession = useCallback(async () => {
-    const id = await createSession()
+  const handleCreateSession = useCallback(async (agent?: string) => {
+    const id = await createSession(agent)
     if (id) {
       setCurrentSessionId(id)
       clearMessages()
@@ -30,6 +32,16 @@ export default function App() {
       await loadHistory(id)
     }
   }, [createSession, clearMessages, loadHistory, setCurrentSessionId])
+
+  const handleCreateSessionNoAgent = useCallback(async () => {
+    setCurrentSessionId(null)
+    clearMessages()
+  }, [setCurrentSessionId, clearMessages])
+
+  const handleSelectAgent = useCallback(async (agent: string) => {
+    setSelectedAgent(agent)
+    await handleCreateSession(agent)
+  }, [handleCreateSession, setSelectedAgent])
 
   const handleSelectSession = useCallback(async (sessionId: string) => {
     setCurrentSessionId(sessionId)
@@ -55,7 +67,7 @@ export default function App() {
       <ErrorBanner message={globalError} onDismiss={() => setGlobalError(null)} />
 
       <Sidebar isOpen={sidebarOpen}>
-        <SidebarHeader onCreateClick={handleCreateSession} isCreating={isCreating} />
+        <SidebarHeader onCreateClick={handleCreateSessionNoAgent} isCreating={isCreating} />
         <SessionList
           sessions={sessions}
           activeId={currentSessionId}
@@ -69,21 +81,32 @@ export default function App() {
           title={currentSession?.title || '选择或新建对话'}
           onMenuClick={() => setSidebarOpen((v) => !v)}
         />
-        <MessageList
-          messages={messages}
-          isLoading={messagesLoading}
-          isStreaming={isStreaming}
-          sessionId={currentSessionId}
-          feedbackStates={feedbackStates}
-          onSubmitFeedback={handleSubmitFeedback}
-          onStop={abortMessage}
-        />
-        <ChatInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSend={handleSendMessage}
-          disabled={!currentSessionId}
-        />
+        {currentSessionId ? (
+          <>
+            <MessageList
+              messages={messages}
+              isLoading={messagesLoading}
+              isStreaming={isStreaming}
+              sessionId={currentSessionId}
+              feedbackStates={feedbackStates}
+              onSubmitFeedback={handleSubmitFeedback}
+              onStop={abortMessage}
+            />
+            <ChatInput
+              value={inputValue}
+              onChange={setInputValue}
+              onSend={handleSendMessage}
+              disabled={!currentSessionId}
+            />
+          </>
+        ) : (
+          <AgentSelector
+            agents={agents}
+            loading={agentsLoading}
+            onSelect={handleSelectAgent}
+            creating={isCreating}
+          />
+        )}
       </ChatArea>
     </>
   )

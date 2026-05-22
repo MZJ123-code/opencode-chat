@@ -1,6 +1,7 @@
 import { Router } from "express"
 import { getClient } from "../services/opencode.js"
 import { requireSessionOwnership } from "../middleware/sessionGuard.js"
+import { getSessionMeta } from "../services/sessionService.js"
 import { logger } from "../logger/index.js"
 
 function serializePart(p) {
@@ -13,7 +14,7 @@ function serializePart(p) {
     case "tool":
       return { ...base, callID: p.callID, tool: p.tool, state: p.state }
     case "step-start":
-      return { ...base, snapshot: p.snapshot }
+      return { ...base, snapshot: p.snapshot, model: p.model, agent: p.agent }
     case "step-finish":
       return { ...base, reason: p.reason, cost: p.cost, tokens: p.tokens }
     case "subtask":
@@ -31,24 +32,67 @@ function serializePart(p) {
   }
 }
 
+function collectModelsAndAgents(messages) {
+  const models = new Set()
+  const agents = new Set()
+  for (const m of messages) {
+    if (m.info?.agent) agents.add(m.info.agent)
+    if (m.info?.model) {
+      const md = m.info.model
+      models.add(typeof md === "object" ? `${md.providerID}/${md.modelID}` : md)
+    }
+    for (const p of m.parts || []) {
+      if (p.type === "step-start" && p.agent) agents.add(p.agent)
+      if (p.type === "step-start" && p.model) {
+        const md = p.model
+        models.add(typeof md === "object" ? `${md.providerID}/${md.modelID}` : md)
+      }
+      if (p.type === "subtask" && p.agent) agents.add(p.agent)
+      if (p.type === "subtask" && p.model) {
+        models.add(`${p.model.providerID}/${p.model.modelID}`)
+      }
+      if (p.type === "agent" && p.name) agents.add(p.name)
+    }
+  }
+  return {
+    models: [...models],
+    agents: [...agents],
+  }
+}
+
 const router = Router()
 
 router.get("/:id/messages", requireSessionOwnership("id"), async (req, res, next) => {
   const ip = req.clientIP
   const sessionId = req.params.id
+  const meta = getSessionMeta(sessionId)
 
   try {
-    logger.info(`查询消息历史: ${ip} -> ${sessionId}`)
+    logger.info(`查询消息历史: ${ip} -> ${sessionId}`, {
+      session_agent: meta?.agent || null,
+      session_title: meta?.title,
+    })
     const client = getClient()
-    const result = await client.session.messages({ path: { id: sessionId } })
+    const result = await client.session.messages({ sessionID: sessionId })
+
+    if (!result.data || !Array.isArray(result.data)) {
+      logger.warn(`消息历史为空或无效: ${sessionId}`)
+      return res.json([])
+    }
 
     const messages = result.data.map((m) => ({
       role: m.info.role,
-      parts: m.parts.map((p) => serializePart(p)),
+      parts: (m.parts || []).map((p) => serializePart(p)),
       time: m.info.time,
     }))
 
-    logger.info(`返回消息历史: ${sessionId}`, { message_count: messages.length })
+    const { models, agents } = collectModelsAndAgents(result.data)
+
+    logger.info(`返回消息历史: ${sessionId}`, {
+      message_count: messages.length,
+      models_in_use: models.length > 0 ? models : undefined,
+      agents_in_use: agents.length > 0 ? agents : undefined,
+    })
     res.json(messages)
   } catch (err) {
     next(err)

@@ -1,5 +1,5 @@
-import { createOpencode } from "@opencode-ai/sdk"
-import { OPENCODE_PORT, OPENCODE_HOST, buildOpenCodeConfig } from "../config.js"
+import { createOpencode } from "@opencode-ai/sdk/v2"
+import { OPENCODE_PORT, OPENCODE_HOST, buildOpenCodeConfig, MODEL, SMALL_MODEL, AGENT_OPTIONS, PROVIDER } from "../config.js"
 import { logger } from "../logger/index.js"
 
 let _client = null
@@ -9,10 +9,25 @@ export async function startOpenCode() {
   logger.info("正在启动 OpenCode Server...")
   const start = Date.now()
 
+  const cfg = buildOpenCodeConfig()
+
+  logger.info("OpenCode 配置信息", {
+    model: MODEL,
+    small_model: SMALL_MODEL,
+    provider_keys: Object.keys(PROVIDER).length > 0 ? Object.keys(PROVIDER) : undefined,
+    agents: AGENT_OPTIONS.map(a => ({ label: a.label, agent: a.agent })),
+    tools: Object.entries(cfg.tools || {})
+      .filter(([, v]) => v)
+      .map(([k]) => k),
+    autoupdate: cfg.autoupdate,
+    compaction_auto: cfg.compaction?.auto,
+    logLevel: cfg.logLevel,
+  })
+
   const result = await createOpencode({
     port: OPENCODE_PORT,
     hostname: OPENCODE_HOST,
-    config: buildOpenCodeConfig(),
+    config: cfg,
   })
 
   _client = result.client

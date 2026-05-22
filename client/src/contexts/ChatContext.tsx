@@ -4,6 +4,8 @@ import type { SessionListItem } from '../types/session'
 import type { FeedbackState } from '../hooks/useFeedback'
 import * as sessionsApi from '../api/sessions'
 import * as chatApi from '../api/chat'
+import * as agentsApi from '../api/agents'
+import type { AgentOption } from '../api/agents'
 import { useEvents } from '../hooks/useEvents'
 import { useFeedback } from '../hooks/useFeedback'
 import { PermissionDialog } from '../components/common/PermissionDialog'
@@ -16,7 +18,7 @@ interface ChatContextValue {
   sessionsLoading: boolean
   isCreating: boolean
   sessionError: string | null
-  createSession: () => Promise<string | null>
+  createSession: (agent?: string) => Promise<string | null>
   refreshSessions: () => Promise<SessionListItem[]>
 
   messages: ChatMessage[]
@@ -42,6 +44,11 @@ interface ChatContextValue {
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>
   globalError: string | null
   setGlobalError: (error: string | null) => void
+
+  agents: AgentOption[]
+  agentsLoading: boolean
+  selectedAgent: string | null
+  setSelectedAgent: (agent: string | null) => void
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null)
@@ -72,6 +79,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [pendingPermission, setPendingPermission] = useState<PermissionRequest | null>(null)
+
+  const [agents, setAgents] = useState<AgentOption[]>([])
+  const [agentsLoading, setAgentsLoading] = useState(true)
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
 
   const { feedbackStates, submitFeedback } = useFeedback()
 
@@ -110,11 +121,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return refreshSessions()
   }, [refreshSessions])
 
-  const createSession = useCallback(async () => {
+  const createSession = useCallback(async (agent?: string) => {
     setIsCreating(true)
     setSessionError(null)
     try {
-      const result = await sessionsApi.createSession()
+      const result = await sessionsApi.createSession(undefined, agent)
       await refreshSessions()
       return result.sessionId
     } catch (e) {
@@ -242,7 +253,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const partIdx = parts.findIndex((p) => p.id === part.id)
 
       if (partIdx === -1) {
-        parts.push(part)
+        const existingTextIdx = msg.parts.findIndex((p) => p.type === 'text')
+        if (msg.role === 'user' && part.type === 'text' && existingTextIdx !== -1) {
+          const updatedPart = { ...parts[existingTextIdx], id: part.id, messageID: part.messageID }
+          ;(updatedPart as Record<string, unknown>).text = (part as unknown as Record<string, unknown>).text
+          parts[existingTextIdx] = updatedPart as ChatPart
+        } else {
+          parts.push(part)
+        }
       } else {
         if (part.type === 'text' && parts[partIdx]?.type === 'text') {
           const existingText = getPartText(parts[partIdx])
@@ -376,13 +394,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
     syncMessages([...messagesRef.current, userMsg])
 
+    const session = sessions.find((s) => s.sessionId === sessionId)
+    const agent = session?.agent || selectedAgent || undefined
+
     try {
-      await chatApi.sendMessageAsync(sessionId, text)
+      await chatApi.sendMessageAsync(sessionId, text, agent)
     } catch (e) {
       setChatError(e instanceof Error ? e.message : '发送失败')
       setIsStreaming(false)
     }
-  }, [syncMessages])
+  }, [syncMessages, sessions, selectedAgent])
 
   const abortMessage = useCallback(async () => {
     const sid = currentSessionRef.current
@@ -401,6 +422,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setChatError(null)
     setIsStreaming(false)
   }, [syncMessages])
+
+  useEffect(() => {
+    agentsApi.fetchAgents()
+      .then(setAgents)
+      .catch(() => setAgents([]))
+      .finally(() => setAgentsLoading(false))
+  }, [])
 
   useEffect(() => { loadSessions() }, [loadSessions])
 
@@ -424,6 +452,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     inputValue, setInputValue,
     sidebarOpen, setSidebarOpen, globalError, setGlobalError,
     abortMessage,
+    agents, agentsLoading, selectedAgent, setSelectedAgent,
   }
 
   return (

@@ -1,21 +1,31 @@
 import { ipUsers, ipSessions, sessionMeta, stats } from "../storage/store.js"
 import { logger } from "../logger/index.js"
 import { getClient } from "./opencode.js"
+import { MODEL } from "../config.js"
 
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days
 
-export async function createSession(ip, title) {
+export async function createSession(ip, title, agent = null) {
   const client = getClient()
-  const result = await client.session.create({ body: { title } })
+  const createParams = { title }
+  if (agent) createParams.agent = agent
+  const result = await client.session.create(createParams)
   const sessionId = result.data.id
 
   ipUsers.get(ip).sessionIds.add(sessionId)
   ipSessions.get(ip).push(sessionId)
-  sessionMeta.set(sessionId, { ip, createdAt: Date.now(), title, messageCount: 0 })
+  sessionMeta.set(sessionId, { ip, createdAt: Date.now(), title, messageCount: 0, agent })
   stats.totalSessions++
 
-  logger.info(`会话创建成功: ${sessionId}`, { ip, title, session_count: stats.totalSessions })
-  return { sessionId, title }
+  logger.info(`会话创建成功: ${sessionId}`, {
+    ip,
+    title,
+    agent,
+    model: MODEL,
+    session_count: stats.totalSessions,
+    session_agent: agent || "default",
+  })
+  return { sessionId, title, agent }
 }
 
 function cleanupExpiredSessions() {
@@ -47,7 +57,7 @@ export function listSessions(ip) {
     .map((id) => {
       const meta = sessionMeta.get(id)
       return meta
-        ? { sessionId: id, title: meta.title, createdAt: meta.createdAt, messageCount: meta.messageCount }
+        ? { sessionId: id, title: meta.title, createdAt: meta.createdAt, messageCount: meta.messageCount, agent: meta.agent || null }
         : null
     })
     .filter(Boolean)

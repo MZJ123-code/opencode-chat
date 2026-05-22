@@ -44,6 +44,29 @@
 
   "snapshot": true,
 
+  "agentOptions": [
+    {
+      "label": "代码构建",
+      "description": "编写、修改和调试代码的最佳选择，支持完整的工具链",
+      "agent": "build"
+    },
+    {
+      "label": "架构规划",
+      "description": "设计系统架构和技术方案，适合前期设计和讨论",
+      "agent": "plan"
+    },
+    {
+      "label": "代码探索",
+      "description": "快速了解和分析现有代码库的结构与逻辑",
+      "agent": "explore"
+    },
+       {
+      "label": "门子俊",
+      "description": "快速了解和分析现有代码库的结构与逻辑",
+      "agent": "explore"
+    }
+  ],
+
   "provider": {},
 
   "log": {

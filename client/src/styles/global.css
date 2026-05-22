@@ -62,18 +62,19 @@
   --sidebar-bg: #1a1b2e;
   --sidebar-hover: #252742;
   --sidebar-active: #2d2f4a;
-  --bg: #f0f2f5;
+  --bg: #f2f2f7;
   --chat-bg: #fff;
-  --user-bubble: #4f46e5;
-  --ai-bubble: #f1f5f9;
-  --ai-border: #e2e8f0;
-  --text: #1e293b;
-  --text-secondary: #64748b;
+  --user-bubble: #007AFF;
+  --ai-bubble: #e9e9ec;
+  --ai-border: transparent;
+  --text: #1c1c1e;
+  --text-secondary: #8e8e93;
   --input-bg: #fff;
   --border: #e2e8f0;
   --danger: #ef4444;
   --success: #22c55e;
   --radius: 12px;
+  --bubble-radius: 18px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: "SF Mono", "Cascadia Code", "Consolas", "Monaco", monospace;
 }

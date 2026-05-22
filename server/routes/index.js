@@ -5,6 +5,7 @@ import messagesRouter from "./messages.js"
 import feedbackRouter from "./feedback.js"
 import statsRouter from "./stats.js"
 import permissionRouter from "./permission.js"
+import agentsRouter from "./agents.js"
 
 export function registerRoutes(app) {
   app.use("/api/sessions", sessionsRouter)
@@ -14,4 +15,5 @@ export function registerRoutes(app) {
   app.use("/api/sessions", feedbackRouter)
   app.use("/api/stats", statsRouter)
   app.use("/api/permission", permissionRouter)
+  app.use("/api/agents", agentsRouter)
 }

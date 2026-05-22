@@ -1,4 +1,4 @@
-import { validateOwnership } from "../services/sessionService.js"
+import { validateOwnership, getSessionMeta } from "../services/sessionService.js"
 import { recordBlockedAccess } from "../services/statsService.js"
 import { saveStats } from "../services/statsService.js"
 import { logger } from "../logger/index.js"
@@ -10,7 +10,12 @@ export function requireSessionOwnership(paramName = "id") {
 
     if (!sessionId || !validateOwnership(ip, sessionId)) {
       recordBlockedAccess()
-      logger.warn(`访问被拒绝: ${ip} -> ${sessionId}`)
+      const meta = sessionId ? getSessionMeta(sessionId) : null
+      logger.warn(`访问被拒绝: ${ip} -> ${sessionId}`, {
+        session_exists: !!meta,
+        session_agent: meta?.agent || null,
+        session_title: meta?.title,
+      })
       saveStats()
       return res.status(403).json({ error: "无权访问此会话" })
     }

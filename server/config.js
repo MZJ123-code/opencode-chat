@@ -17,6 +17,12 @@ export const LOG_DIR = path.join(__dirname, "..", "logs")
 export const LOG_MAX_SIZE = cfg.log.maxFileSize
 export const LOG_MAX_ARCHIVES = cfg.log.maxArchives
 
+export const MODEL = process.env.MODEL || cfg.model || "unknown"
+export const SMALL_MODEL = cfg.small_model || "unknown"
+export const PROVIDER = cfg.provider || {}
+
+export const AGENT_OPTIONS = cfg.agentOptions || []
+
 export const isProduction = process.env.NODE_ENV === "production"
 
 const distDir = path.join(__dirname, "..", "dist")

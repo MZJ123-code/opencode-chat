@@ -6,8 +6,11 @@ export function fetchSessions() {
   return api<SessionListItem[]>('GET', '/api/sessions')
 }
 
-export function createSession(title?: string) {
-  return api<SessionCreateResult>('POST', '/api/sessions', title ? { title } : {})
+export function createSession(title?: string, agent?: string) {
+  const body: Record<string, string> = {}
+  if (title) body.title = title
+  if (agent) body.agent = agent
+  return api<SessionCreateResult>('POST', '/api/sessions', body)
 }
 
 export function fetchMessages(sessionId: string) {

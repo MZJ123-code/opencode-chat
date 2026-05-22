@@ -80,6 +80,35 @@ export function useEvents(handlers: EventHandlerMap) {
       case 'permission.asked':
         h.onPermissionAsked?.(props as Record<string, unknown>)
         break
+      case 'question.asked':
+        h.onPermissionAsked?.({
+          id: (props as Record<string, unknown>).id as string,
+          sessionID: (props as Record<string, unknown>).sessionID as string,
+          permission: 'question',
+          patterns: [],
+          metadata: { questions: (props as Record<string, unknown>).questions },
+          always: [],
+          tool: (props as Record<string, unknown>).tool
+            ? { messageID: ((props as Record<string, unknown>).tool as Record<string, unknown>).messageID as string, callID: ((props as Record<string, unknown>).tool as Record<string, unknown>).callID as string }
+            : undefined,
+        })
+        break
+      case 'permission.updated':
+        h.onPermissionAsked?.({
+          id: (props as Record<string, unknown>).id as string,
+          sessionID: (props as Record<string, unknown>).sessionID as string,
+          permission: (props as Record<string, unknown>).type as string,
+          patterns: (() => {
+            const p = (props as Record<string, unknown>).pattern
+            return Array.isArray(p) ? p : p ? [p] : []
+          })(),
+          metadata: (props as Record<string, unknown>).metadata as Record<string, unknown>,
+          always: [],
+          tool: (props as Record<string, unknown>).callID
+            ? { messageID: (props as Record<string, unknown>).messageID as string, callID: (props as Record<string, unknown>).callID as string }
+            : undefined,
+        })
+        break
 
       // session.next.* events — convert to parts
       case 'session.next.tool.called':

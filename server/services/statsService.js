@@ -26,8 +26,11 @@ export function recordBlockedAccess() {
 
 export function getStats() {
   let activeSessions = 0
+  const agentDistribution = {}
   for (const [, meta] of sessionMeta) {
     if (meta.messageCount > 0) activeSessions++
+    const a = meta.agent || "default"
+    agentDistribution[a] = (agentDistribution[a] || 0) + 1
   }
   return {
     visitors: stats.visitors.size,
@@ -36,6 +39,7 @@ export function getStats() {
     totalQuestions: stats.totalQuestions,
     satisfied: stats.satisfied,
     unsatisfied: stats.unsatisfied,
+    agentDistribution,
   }
 }
 
@@ -47,6 +51,15 @@ export function saveStats() {
   pending = true
   setImmediate(async () => {
     try {
+      const sessionAgents = {}
+      for (const [id, meta] of sessionMeta) {
+        sessionAgents[id] = {
+          agent: meta.agent || null,
+          title: meta.title,
+          messageCount: meta.messageCount,
+          createdAt: new Date(meta.createdAt).toISOString().replace("T", " ").slice(0, 23),
+        }
+      }
       await fsp.writeFile(
         statsPath,
         JSON.stringify(
@@ -59,6 +72,7 @@ export function saveStats() {
             unsatisfied: stats.unsatisfied,
             blockedAccess: stats.blockedAccess,
             activeIPs: [...stats.visitors],
+            sessions: sessionAgents,
           },
           null,
           2

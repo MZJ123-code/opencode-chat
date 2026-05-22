@@ -15,6 +15,16 @@ export function ensureIP(ip) {
     ipUsers.set(ip, { sessionIds: new Set() })
     ipSessions.set(ip, [])
     stats.visitors.add(ip)
-    logger.info(`新访客: ${ip}`, { visitor_count: stats.visitors.size })
+    logger.info(`新访客: ${ip}`, {
+      visitor_count: stats.visitors.size,
+      total_sessions: stats.totalSessions,
+    })
+  }
+}
+
+export function getVisitorInfo() {
+  return {
+    total_visitors: stats.visitors.size,
+    active_visitors: ipUsers.size,
   }
 }
