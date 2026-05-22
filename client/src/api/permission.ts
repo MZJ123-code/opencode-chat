@@ -14,7 +14,7 @@ export async function respondPermission(requestID: string, reply: 'once' | 'alwa
   await api('POST', '/api/permission/respond', { requestID, reply, message })
 }
 
-export async function replyQuestion(requestID: string, answers: string[]): Promise<void> {
+export async function replyQuestion(requestID: string, answers: string[][]): Promise<void> {
   await api('POST', '/api/permission/question/reply', { requestID, answers })
 }
 

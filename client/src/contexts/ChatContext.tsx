@@ -73,6 +73,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const loadedSessionRef = useRef<string | null>(null)
   const currentSessionRef = useRef<string | null>(null)
   const messagesRef = useRef<ChatMessage[]>([])
+  // Track child sessions created by the task tool so we can display their events inline
+  const childSessionIdsRef = useRef<Set<string>>(new Set())
+  const childBoundaryInjectedRef = useRef<Set<string>>(new Set())
 
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState('')
@@ -141,6 +144,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (loadedSessionRef.current === sessionId) return
     loadedSessionRef.current = sessionId
     currentSessionRef.current = sessionId
+    childSessionIdsRef.current.clear()
+    childBoundaryInjectedRef.current.clear()
     setMessagesLoading(true)
     setChatError(null)
     try {
@@ -235,8 +240,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     },
 
     onPartUpdated(part, messageID, sessionID) {
-      if (sessionID !== currentSessionRef.current) return
+      const isChild = childSessionIdsRef.current.has(sessionID)
+      const isCurrent = sessionID === currentSessionRef.current
+      if (!isCurrent && !isChild) return
       if (part.type === 'compaction' || part.type === 'retry') return
+
+      // For child session parts, inject them into the parent's message flow inline
+      if (isChild) {
+        injectPart(part as unknown as Record<string, unknown>)
+        return
+      }
 
       const msgs = messagesRef.current
       let msgIdx = msgs.findIndex((m) => getMsgInfo(m)?.id === messageID)
@@ -279,17 +292,29 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     },
 
     onPartDelta(partID, messageID, sessionID, delta) {
-      if (sessionID !== currentSessionRef.current) return
+      const isChild = childSessionIdsRef.current.has(sessionID)
+      const isCurrent = sessionID === currentSessionRef.current
+      if (!isCurrent && !isChild) return
+
       const msgs = messagesRef.current
-      const msgIdx = msgs.findIndex((m) => getMsgInfo(m)?.id === messageID)
-      if (msgIdx === -1) return
+      let msgIdx = -1
+      let partIdx = -1
+
+      if (isCurrent) {
+        msgIdx = msgs.findIndex((m) => getMsgInfo(m)?.id === messageID)
+        if (msgIdx >= 0) partIdx = msgs[msgIdx].parts.findIndex((p) => p.id === partID)
+      } else {
+        // For child sessions, the part was injected into the parent's messages — search all
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          const pIdx = msgs[i].parts.findIndex((p) => p.id === partID)
+          if (pIdx >= 0) { msgIdx = i; partIdx = pIdx; break }
+        }
+      }
+      if (msgIdx === -1 || partIdx === -1) return
 
       const next = [...msgs]
       const msg = { ...next[msgIdx] }
       const parts = [...msg.parts]
-      const partIdx = parts.findIndex((p) => p.id === partID)
-      if (partIdx === -1) return
-
       const part = { ...parts[partIdx] }
       if (part.type === 'text' || part.type === 'reasoning') {
         setPartText(part, (getPartText(part) || '') + delta)
@@ -302,10 +327,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     },
 
     onPartRemoved(sessionID, messageID, partID) {
-      if (sessionID !== currentSessionRef.current) return
+      const isChild = childSessionIdsRef.current.has(sessionID)
+      const isCurrent = sessionID === currentSessionRef.current
+      if (!isCurrent && !isChild) return
+
       const msgs = messagesRef.current
-      const msgIdx = msgs.findIndex((m) => getMsgInfo(m)?.id === messageID)
+      let msgIdx = -1
+
+      if (isCurrent) {
+        msgIdx = msgs.findIndex((m) => getMsgInfo(m)?.id === messageID)
+      } else {
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i].parts.find((p) => p.id === partID)) { msgIdx = i; break }
+        }
+      }
       if (msgIdx === -1) return
+
       const next = [...msgs]
       const msg = { ...next[msgIdx] }
       msg.parts = msg.parts.filter((p) => p.id !== partID)
@@ -330,21 +367,45 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setIsStreaming(false)
     },
 
+    // Detect child sessions created by the task tool
+    onSessionUpdated(info) {
+      const sid = (info as Record<string, unknown>).id as string | undefined
+      const parentID = (info as Record<string, unknown>).parentID as string | undefined
+      if (sid && parentID === currentSessionRef.current) {
+        childSessionIdsRef.current.add(sid)
+        // Inject a subtask boundary so child tool calls are visually grouped
+        if (!childBoundaryInjectedRef.current.has(sid)) {
+          childBoundaryInjectedRef.current.add(sid)
+          const title = ((info as Record<string, unknown>).title as string) || '子任务'
+          const agentMatch = title.match(/@(\w+)/)
+          injectPart({
+            id: `subtask-${sid}`,
+            messageID: '',
+            sessionID: currentSessionRef.current,
+            type: 'subtask',
+            agent: agentMatch ? agentMatch[1] : '',
+            description: title,
+            prompt: '',
+          })
+        }
+      }
+    },
+
     onToolCalled(sessionID, callID, tool, input) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       injectPart({ id: callID, messageID: '', sessionID, type: 'tool', callID, tool, state: { status: 'running', input, title: tool, time: { start: Date.now() } } })
     },
     onToolSuccess(sessionID, callID, output, title, time) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       injectPart({ id: callID, messageID: '', sessionID, type: 'tool', callID, tool: title || '', state: { status: 'completed', output, title, time } })
     },
     onToolFailed(sessionID, callID, error) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       injectPart({ id: callID, messageID: '', sessionID, type: 'tool', callID, tool: '', state: { status: 'error', error } })
     },
 
     onReasoningDelta(sessionID, reasoningID, delta) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       const msgs = messagesRef.current
       let targetIdx = -1
       for (let i = msgs.length - 1; i >= 0; i--) {
@@ -357,16 +418,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       injectPart({ id: reasoningID, messageID: '', sessionID, type: 'reasoning', text: prevText + delta })
     },
     onReasoningEnded(sessionID, reasoningID, text) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       injectPart({ id: reasoningID, messageID: '', sessionID, type: 'reasoning', text })
     },
 
     onShellStarted(sessionID, callID, command) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       injectPart({ id: callID, messageID: '', sessionID, type: 'tool', callID, tool: 'shell', state: { status: 'running', input: { command }, title: command, time: { start: Date.now() } } })
     },
     onShellEnded(sessionID, callID, output) {
-      if (sessionID !== currentSessionRef.current) return
+      if (sessionID !== currentSessionRef.current && !childSessionIdsRef.current.has(sessionID)) return
       injectPart({ id: callID, messageID: '', sessionID, type: 'tool', callID, tool: 'shell', state: { status: 'completed', output, title: 'shell', time: { start: 0, end: 0 } } })
     },
 
@@ -421,6 +482,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     loadedSessionRef.current = null
     setChatError(null)
     setIsStreaming(false)
+    childSessionIdsRef.current.clear()
+    childBoundaryInjectedRef.current.clear()
   }, [syncMessages])
 
   useEffect(() => {

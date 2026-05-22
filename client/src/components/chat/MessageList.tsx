@@ -48,7 +48,9 @@ function renderThinkingPart(part: ChatPart): ReactNode {
       const st = part as import('../../types/message').SubtaskPart
       return (
         <div key={part.id} className={styles.subtaskBlock}>
-          <div className={styles.subtaskAgent}>subtask: {st.agent}</div>
+          <div className={styles.subtaskAgent}>
+            {st.agent ? `subtask: ${st.agent}` : '子任务'}
+          </div>
           <div className={styles.subtaskDesc}>{st.description}</div>
         </div>
       )
