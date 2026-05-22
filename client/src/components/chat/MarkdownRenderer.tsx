@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
 import mermaid from 'mermaid'
 import type { Components } from 'react-markdown'
 
@@ -51,7 +52,21 @@ const components: Components = {
       : ''
 
     if (lang === 'mermaid') {
-      return <MermaidBlock code={codeContent} />
+      const encoded = encodeURIComponent(codeContent)
+      return (
+        <>
+          <MermaidBlock code={codeContent} />
+          <div className="code-block-wrap">
+            <div className="code-block-header">
+              <span className="code-lang-badge">mermaid</span>
+              <button className="code-copy-btn" data-code={encoded} onClick={handleCopy}>
+                Copy
+              </button>
+            </div>
+            <pre><code>{codeContent}</code></pre>
+          </div>
+        </>
+      )
     }
 
     if (child && typeof child === 'object' && 'props' in child && child.props?.className !== undefined) {
@@ -84,6 +99,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <div className="markdown-body">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
         components={components}
       >
         {content}

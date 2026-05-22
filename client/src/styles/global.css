@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "highlight.js/styles/atom-one-dark.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -170,20 +171,16 @@ body {
 .markdown-body pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 8px 0; }
 .markdown-body pre code { background: none; padding: 0; font-size: 13px; line-height: 1.55; color: var(--text); border: none; }
 
-/* Syntax highlighting */
-.code-block-wrap .hl-kw   { color: #c084fc; }
-.code-block-wrap .hl-str  { color: #34d399; }
-.code-block-wrap .hl-num  { color: #fbbf24; }
-.code-block-wrap .hl-cm   { color: #64748b; font-style: italic; }
-.code-block-wrap .hl-fn   { color: #60a5fa; }
-.code-block-wrap .hl-op   { color: #f87171; }
-.code-block-wrap .hl-type { color: #22d3ee; }
-.code-block-wrap .hl-const{ color: #f472b6; }
-.code-block-wrap .hl-var  { color: #e2e8f0; }
-.code-block-wrap .hl-bool { color: #c084fc; }
-.code-block-wrap .hl-attr { color: #fde68a; }
-.code-block-wrap .hl-tag  { color: #f87171; }
-.code-block-wrap .hl-pun  { color: #94a3b8; }
+/* highlight.js overrides for code blocks */
+.code-block-wrap pre code.hljs {
+  background: transparent;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: var(--mono);
+  white-space: pre;
+  tab-size: 2;
+}
 
 /* JSON syntax highlighting */
 .json-key { color: #881391; }
