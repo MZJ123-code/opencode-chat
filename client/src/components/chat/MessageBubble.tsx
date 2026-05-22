@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { renderMarkdown } from '../../utils/renderMarkdown'
+import { MarkdownRenderer } from './MarkdownRenderer'
 import styles from './MessageBubble.module.css'
 
 interface MessageBubbleProps {
@@ -14,10 +14,9 @@ export function MessageBubble({ role, parts, children }: MessageBubbleProps) {
 
   return (
     <div className={isUser ? styles.userWrapper : styles.aiWrapper}>
-      <div
-        className={`markdown-body ${isUser ? styles.userBubble : styles.aiBubble}`}
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }}
-      />
+      <div className={isUser ? styles.userBubble : styles.aiBubble}>
+        <MarkdownRenderer content={text} />
+      </div>
       {children}
     </div>
   )

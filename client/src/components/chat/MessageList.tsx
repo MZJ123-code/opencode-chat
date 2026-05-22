@@ -6,6 +6,7 @@ import { FeedbackRow } from './FeedbackRow'
 import { TypingIndicator } from './TypingIndicator'
 import { EmptyState } from './EmptyState'
 import { Skeleton } from '../common/Skeleton'
+import { MarkdownRenderer } from './MarkdownRenderer'
 import { escapeHtml } from '../../utils/escapeHtml'
 import type { FeedbackState } from '../../hooks/useFeedback'
 import styles from './MessageList.module.css'
@@ -133,10 +134,9 @@ export function MessageList({
 
         elements.push(
           <div key={`user-${msgIdx}`} className={styles.userMsg}>
-            <div
-              className={styles.userBubble}
-              dangerouslySetInnerHTML={{ __html: escapeHtml(userText) }}
-            />
+            <div className={styles.userBubble}>
+              <MarkdownRenderer content={userText} />
+            </div>
           </div>
         )
         return
