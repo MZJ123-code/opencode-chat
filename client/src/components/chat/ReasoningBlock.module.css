@@ -1,0 +1,46 @@
+.container {
+  margin-bottom: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fafbfd;
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+  background: #f3f4f6;
+  user-select: none;
+}
+
+.headerOpen {
+  composes: header;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.arrow {
+  transition: transform .15s;
+  font-size: 10px;
+}
+
+.arrowCollapsed {
+  composes: arrow;
+  transform: rotate(-90deg);
+}
+
+.body {
+  padding: 10px 14px;
+  line-height: 1.6;
+  color: #4b5563;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 600px;
+  overflow-y: auto;
+  font-size: 13px;
+}

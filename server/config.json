@@ -1,0 +1,53 @@
+{
+  "server": {
+    "port": 3000,
+    "hostname": "0.0.0.0"
+  },
+  "opencode": {
+    "port": 4096,
+    "hostname": "127.0.0.1"
+  },
+
+  "model": "deepseek/deepseek-chat",
+  "small_model": "deepseek/deepseek-chat",
+  "logLevel": "INFO",
+  "autoupdate": false,
+
+  "agent": {
+    "build": {
+      "temperature": 0.7
+    }
+  },
+
+  "tools": {
+    "bash": true,
+    "write": true,
+    "read": true,
+    "edit": true,
+    "search": true,
+    "web_search": false,
+    "web_fetch": false
+  },
+
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "tail_turns": 8,
+    "preserve_recent_tokens": 16000,
+    "reserved": 8000
+  },
+
+  "tool_output": {
+    "max_lines": 500,
+    "max_bytes": 102400
+  },
+
+  "snapshot": true,
+
+  "provider": {},
+
+  "log": {
+    "maxFileSize": 10485760,
+    "maxArchives": 10
+  }
+}

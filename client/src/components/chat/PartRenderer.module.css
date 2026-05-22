@@ -1,0 +1,18 @@
+.subtaskBlock {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border: 1px dashed #c4b5fd;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #faf5ff;
+  color: #7c3aed;
+}
+
+.subtaskAgent {
+  font-weight: 600;
+}
+
+.subtaskDesc {
+  font-size: 12px;
+  opacity: 0.8;
+}

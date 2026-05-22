@@ -1,0 +1,20 @@
+.banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 10px 20px;
+  background: #fef2f2;
+  color: var(--danger);
+  font-size: 13px;
+  text-align: center;
+  animation: fadeIn .2s ease;
+}
+
+.dismiss {
+  margin-left: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: 0.7;
+}

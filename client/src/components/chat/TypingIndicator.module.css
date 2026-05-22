@@ -1,0 +1,31 @@
+.container {
+  align-self: flex-start;
+  max-width: 80px;
+}
+
+.bubble {
+  padding: 16px 20px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: var(--ai-bubble);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius);
+  border-bottom-left-radius: 4px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: bounce 1s infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
