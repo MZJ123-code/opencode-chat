@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { ToolPart } from '../../types/message'
 import { escapeHtml } from '../../utils/escapeHtml'
+import { JsonView } from './JsonView'
 import styles from './ToolCallBlock.module.css'
 
 const stateConfig: Record<string, { icon: string; label: string; color: string }> = {
@@ -63,10 +64,7 @@ export function ToolCallBlock({ part }: { part: ToolPart }) {
       {hasBody && (
         <div className={styles.body}>
           {inputText && (
-            <div>
-              <div className={styles.sectionLabel}>输入参数</div>
-              <pre className={styles.codeBlock}>{inputText}</pre>
-            </div>
+            <JsonView data={part.state.input!} />
           )}
 
           {outputText && (

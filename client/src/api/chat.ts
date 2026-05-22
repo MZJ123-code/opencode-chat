@@ -8,3 +8,7 @@ export function sendMessage(sessionId: string, message: string) {
 export function sendMessageAsync(sessionId: string, message: string) {
   return api<{ ok: boolean; sessionId: string }>('POST', '/api/chat/async', { sessionId, message })
 }
+
+export function abortSession(sessionId: string) {
+  return api<{ ok: boolean }>('POST', `/api/sessions/${sessionId}/abort`)
+}

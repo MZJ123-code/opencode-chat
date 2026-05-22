@@ -25,6 +25,7 @@ interface ChatContextValue {
   chatError: string | null
   loadHistory: (sessionId: string) => Promise<void>
   sendMessage: (text: string, sessionId: string) => Promise<void>
+  abortMessage: () => Promise<void>
   clearMessages: () => void
 
   currentSessionId: string | null
@@ -383,6 +384,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [syncMessages])
 
+  const abortMessage = useCallback(async () => {
+    const sid = currentSessionRef.current
+    if (!sid) return
+    try {
+      await chatApi.abortSession(sid)
+    } catch {
+      // ignore
+    }
+    setIsStreaming(false)
+  }, [])
+
   const clearMessages = useCallback(() => {
     syncMessages([])
     loadedSessionRef.current = null
@@ -411,6 +423,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     feedbackStates, submitFeedback,
     inputValue, setInputValue,
     sidebarOpen, setSidebarOpen, globalError, setGlobalError,
+    abortMessage,
   }
 
   return (

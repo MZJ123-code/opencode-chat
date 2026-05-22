@@ -185,6 +185,13 @@ body {
 .code-block-wrap .hl-tag  { color: #f87171; }
 .code-block-wrap .hl-pun  { color: #94a3b8; }
 
+/* JSON syntax highlighting */
+.json-key { color: #881391; }
+.json-str { color: #0e7f6a; }
+.json-num { color: #d8830a; }
+.json-bool { color: #2563eb; }
+.json-null { color: #94a3b8; font-style: italic; }
+
 /* Mobile */
 @media (max-width: 640px) {
   .mobile-menu-btn { display: inline-flex !important; }

@@ -85,6 +85,30 @@
   font-family: var(--font);
 }
 
+.stopBtn {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 8px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  transition: all .15s ease;
+  animation: fadeIn .2s ease;
+  line-height: 1.4;
+}
+.stopBtn:hover {
+  background: #dc2626;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+}
+
 .scrollBtn {
   position: absolute;
   bottom: 16px;

@@ -6,10 +6,9 @@ interface ChatInputProps {
   onChange: (value: string) => void
   onSend: () => void
   disabled: boolean
-  isStreaming?: boolean
 }
 
-export function ChatInput({ value, onChange, onSend, disabled, isStreaming }: ChatInputProps) {
+export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
 
@@ -21,13 +20,11 @@ export function ChatInput({ value, onChange, onSend, disabled, isStreaming }: Ch
   }, [value])
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isComposing && !isStreaming) {
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing && !disabled) {
       e.preventDefault()
       onSend()
     }
   }
-
-  const inputDisabled = disabled || isStreaming
 
   return (
     <div className="flex items-end gap-2 px-4 py-3 border-t border-[var(--border)] bg-white">
@@ -39,17 +36,17 @@ export function ChatInput({ value, onChange, onSend, disabled, isStreaming }: Ch
         onKeyDown={handleKeyDown}
         onCompositionStart={() => setIsComposing(true)}
         onCompositionEnd={() => setIsComposing(false)}
-        placeholder={isStreaming ? 'AI 回复中...' : '输入你的问题...'}
+        placeholder={'输入你的问题...'}
         rows={1}
-        disabled={inputDisabled}
+        disabled={disabled}
         style={{ maxHeight: 120 }}
       />
       <Button
         onClick={onSend}
-        disabled={inputDisabled || !value.trim()}
+        disabled={disabled || !value.trim()}
         size="default"
       >
-        {isStreaming ? '...' : '发送'}
+        发送
       </Button>
     </div>
   )

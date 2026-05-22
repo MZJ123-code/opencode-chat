@@ -1,0 +1,10 @@
+flowchart TD
+    Start([开始]) --> Init[初始化队列 queue<br>将起始节点入队<br>标记起始节点为已访问]
+    Init --> Check{queue 为空?}
+    Check -- 是 --> End([结束])
+    Check -- 否 --> Dequeue[从队列头部取出节点 current]
+    Dequeue --> Process[处理/访问 current 节点]
+    Process --> Neighbors{current 有未访问的邻居?}
+    Neighbors -- 是 --> Enqueue[将邻居节点入队<br>标记为已访问]
+    Enqueue --> Neighbors
+    Neighbors -- 否 --> Check

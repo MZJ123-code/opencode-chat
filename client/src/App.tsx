@@ -18,7 +18,7 @@ export default function App() {
     inputValue, setInputValue,
     sidebarOpen, setSidebarOpen,
     globalError, setGlobalError,
-    createSession, loadHistory, clearMessages, sendMessage,
+    createSession, loadHistory, clearMessages, sendMessage, abortMessage,
   } = useChatContext()
 
   const handleCreateSession = useCallback(async () => {
@@ -76,13 +76,13 @@ export default function App() {
           sessionId={currentSessionId}
           feedbackStates={feedbackStates}
           onSubmitFeedback={handleSubmitFeedback}
+          onStop={abortMessage}
         />
         <ChatInput
           value={inputValue}
           onChange={setInputValue}
           onSend={handleSendMessage}
           disabled={!currentSessionId}
-          isStreaming={isStreaming}
         />
       </ChatArea>
     </>

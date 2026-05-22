@@ -18,6 +18,7 @@ interface MessageListProps {
   sessionId: string | null
   feedbackStates: Map<number, FeedbackState>
   onSubmitFeedback: (sessionId: string, satisfied: boolean, msgIdx: number) => Promise<void>
+  onStop: () => void
 }
 
 function isNearBottom(el: HTMLElement, threshold = 30): boolean {
@@ -64,6 +65,7 @@ export function MessageList({
   sessionId,
   feedbackStates,
   onSubmitFeedback,
+  onStop,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
@@ -201,6 +203,12 @@ export function MessageList({
         {content()}
         {isStreaming && <TypingIndicator />}
       </div>
+
+      {isStreaming && (
+        <button className={styles.stopBtn} onClick={onStop}>
+          停止
+        </button>
+      )}
 
       {showScrollBtn && (
         <button
