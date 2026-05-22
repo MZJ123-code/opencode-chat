@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import styles from './ChatArea.module.css'
 
 interface ChatAreaProps {
   children: ReactNode
@@ -7,7 +6,7 @@ interface ChatAreaProps {
 
 export function ChatArea({ children }: ChatAreaProps) {
   return (
-    <main className={styles.main}>
+    <main className="flex flex-col flex-1 min-w-0 bg-white">
       {children}
     </main>
   )

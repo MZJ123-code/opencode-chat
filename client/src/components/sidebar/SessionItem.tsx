@@ -1,6 +1,6 @@
 import type { SessionListItem } from '../../types/session'
 import { formatDate } from '../../utils/formatDate'
-import styles from './SessionItem.module.css'
+import { cn } from '@/lib/utils'
 
 interface SessionItemProps {
   session: SessionListItem
@@ -11,11 +11,16 @@ interface SessionItemProps {
 export function SessionItem({ session, isActive, onClick }: SessionItemProps) {
   return (
     <div
-      className={`${styles.item} ${isActive ? styles.itemActive : ''}`}
+      className={cn(
+        'px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors',
+        isActive
+          ? 'bg-[var(--sidebar-active)] text-slate-100'
+          : 'text-slate-300 hover:bg-[var(--sidebar-hover)]'
+      )}
       onClick={onClick}
     >
-      <div className={styles.title}>{session.title}</div>
-      <div className={styles.meta}>
+      <div className="text-sm font-medium truncate">{session.title}</div>
+      <div className="text-xs text-slate-400 mt-0.5">
         {formatDate(session.createdAt)} · {session.messageCount || 0} 条消息
       </div>
     </div>

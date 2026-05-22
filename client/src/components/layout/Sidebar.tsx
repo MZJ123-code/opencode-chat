@@ -11,16 +11,13 @@ export function Sidebar({ children, isOpen }: SidebarProps) {
 
   return (
     <aside
-      className="sidebar"
+      className="flex flex-col h-screen"
       data-open={isOpen}
       style={{
         width: 'var(--sidebar-width)',
         minWidth: 'var(--sidebar-width)',
         background: 'var(--sidebar-bg)',
         color: '#cbd5e1',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
         ...(isMobile
           ? {
               display: isOpen ? 'flex' : 'none',
@@ -42,20 +39,7 @@ export function MobileMenuButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="mobile-menu-btn"
-      style={{
-        display: 'none',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 32,
-        height: 32,
-        borderRadius: 6,
-        border: '1px solid var(--border)',
-        background: '#fff',
-        cursor: 'pointer',
-        fontSize: 18,
-        marginRight: 8,
-      }}
+      className="mobile-menu-btn hidden max-sm:inline-flex items-center justify-center w-8 h-8 rounded-md border border-[var(--border)] bg-white cursor-pointer text-lg mr-2"
     >
       ☰
     </button>

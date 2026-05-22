@@ -1,7 +1,6 @@
 import type { SessionListItem } from '../../types/session'
 import { SessionItem } from './SessionItem'
 import { Skeleton } from '../common/Skeleton'
-import styles from './SessionList.module.css'
 
 interface SessionListProps {
   sessions: SessionListItem[]
@@ -13,18 +12,22 @@ interface SessionListProps {
 export function SessionList({ sessions, activeId, onSelect, isLoading }: SessionListProps) {
   if (isLoading) {
     return (
-      <div className={styles.skeleton}>
+      <div className="px-4 py-2">
         <Skeleton count={5} height={56} />
       </div>
     )
   }
 
   if (sessions.length === 0) {
-    return <div className={styles.empty}>暂无对话</div>
+    return (
+      <div className="text-center text-slate-400 text-sm py-8">
+        暂无对话
+      </div>
+    )
   }
 
   return (
-    <div className={styles.list}>
+    <div className="flex flex-col gap-0.5 py-2 overflow-y-auto flex-1">
       {sessions.map((s) => (
         <SessionItem
           key={s.sessionId}

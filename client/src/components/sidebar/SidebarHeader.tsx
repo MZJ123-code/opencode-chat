@@ -1,4 +1,4 @@
-import styles from './SidebarHeader.module.css'
+import { Button } from '@/components/ui/button'
 
 interface SidebarHeaderProps {
   onCreateClick: () => void
@@ -7,17 +7,17 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ onCreateClick, isCreating }: SidebarHeaderProps) {
   return (
-    <div className={styles.header}>
-      <h2 className={styles.title}>
+    <div className="px-4 pt-5 pb-4 border-b border-[#2d2f4a]">
+      <h2 className="text-base font-semibold text-slate-100 m-0">
         AI 咨询平台
       </h2>
-      <button
-        className={styles.createBtn}
+      <Button
+        className="w-full mt-3 bg-indigo-600 hover:bg-indigo-500 text-white"
         onClick={onCreateClick}
         disabled={isCreating}
       >
         {isCreating ? '创建中...' : '+ 新建对话'}
-      </button>
+      </Button>
     </div>
   )
 }

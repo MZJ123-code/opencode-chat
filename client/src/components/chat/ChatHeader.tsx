@@ -1,5 +1,4 @@
 import { MobileMenuButton } from '../layout/Sidebar'
-import styles from './ChatHeader.module.css'
 
 interface ChatHeaderProps {
   title: string
@@ -8,9 +7,9 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
   return (
-    <div className={styles.header}>
+    <div className="flex items-center px-4 h-14 border-b border-[var(--border)] bg-white shrink-0">
       {onMenuClick && <MobileMenuButton onClick={onMenuClick} />}
-      <span className={styles.title}>{title}</span>
+      <span className="text-sm font-medium text-[var(--text)] truncate">{title}</span>
     </div>
   )
 }

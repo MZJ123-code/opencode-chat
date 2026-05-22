@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
-import styles from './ChatInput.module.css'
+import { Button } from '@/components/ui/button'
 
 interface ChatInputProps {
   value: string
@@ -30,10 +30,10 @@ export function ChatInput({ value, onChange, onSend, disabled, isStreaming }: Ch
   const inputDisabled = disabled || isStreaming
 
   return (
-    <div className={styles.container}>
+    <div className="flex items-end gap-2 px-4 py-3 border-t border-[var(--border)] bg-white">
       <textarea
         ref={textareaRef}
-        className={styles.textarea}
+        className="flex-1 resize-none rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 disabled:opacity-50 placeholder:text-slate-400"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -42,14 +42,15 @@ export function ChatInput({ value, onChange, onSend, disabled, isStreaming }: Ch
         placeholder={isStreaming ? 'AI 回复中...' : '输入你的问题...'}
         rows={1}
         disabled={inputDisabled}
+        style={{ maxHeight: 120 }}
       />
-      <button
-        className={styles.sendBtn}
+      <Button
         onClick={onSend}
         disabled={inputDisabled || !value.trim()}
+        size="default"
       >
         {isStreaming ? '...' : '发送'}
-      </button>
+      </Button>
     </div>
   )
 }

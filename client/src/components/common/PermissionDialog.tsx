@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { respondPermission } from '../../api/permission'
-import styles from './PermissionDialog.module.css'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 interface PermissionDialogProps {
   request: {
@@ -16,6 +24,7 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
   const [value, setValue] = useState('')
   const [pending, setPending] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const [open, setOpen] = useState(true)
 
   const isQuestion = request.permission === 'question' || request.permission === 'tool:question'
   const questionText = (request.metadata?.question as string) || (request.metadata?.text as string) || request.permission
@@ -28,28 +37,37 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
     setPending(true)
     try {
       await respondPermission(request.id, reply, reply === 'once' ? value : undefined)
+      setOpen(false)
       onClose()
     } catch {
       setPending(false)
     }
   }
 
-  return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <span className={styles.headerIcon}>
-            {isQuestion ? '💬' : '🔒'}
-          </span>
-          {isQuestion ? 'AI 提问' : '权限请求'}
-        </div>
+  function handleOpenChange(open: boolean) {
+    if (!open) {
+      setOpen(false)
+      onClose()
+    }
+  }
 
-        <div className={styles.question}>{questionText}</div>
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span>{isQuestion ? '💬' : '🔒'}</span>
+            {isQuestion ? 'AI 提问' : '权限请求'}
+          </DialogTitle>
+          <DialogDescription>
+            {questionText}
+          </DialogDescription>
+        </DialogHeader>
 
         {isQuestion && (
           <textarea
             ref={inputRef}
-            className={styles.input}
+            className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none disabled:opacity-50"
             placeholder="输入你的回答..."
             value={value}
             disabled={pending}
@@ -64,29 +82,28 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
           />
         )}
 
-        <div className={styles.hint}>
+        <div className="text-xs text-[var(--text-secondary)]">
           {isQuestion ? '按 Enter 发送 · Shift+Enter 换行' : 'AI 需要你的授权才能继续'}
         </div>
 
-        <div className={styles.actions}>
+        <DialogFooter>
           {isQuestion && (
-            <button
-              className={styles.btnPrimary}
+            <Button
               disabled={!value.trim() || pending}
               onClick={() => handleReply('once')}
             >
               {pending ? '发送中...' : '发送'}
-            </button>
+            </Button>
           )}
-          <button
-            className={styles.btnSecondary}
+          <Button
+            variant="outline"
             disabled={pending}
             onClick={() => handleReply('reject')}
           >
             {isQuestion ? '跳过' : '拒绝'}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
