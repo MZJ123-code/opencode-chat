@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 const MIN_WIDTH = 200
@@ -49,35 +50,56 @@ export function Sidebar({ children, isOpen }: SidebarProps) {
     }
   }, [handleMouseMove, handleMouseUp])
 
+  if (isMobile) {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.aside
+              className="flex flex-col h-screen fixed top-0 left-0 z-50 overflow-hidden"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              style={{
+                width: DEFAULT_WIDTH,
+                background: 'var(--sidebar-bg)',
+                color: '#cbd5e1',
+              }}
+            >
+              {children}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    )
+  }
+
   return (
-    <aside
+    <motion.aside
       className="flex flex-col h-screen relative"
-      data-open={isOpen}
       style={{
         width,
         minWidth: MIN_WIDTH,
         background: 'var(--sidebar-bg)',
         color: '#cbd5e1',
-        ...(isMobile
-          ? {
-              display: isOpen ? 'flex' : 'none',
-              position: 'fixed' as const,
-              zIndex: 50,
-              top: 0,
-              left: 0,
-              height: '100vh',
-            }
-          : {}),
       }}
+      animate={{ width }}
+      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
     >
       {children}
-      {!isMobile && (
-        <div
-          className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-indigo-500/30 active:bg-indigo-500/50 transition-colors"
-          onMouseDown={handleMouseDown}
-        />
-      )}
-    </aside>
+      <div
+        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-indigo-500/30 active:bg-indigo-500/50 transition-colors z-10"
+        onMouseDown={handleMouseDown}
+      />
+    </motion.aside>
   )
 }
 
@@ -85,7 +107,7 @@ export function MobileMenuButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="mobile-menu-btn hidden max-sm:inline-flex items-center justify-center w-8 h-8 rounded-md border border-[var(--border)] bg-white cursor-pointer text-lg mr-2"
+      className="mobile-menu-btn hidden max-sm:inline-flex items-center justify-center w-8 h-8 rounded-md border border-[var(--border)] bg-[var(--chat-bg)] cursor-pointer text-lg mr-2 hover:bg-[var(--accent)] transition-colors"
     >
       ☰
     </button>

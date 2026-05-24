@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import type { SessionListItem } from '../../types/session'
 import { formatDate } from '../../utils/formatDate'
 import { cn } from '@/lib/utils'
@@ -10,7 +11,7 @@ interface SessionItemProps {
 
 export function SessionItem({ session, isActive, onClick }: SessionItemProps) {
   return (
-    <div
+    <motion.div
       className={cn(
         'px-3 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors',
         isActive
@@ -18,11 +19,14 @@ export function SessionItem({ session, isActive, onClick }: SessionItemProps) {
           : 'text-slate-300 hover:bg-[var(--sidebar-hover)]'
       )}
       onClick={onClick}
+      whileHover={{ x: 2 }}
+      whileTap={{ scale: 0.98 }}
+      layout
     >
       <div className="text-sm font-medium truncate">{session.title}</div>
       <div className="text-xs text-slate-400 mt-0.5">
         {formatDate(session.createdAt)} · {session.messageCount || 0} 条消息
       </div>
-    </div>
+    </motion.div>
   )
 }

@@ -19,7 +19,6 @@
 .userMsg {
   align-self: flex-end;
   max-width: 72%;
-  animation: fadeIn .2s ease;
   flex-shrink: 0;
   margin-bottom: 2px;
 }
@@ -31,13 +30,13 @@
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
-  background: var(--user-bubble);
+  background: var(--user-bubble-gradient);
   color: #fff;
   border-bottom-right-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
 }
 
-/* Apple style: all markdown content inside user bubble is white */
+/* User bubble markdown - white text on gradient */
 .userBubble :global(.markdown-body) {
   color: #fff;
 }
@@ -113,13 +112,14 @@
   border-color: rgba(255,255,255,0.2);
 }
 
+/* AI thinking block in message list */
 .thinkingBlock {
   align-self: flex-start;
   max-width: 85%;
   width: 100%;
   margin-bottom: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--secondary);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   border-bottom-left-radius: 4px;
   flex-shrink: 0;
@@ -134,15 +134,16 @@
   user-select: none;
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: var(--muted-foreground);
   font-family: var(--font);
-  background: #f1f5f9;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .thinkingArrow {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--muted-foreground);
   transition: transform .15s;
   flex-shrink: 0;
 }
@@ -156,7 +157,7 @@
 
 .thinkingPart {
   font-size: 13px;
-  color: #475569;
+  color: var(--muted-foreground);
   line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
@@ -172,19 +173,19 @@
   padding: 8px 22px;
   border: none;
   border-radius: 999px;
-  background: #ef4444;
+  background: var(--danger);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
   transition: all .15s ease;
-  animation: fadeIn .2s ease;
   line-height: 1.4;
 }
 .stopBtn:hover {
   background: #dc2626;
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+  transform: translateX(-50%) translateY(-1px);
 }
 
 .scrollBtn {
@@ -194,9 +195,9 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #64748b;
+  border: 1px solid var(--border);
+  background: var(--chat-bg);
+  color: var(--muted-foreground);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -210,10 +211,9 @@
 
 .scrollBtn:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-  background: #f8fafc;
+  background: var(--accent);
 }
 
-/* Subtask display in message list */
 .subtaskBlock {
   padding: 8px 12px;
   border: 1px dashed #c4b5fd;

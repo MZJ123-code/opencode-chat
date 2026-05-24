@@ -1,9 +1,10 @@
 .container {
   margin-bottom: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fafbfd;
+  background: var(--card);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .header {
@@ -12,32 +13,27 @@
   gap: 6px;
   padding: 7px 12px;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--muted-foreground);
   font-size: 12px;
   font-weight: 500;
-  background: #f3f4f6;
+  background: var(--muted);
   user-select: none;
 }
 
 .headerOpen {
   composes: header;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
 }
 
 .arrow {
-  transition: transform .15s;
+  display: inline-flex;
   font-size: 10px;
-}
-
-.arrowCollapsed {
-  composes: arrow;
-  transform: rotate(-90deg);
 }
 
 .body {
   padding: 10px 14px;
   line-height: 1.6;
-  color: #4b5563;
+  color: var(--foreground);
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 600px;

@@ -1,4 +1,5 @@
 import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { ChatMessage, ChatPart } from '../../types/message'
 import { PartRenderer } from './PartRenderer'
 import { ToolCallBlock } from './ToolCallBlock'
@@ -19,6 +20,28 @@ interface MessageListProps {
   feedbackStates: Map<number, FeedbackState>
   onSubmitFeedback: (sessionId: string, satisfied: boolean, msgIdx: number) => Promise<void>
   onStop: () => void
+}
+
+const messageVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 400,
+      damping: 30,
+      delay: i * 0.03,
+    },
+  }),
+  exit: { opacity: 0, y: -10, transition: { duration: 0.15 } },
+}
+
+const stopBtnVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.9 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 500, damping: 30 } },
+  exit: { opacity: 0, y: 10, scale: 0.9, transition: { duration: 0.15 } },
 }
 
 function isNearBottom(el: HTMLElement, threshold = 30): boolean {
@@ -73,10 +96,6 @@ export function MessageList({
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const nearBottomRef = useRef(true)
   const prevScrollHeightRef = useRef(0)
-
-  // Auto-scroll after every DOM commit — only if user hasn't scrolled away AND content actually grew
-  // This avoids the old bug where `messages` reference changes (from requestAnimationFrame batching)
-  // triggered scroll resets even after streaming ended.
   useLayoutEffect(() => {
     const el = containerRef.current
     if (!el || !nearBottomRef.current) return
@@ -85,7 +104,6 @@ export function MessageList({
       prevScrollHeightRef.current = sh
       el.scrollTop = sh
     } else {
-      // Still track even if no growth (handles initial render)
       prevScrollHeightRef.current = sh
     }
   })
@@ -137,11 +155,18 @@ export function MessageList({
           .join('\n')
 
         elements.push(
-          <div key={`user-${msgIdx}`} className={styles.userMsg}>
+          <motion.div
+            key={`user-${msgIdx}`}
+            className={styles.userMsg}
+            custom={msgIdx}
+            variants={messageVariants}
+            initial="hidden"
+            animate="visible"
+          >
             <div className={styles.userBubble}>
               <MarkdownRenderer content={userText} />
             </div>
-          </div>
+          </motion.div>
         )
         return
       }
@@ -153,7 +178,14 @@ export function MessageList({
       if (thinkingParts.length > 0) {
         const label = `思考过程 (${thinkingParts.length})`
         elements.push(
-          <div key={`thinking-${msgIdx}`} className={styles.thinkingBlock}>
+          <motion.div
+            key={`thinking-${msgIdx}`}
+            className={styles.thinkingBlock}
+            custom={msgIdx}
+            variants={messageVariants}
+            initial="hidden"
+            animate="visible"
+          >
             <details open style={{ fontSize: 13 }}>
               <summary className={styles.thinkingSummary}>
                 <span className={styles.thinkingArrow}>▶</span>
@@ -163,7 +195,7 @@ export function MessageList({
                 {thinkingParts.map((p) => renderThinkingPart(p))}
               </div>
             </details>
-          </div>
+          </motion.div>
         )
       }
 
@@ -171,7 +203,15 @@ export function MessageList({
         const text = 'text' in part ? (part as unknown as { text: string }).text : ''
         if (!text) return
         elements.push(
-          <PartRenderer key={`ai-${msgIdx}-${partIdx}`} part={part} role="assistant" />
+          <motion.div
+            key={`ai-${msgIdx}-${partIdx}`}
+            custom={msgIdx}
+            variants={messageVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <PartRenderer part={part} role="assistant" />
+          </motion.div>
         )
       })
 
@@ -181,13 +221,19 @@ export function MessageList({
       const isLastMsgOverall = msgIdx === messages.length - 1
       if (hasTextParts && sessionId && isLastInTurn && !(isLastMsgOverall && isStreaming)) {
         elements.push(
-          <FeedbackRow
+          <motion.div
             key={`feedback-${msgIdx}`}
-            sessionId={sessionId}
-            messageIndex={currentAiIdx}
-            feedbackState={feedbackStates.get(currentAiIdx) || 'none'}
-            onSubmit={onSubmitFeedback}
-          />
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <FeedbackRow
+              sessionId={sessionId}
+              messageIndex={currentAiIdx}
+              feedbackState={feedbackStates.get(currentAiIdx) || 'none'}
+              onSubmit={onSubmitFeedback}
+            />
+          </motion.div>
         )
       }
     })
@@ -206,21 +252,37 @@ export function MessageList({
         {isStreaming && <TypingIndicator />}
       </div>
 
-      {isStreaming && (
-        <button className={styles.stopBtn} onClick={onStop}>
-          停止
-        </button>
-      )}
+      <AnimatePresence>
+        {isStreaming && (
+          <motion.button
+            className={styles.stopBtn}
+            onClick={onStop}
+            variants={stopBtnVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            停止
+          </motion.button>
+        )}
+      </AnimatePresence>
 
-      {showScrollBtn && (
-        <button
-          className={styles.scrollBtn}
-          onClick={scrollToBottom}
-          title="滚动到底部"
-        >
-          ↓
-        </button>
-      )}
+      <AnimatePresence>
+        {showScrollBtn && (
+          <motion.button
+            className={styles.scrollBtn}
+            onClick={scrollToBottom}
+            title="滚动到底部"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            ↓
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
