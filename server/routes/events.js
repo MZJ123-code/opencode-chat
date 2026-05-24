@@ -3,6 +3,7 @@ import { getClient } from "../services/opencode.js"
 import { logger } from "../logger/index.js"
 import { ipUsers, ipSessions, sessionMeta } from "../storage/store.js"
 import { validateOwnership } from "../services/sessionService.js"
+import { pushEvent, getBufferedEvents } from "../services/eventBuffer.js"
 
 const router = Router()
 
@@ -10,7 +11,10 @@ router.get("/", async (req, res) => {
   const client = getClient()
   const ip = req.clientIP
 
-  logger.info(`SSE 事件流连接: ${ip}`)
+  // 客户端可携带 lastSeq 参数增量回放（浏览器 EventSource 不支持自定义参数，预留扩展）
+  const sinceSeq = parseInt(req.query.since || "0", 10) || 0
+
+  logger.info(`SSE 事件流连接: ${ip}`, { sinceSeq: sinceSeq || "全部" })
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -23,6 +27,20 @@ router.get("/", async (req, res) => {
   let eventCount = 0
   const eventTypeCount = new Map()
 
+  // 静默响应流错误，避免客户端断连导致进程崩溃
+  res.on("error", () => {})
+
+  function safeWrite(data) {
+    if (closed || !res.writable) return false
+    try {
+      res.write(data)
+      return true
+    } catch {
+      closed = true
+      return false
+    }
+  }
+
   req.on("close", () => {
     closed = true
     logger.info(`SSE 事件流关闭: ${ip}`, {
@@ -32,11 +50,27 @@ router.get("/", async (req, res) => {
   })
 
   try {
+    // 先回放断连期间缓冲的事件
+    const { events: buffered } = getBufferedEvents(ip, sinceSeq)
+    if (buffered.length > 0) {
+      logger.info(`SSE 回放缓冲事件: ${ip}`, { count: buffered.length })
+      for (const ev of buffered) {
+        if (closed) break
+        eventCount++
+        const etype = ev.type || "unknown"
+        eventTypeCount.set(etype, (eventTypeCount.get(etype) || 0) + 1)
+        if (!safeWrite(`event: message\ndata: ${JSON.stringify(ev)}\n\n`)) break
+      }
+    }
+
     const events = await client.event.subscribe()
 
     for await (const event of events.stream) {
       if (closed) break
       eventCount++
+
+      // 写入环形缓冲区
+      pushEvent(ip, event)
 
       // Track all event types
       const etype = event.type || "unknown"
@@ -73,7 +107,6 @@ router.get("/", async (req, res) => {
         const childSid = info.id
         const parentSid = info.parentID
         if (childSid && parentSid && !sessionMeta.has(childSid)) {
-          // 验证父会话属于当前 IP
           if (validateOwnership(ip, parentSid)) {
             const title = info.title || "子任务"
             sessionMeta.set(childSid, {
@@ -110,8 +143,7 @@ router.get("/", async (req, res) => {
         }
       }
 
-      const data = JSON.stringify(event)
-      res.write(`event: message\ndata: ${data}\n\n`)
+      if (!safeWrite(`event: message\ndata: ${JSON.stringify(event)}\n\n`)) break
     }
   } catch (err) {
     if (!closed) {

@@ -31,6 +31,7 @@ router.post("/", async (req, res, next) => {
 
 router.get("/", (req, res) => {
   const ip = req.clientIP
+  ensureIP(ip)
   const list = listSessions(ip)
   const agentStats = {}
   for (const s of list) {

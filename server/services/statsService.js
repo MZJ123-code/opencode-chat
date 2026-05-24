@@ -100,12 +100,3 @@ export function saveStats() {
     }
   }, WRITE_INTERVAL).unref()
 }
-
-// 立即强制写入（供手动触发使用，当前未导出）
-export function flushStats() {
-  if (writeTimer) {
-    clearTimeout(writeTimer)
-    writeTimer = null
-  }
-  saveStatsSync()
-}

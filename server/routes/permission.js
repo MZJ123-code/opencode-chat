@@ -38,6 +38,9 @@ router.post("/question/reply", async (req, res, next) => {
     if (!requestID) {
       return res.status(400).json({ error: "Missing requestID" })
     }
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({ error: "answers 必须是数组" })
+    }
 
     const client = getClient()
     logger.info(`问题回复: id=${requestID}`, {

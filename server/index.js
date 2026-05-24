@@ -5,10 +5,15 @@ import { PORT, HOSTNAME, PUBLIC_DIR, isProduction, MODEL, SMALL_MODEL, AGENT_OPT
 import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
 import { startOpenCode, getServer } from "./services/opencode.js"
-import { restoreStats, saveStats, saveStatsSync } from "./services/statsService.js"
+import { restoreStats, saveStatsSync } from "./services/statsService.js"
 
 restoreStats()
-await startOpenCode()
+try {
+  await startOpenCode()
+} catch (err) {
+  logger.error("OpenCode 启动失败，无法继续运行", { error: err.message, stack: err.stack })
+  process.exit(1)
+}
 
 const app = createApp()
 
