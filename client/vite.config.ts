@@ -13,7 +13,19 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-  plugins: [tailwindcss(), react()],
+  plugins: [
+    tailwindcss(),
+    react(),
+    {
+      name: 'print-dashboard-url',
+      configureServer(server) {
+        server.httpServer?.once('listening', () => {
+          const port = server.config.server.port || 5173
+          console.log(`  ➜  Dashboard: http://localhost:${port}/#dashboard`)
+        })
+      },
+    },
+  ],
   server: {
     port: 5173,
     proxy: {

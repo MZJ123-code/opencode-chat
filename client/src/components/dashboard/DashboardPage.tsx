@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { ArrowUpDown, ArrowUp, ArrowDown, ListFilter, X, Search } from 'lucide-react'
 import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail, recordVisit } from '../../api/stats'
 import type { BasicStats, DailyStatsItem, FeedbackDetailItem, VisitDetailItem, QuestionDetailItem } from '../../api/stats'
 import { ThemeToggle } from '../common/ThemeToggle'
@@ -370,46 +371,62 @@ function ColHeader({ label, colKey, sortKey, sortDir, onSort, columnFilters, set
   activeFilterCol: string | null; setActiveFilterCol: (v: string | null) => void; center?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const active = sortKey === colKey
+  const isSorted = sortKey === colKey
   const filterVal = columnFilters[colKey] || ''
 
   useEffect(() => {
-    if (activeFilterCol === colKey && inputRef.current) {
-      inputRef.current.focus()
-    }
+    if (activeFilterCol === colKey && inputRef.current) inputRef.current.focus()
   }, [activeFilterCol, colKey])
 
   return (
-    <th className={`${center ? 'text-center' : 'text-left'} px-4 py-2.5 font-medium whitespace-nowrap relative`} style={{ background: 'var(--secondary)' }}>
-      <div className="flex items-center gap-1">
-        <span onClick={() => onSort(colKey)} className="cursor-pointer select-none hover:text-[var(--text)] transition-colors">
+    <th className={`${center ? 'text-center' : 'text-left'} px-4 py-3 font-medium whitespace-nowrap relative select-none`} style={{ background: 'var(--secondary)' }}>
+      <div className="inline-flex items-center gap-1.5">
+        <button
+          onClick={() => onSort(colKey)}
+          className="inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer text-inherit text-xs font-medium hover:text-[var(--text)] transition-colors px-0"
+        >
           {label}
-          <span className="ml-1 text-[10px]" style={{ color: active ? 'var(--accent)' : 'var(--muted-foreground)' }}>
-            {active ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}
+          <span className="text-[var(--muted-foreground)]" style={{ color: isSorted ? 'var(--accent)' : undefined }}>
+            {isSorted ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
           </span>
-        </span>
+        </button>
         <button
           onClick={() => setActiveFilterCol(activeFilterCol === colKey ? null : colKey)}
-          className="text-[11px] bg-transparent border-0 cursor-pointer px-0.5 rounded hover:bg-[var(--accent)] transition-colors"
+          className="inline-flex items-center justify-center bg-transparent border-0 cursor-pointer p-0.5 rounded hover:bg-[var(--accent)]/10 transition-colors"
           style={{ color: filterVal ? 'var(--accent)' : 'var(--muted-foreground)' }}
           title="筛选"
         >
-          ⚬
+          <ListFilter size={13} />
         </button>
       </div>
+
       {activeFilterCol === colKey && (
-        <div className="absolute top-full left-0 z-10 mt-1 p-1.5 rounded border shadow-lg" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={`筛选${label}...`}
-            value={filterVal}
-            onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
-            className="w-32 px-2 py-1 text-xs rounded border bg-transparent text-[var(--text)] outline-none"
-            style={{ borderColor: 'var(--border)' }}
-            onKeyDown={e => e.key === 'Escape' && setActiveFilterCol(null)}
-            onBlur={() => setTimeout(() => setActiveFilterCol(null), 200)}
-          />
+        <div
+          className="absolute top-full left-0 z-20 mt-1.5 p-2 rounded-xl border shadow-lg min-w-[200px]"
+          style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
+        >
+          <div className="relative">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' }} />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder={`筛选${label}...`}
+              value={filterVal}
+              onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
+              className="w-full pl-7 pr-7 py-1.5 text-xs rounded-lg border bg-transparent text-[var(--text)] outline-none"
+              style={{ borderColor: 'var(--border)' }}
+              onKeyDown={e => e.key === 'Escape' && setActiveFilterCol(null)}
+              onBlur={() => setTimeout(() => setActiveFilterCol(null), 200)}
+            />
+            {filterVal && (
+              <button
+                onClick={() => { setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n }); setActiveFilterCol(null) }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer p-0 text-[var(--muted-foreground)] hover:text-[var(--text)]"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </th>
