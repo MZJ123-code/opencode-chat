@@ -2,6 +2,7 @@ import { Router } from "express"
 import { getClient } from "../services/opencode.js"
 import { getSessionMeta, recordMessage } from "../services/sessionService.js"
 import { incrementQuestions, saveStats } from "../services/statsService.js"
+import { recordQuestion } from "../services/analyticsService.js"
 import { MODEL, SMALL_MODEL } from "../config.js"
 import { logger } from "../logger/index.js"
 import { requireBody } from "../middleware/validate.js"
@@ -72,6 +73,7 @@ router.post("/", requireBody("sessionId", "message"), requireSessionOwnership(),
 
     recordMessage(ctx.sessionId)
     incrementQuestions()
+    recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
 
     const client = getClient()
     const promptStart = Date.now()
@@ -123,6 +125,7 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
 
     recordMessage(ctx.sessionId)
     incrementQuestions()
+    recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
     saveStats()
 
     const client = getClient()

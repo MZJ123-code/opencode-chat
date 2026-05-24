@@ -5,10 +5,12 @@
   "description": "Multi-user AI chat service based on OpenCode SDK",
   "scripts": {
     "dev": "bun --watch server/index.js",
-    "start": "bun server/index.js"
+    "start": "bun server/index.js",
+    "db:view": "bun scripts/view-db.js",
+    "db:sql": "bun scripts/sql-query.js"
   },
   "dependencies": {
-    "@opencode-ai/sdk": "^1.14.29",
+    "@opencode-ai/sdk": "1.14.29",
     "express": "^4.21.0"
   }
 }

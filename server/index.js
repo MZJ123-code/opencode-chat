@@ -6,7 +6,9 @@ import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
 import { startOpenCode, killOpenCode } from "./services/opencode.js"
 import { restoreStats, saveStatsSync } from "./services/statsService.js"
+import { initDatabase } from "./storage/database.js"
 
+initDatabase()
 restoreStats()
 try {
   await startOpenCode()

@@ -1,6 +1,6 @@
 # OpenCode Chat
 
-> 零认证、零数据库、双前端引擎的 OpenCode AI 对话平台。IP 即身份，打开浏览器就能用。
+> 零认证、IP 即身份、SQLite 统计分析 — 开箱即用的 AI 对话平台。
 
 ---
 
@@ -11,9 +11,10 @@
 | 🔑 | **零认证多用户** | 无需注册登录，IP 自动识别，团队内直接使用 |
 | 🏗️ | **双前端引擎** | React SPA（全功能）+ Vanilla JS（零构建兜底），任选 |
 | ⚡ | **SSE 实时流** | 事件环形缓冲区，断连回放，不丢消息 |
-| 🔄 | **AI 子会话导航** | Agent 可创建子任务，前端维护完整导航栈（进入/返回/回根） |
+| 🔄 | **AI 子会话导航** | Agent 可创建子任务，前端维护完整导航栈 |
 | 💬 | **AI 权限问答** | Agent 能主动请求权限、发起多步表单问答 |
-| 🗄️ | **零数据库** | 纯内存存储，`bun install && bun start` 即用 |
+| 🗄️ | **SQLite 统计分析** | 访问/提问/赞踩明细持久化存储，支持看板 |
+| 📊 | **数据看板** | 每日统计 + 赞踩明细，管理员独享入口 |
 | 🤖 | **多 Agent 模式** | 代码构建 / 架构规划 / 代码探索，按需切换 |
 | 🛡️ | **生产就绪** | IP 隔离+限流、会话 TTL 清理、日志轮转归档 |
 
@@ -76,7 +77,8 @@ cd client && bun run build && cd ..     # 生产构建（输出到 dist/）
 - **识别**：`x-forwarded-for` → `x-real-ip` → `socket.remoteAddress`，无需登录
 - **隔离**：`sessionGuard` 中间件验证会话归属
 - **过期**：7 天未活跃自动清理（每小时检查）
-- **存储**：进程内存（`Map`），重启丢失；统计快照异步写入 `logs/_stats.json`
+- **运行时**：进程内存（`Map`），重启丢失；统计快照异步写入 `logs/_stats.json`
+- **持久化**：访问/提问/赞踩明细写入 `logs/analytics.db`（SQLite）
 - **子会话**：AI `task` 工具创建子会话，SSE 事件自动维护导航栈
 
 ### 中间件链
@@ -94,24 +96,29 @@ opencode-chat/
 ├── server/                     # Express ESM 后端
 │   ├── index.js / app.js       # 入口 + Express 工厂
 │   ├── config.js / config.json # 配置
-│   ├── routes/                 # 9 组 API 路由
-│   ├── services/               # OpenCode SDK、会话、用户、统计、事件缓冲
+│   ├── routes/                 # 12 组 API 路由
+│   ├── services/               # OpenCode SDK、会话、用户、统计、分析
 │   ├── middleware/             # IP 解析、限流、会话守卫、日志、校验、错误处理
-│   ├── storage/store.js        # 内存数据存储（Map + Set）
+│   ├── storage/
+│   │   ├── store.js            # 内存数据存储（Map + Set）
+│   │   └── database.js         # SQLite 数据库初始化
 │   └── logger/                 # 彩色控制台 + 文件轮转日志
 │
 ├── client/                     # React 19 + TypeScript + Vite 6 前端
 │   └── src/
 │       ├── api/                # API 客户端（按资源拆分）
-│       ├── components/         # layout/ chat/ sidebar/ common/ ui/
+│       ├── components/         # layout/ chat/ sidebar/ common/ dashboard/
 │       ├── contexts/           # ChatContext + ThemeContext
 │       ├── hooks/              # useEvents（SSE 重连），useFeedback，useMediaQuery
 │       ├── types/              # message、session、api 类型定义
 │       └── styles/global.css   # Tailwind CSS v4 入口
 │
+├── scripts/
+│   ├── view-db.js              # 数据库概况查看工具
+│   └── sql-query.js            # 直接执行 SQL 查询工具
 ├── public/index.html           # Vanilla JS 版（零构建 fallback）
 ├── dist/                       # 构建产物（gitignore）
-└── logs/                       # 运行时日志（gitignore）
+└── logs/                       # 运行时日志 + analytics.db（gitignore）
 ```
 
 ---
@@ -128,7 +135,10 @@ opencode-chat/
 | `POST` | `/api/chat` | 同步发送 |
 | `POST` | `/api/chat/async` | 异步发送（SSE 接收回复） |
 | `GET` | `/api/events` | SSE 事件流 |
-| `GET` | `/api/stats` | 平台统计 |
+| `GET` | `/api/stats` | 平台统计（聚合） |
+| `GET` | `/api/stats/daily?days=30` | 每日统计明细（看板用） |
+| `GET` | `/api/stats/feedback-detail?limit=50` | 赞踩明细列表（看板用） |
+| `POST` | `/api/stats/visit` | 记录页面访问 |
 | `POST` | `/api/permission/respond` | 权限响应 |
 | `POST` | `/api/permission/question/reply` | 回复 AI 提问 |
 | `POST` | `/api/permission/question/reject` | 跳过提问 |
@@ -144,6 +154,89 @@ opencode-chat/
 
 ---
 
+## 数据库
+
+项目使用 **SQLite**（`bun:sqlite` 内置模块）持久化统计明细数据，文件位于 `logs/analytics.db`。
+
+### 表结构
+
+**`page_visits`** — 页面访问记录
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | INTEGER | 自增主键 |
+| `ip` | TEXT | 访客 IP |
+| `user_agent` | TEXT | 浏览器标识 |
+| `visit_date` | TEXT | 访问日期 |
+| `visited_at` | TEXT | 访问时间 |
+
+**`questions`** — 用户提问记录
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | INTEGER | 自增主键 |
+| `session_id` | TEXT | 会话 ID |
+| `ip` | TEXT | 提问者 IP |
+| `content` | TEXT | 问题原文 |
+| `agent` | TEXT | 使用的 Agent |
+| `question_date` | TEXT | 提问日期 |
+| `asked_at` | TEXT | 提问时间 |
+
+**`feedback`** — 赞踩记录
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | INTEGER | 自增主键 |
+| `session_id` | TEXT | 会话 ID |
+| `ip` | TEXT | 用户 IP |
+| `satisfied` | INTEGER | 1=点赞，0=点踩 |
+| `question_content` | TEXT | 关联的问题原文 |
+| `answer_content` | TEXT | AI 的回答原文 |
+| `feedback_date` | TEXT | 反馈日期 |
+| `created_at` | TEXT | 反馈时间 |
+
+---
+
+## 数据看板
+
+管理员独享入口，普通用户不可见。
+
+**访问方式**：在浏览器地址栏输入 `http://localhost:3000/#dashboard`
+
+看板包含：
+- 摘要卡片：总访客 / 总提问 / 今日访问 / 今日提问 / 反馈总数
+- 每日统计表：访问次数、访客数、提问数、点赞数、点踩数
+- 赞踩明细表：时间、IP、类型、问题内容
+
+看完点击「← 返回聊天」回到对话页。
+
+---
+
+## 数据库查看工具
+
+### 概况一览
+
+```bash
+bun run db:view              # 显示各表记录数
+bun run db:view visits       # 查看 page_visits 明细
+bun run db:view questions    # 查看 questions 明细
+bun run db:view feedback     # 查看 feedback 明细
+```
+
+### 任意 SQL 查询
+
+```bash
+bun run db:sql "SELECT * FROM page_visits LIMIT 10"
+bun run db:sql "SELECT visit_date, COUNT(*) as visits FROM page_visits GROUP BY visit_date"
+bun run db:sql "SELECT * FROM feedback ORDER BY id DESC LIMIT 20"
+bun run db:sql "SELECT ip, COUNT(*) as cnt FROM questions GROUP BY ip ORDER BY cnt DESC"
+bun run db:sql "PRAGMA table_info(page_visits)"
+bun run db:sql "SELECT name FROM sqlite_master WHERE type='table'"
+```
+
+### GUI 工具
+
+也可用 [DB Browser for SQLite](https://sqlitebrowser.org/) 打开 `logs/analytics.db` 直接浏览。
+
+---
+
 ## 技术栈
 
 | 层 | 技术 |
@@ -153,6 +246,7 @@ opencode-chat/
 | CSS | Tailwind CSS v4 + CSS Modules |
 | 后端 | Express.js 4.21 (ESM) |
 | AI SDK | `@opencode-ai/sdk` ^1.14 |
+| 数据库 | SQLite（`bun:sqlite` 内置） |
 | 日志 | 控制台 + 文件轮转 |
-| 存储 | 进程内存（Map），零数据库 |
+| 运行时 | Bun |
 | 图表 | mermaid + react-markdown + highlight.js |
