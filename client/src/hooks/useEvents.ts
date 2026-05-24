@@ -175,9 +175,8 @@ export function useEvents(handlers: EventHandlerMap) {
 
       es.onerror = () => {
         connectingRef.current = false
-        es.close()
         if (stopped) return
-        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s max
+        es.close()
         const delay = retryRef.current
         retryRef.current = Math.min(delay * 2, 30000)
         retryTimerRef.current = setTimeout(() => connect(), delay)
@@ -192,6 +191,7 @@ export function useEvents(handlers: EventHandlerMap) {
     connect()
     return () => {
       stopped = true
+      connectingRef.current = false
       esRef.current?.close()
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
     }
