@@ -1,5 +1,5 @@
 const windowMs = 15 * 60 * 1000 // 15 minutes
-const maxRequests = 100 // per window per IP
+const maxRequests = 200 // per window per IP
 
 const hits = new Map()
 
@@ -12,6 +12,11 @@ setInterval(() => {
 }, 5 * 60 * 1000).unref()
 
 export function rateLimiter(req, res, next) {
+  // SSE streams should not be rate-limited (they produce many events per second)
+  if (req.path === '/events' && req.headers.accept === 'text/event-stream') {
+    return next()
+  }
+
   const ip = req.clientIP || req.ip || "unknown"
   const now = Date.now()
 

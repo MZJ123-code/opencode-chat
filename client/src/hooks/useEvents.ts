@@ -36,6 +36,8 @@ export function useEvents(handlers: EventHandlerMap) {
   handlersRef.current = handlers
   const esRef = useRef<EventSource | null>(null)
   const retryRef = useRef(1000)
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const connectingRef = useRef(false)
 
   const handleEvent = useCallback((event: OpenCodeEvent) => {
     const h = handlersRef.current
@@ -154,8 +156,14 @@ export function useEvents(handlers: EventHandlerMap) {
   }, [])
 
   useEffect(() => {
+    let stopped = false
+
     function connect() {
+      if (stopped || connectingRef.current) return
+      connectingRef.current = true
+
       if (esRef.current) esRef.current.close()
+
       const es = new EventSource('/api/events')
       esRef.current = es
 
@@ -166,15 +174,26 @@ export function useEvents(handlers: EventHandlerMap) {
       }
 
       es.onerror = () => {
+        connectingRef.current = false
         es.close()
-        retryRef.current = Math.min(retryRef.current * 1.5, 30000)
-        setTimeout(() => connect(), retryRef.current)
+        if (stopped) return
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s max
+        const delay = retryRef.current
+        retryRef.current = Math.min(delay * 2, 30000)
+        retryTimerRef.current = setTimeout(() => connect(), delay)
       }
 
-      es.onopen = () => { retryRef.current = 1000 }
+      es.onopen = () => {
+        connectingRef.current = false
+        retryRef.current = 1000
+      }
     }
 
     connect()
-    return () => { esRef.current?.close() }
+    return () => {
+      stopped = true
+      esRef.current?.close()
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+    }
   }, [handleEvent])
 }
