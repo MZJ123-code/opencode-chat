@@ -1,7 +1,8 @@
 import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ChatMessage } from '../../types/message'
+import type { ChatMessage, ToolPart } from '../../types/message'
 import { PartRenderer } from './PartRenderer'
+import { ToolCallBlock } from './ToolCallBlock'
 import { FeedbackRow } from './FeedbackRow'
 import { TypingIndicator } from './TypingIndicator'
 import { EmptyState } from './EmptyState'
@@ -149,23 +150,82 @@ export function MessageList({
       const currentAiIdx = aiMsgIndex++
       const visibleParts = msg.parts.filter((p) => p.type !== 'reasoning')
 
-      visibleParts.forEach((part, partIdx) => {
+      let partIdx = 0
+      while (partIdx < visibleParts.length) {
+        const part = visibleParts[partIdx]
+
         if (part.type === 'text') {
           const text = 'text' in part ? part.text : ''
-          if (!text) return
+          if (!text) { partIdx++; continue }
         }
-        elements.push(
-          <motion.div
-            key={`ai-${msgIdx}-${partIdx}`}
-            custom={msgIdx}
-            variants={messageVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <PartRenderer part={part} role="assistant" />
-          </motion.div>
-        )
-      })
+
+        if (part.type === 'tool') {
+          const toolName = (part as ToolPart).tool
+          const groupStart = partIdx
+          while (
+            partIdx + 1 < visibleParts.length &&
+            visibleParts[partIdx + 1].type === 'tool' &&
+            (visibleParts[partIdx + 1] as ToolPart).tool === toolName
+          ) {
+            partIdx++
+          }
+          const count = partIdx - groupStart + 1
+
+          if (count > 1) {
+            const groupParts = visibleParts.slice(groupStart, partIdx + 1) as ToolPart[]
+            elements.push(
+              <motion.div
+                key={`ai-${msgIdx}-toolgroup-${partIdx}`}
+                custom={msgIdx}
+                variants={messageVariants}
+                initial="hidden"
+                animate="visible"
+                className={styles.toolGroup}
+              >
+                <details open>
+                  <summary className={styles.toolGroupSummary}>
+                    <span className={styles.toolGroupArrow}>▶</span>
+                    <span className={styles.toolGroupIcon}>🛠</span>
+                    <span className={styles.toolGroupName}>{toolName}</span>
+                    <span className={styles.toolGroupBadge}>调用 {count} 次</span>
+                  </summary>
+                  <div className={styles.toolGroupBody}>
+                    {groupParts.map((gp) => (
+                      <ToolCallBlock key={gp.id} part={gp} />
+                    ))}
+                  </div>
+                </details>
+              </motion.div>
+            )
+          } else {
+            elements.push(
+              <motion.div
+                key={`ai-${msgIdx}-tool-${partIdx}`}
+                custom={msgIdx}
+                variants={messageVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <ToolCallBlock part={part as ToolPart} />
+              </motion.div>
+            )
+          }
+        } else {
+          elements.push(
+            <motion.div
+              key={`ai-${msgIdx}-${partIdx}`}
+              custom={msgIdx}
+              variants={messageVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <PartRenderer part={part} role="assistant" />
+            </motion.div>
+          )
+        }
+
+        partIdx++
+      }
 
       const hasTextParts = visibleParts.some((p) => p.type === 'text')
       const nextMsg = messages[msgIdx + 1]

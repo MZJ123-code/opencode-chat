@@ -86,4 +86,59 @@
   background: var(--accent);
 }
 
+.toolGroup {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 85%;
+  margin-bottom: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+.toolGroupSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.toolGroupArrow {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  transition: transform .15s;
+}
+
+.toolGroupIcon {
+  font-size: 14px;
+}
+
+.toolGroupName {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.toolGroupBadge {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+
+.toolGroupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 
