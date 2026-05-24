@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
 import { motion } from 'framer-motion'
 import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail, recordVisit } from '../../api/stats'
 import type { BasicStats, DailyStatsItem, FeedbackDetailItem, VisitDetailItem, QuestionDetailItem } from '../../api/stats'
@@ -27,6 +27,15 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [questions, setQuestions] = useState<QuestionDetailItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<FilterValues>(defaultFilters)
+  const [expandedFeedback, setExpandedFeedback] = useState<Set<number>>(new Set())
+
+  const toggleFeedback = useCallback((id: number) => {
+    setExpandedFeedback(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     recordVisit()
@@ -244,23 +253,43 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredFeedback.map(row => (
-                  <tr key={row.id} className="border-t" style={{ borderColor: 'var(--border)' }}>
-                    <td className="px-4 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{row.created_at}</td>
-                    <td className="px-4 py-2.5 text-[var(--text)] font-mono whitespace-nowrap">{row.ip}</td>
-                    <td className="px-4 py-2.5 text-center whitespace-nowrap">
-                      <span style={{ color: row.satisfied ? '#22c55e' : '#ef4444' }}>
-                        {row.satisfied ? '👍' : '👎'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-[var(--text)] max-w-xs truncate" title={row.question_content}>
-                      {row.question_content || '-'}
-                    </td>
-                    <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs truncate" title={row.answer_content}>
-                      {row.answer_content || '-'}
-                    </td>
-                  </tr>
-                ))}
+                {filteredFeedback.map(row => {
+                  const expanded = expandedFeedback.has(row.id)
+                  const qLong = (row.question_content?.length || 0) > 100
+                  const aLong = (row.answer_content?.length || 0) > 100
+                  return (
+                    <Fragment key={row.id}>
+                      <tr className="border-t" style={{ borderColor: 'var(--border)' }}>
+                        <td className="px-4 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{row.created_at}</td>
+                        <td className="px-4 py-2.5 text-[var(--text)] font-mono whitespace-nowrap">{row.ip}</td>
+                        <td className="px-4 py-2.5 text-center whitespace-nowrap">
+                          <span style={{ color: row.satisfied ? '#22c55e' : '#ef4444' }}>
+                            {row.satisfied ? '👍' : '👎'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-[var(--text)] max-w-xs">
+                          {expanded || !qLong
+                            ? row.question_content || '-'
+                            : <span title={row.question_content}>{row.question_content?.slice(0, 100)}… <button onClick={() => toggleFeedback(row.id)} className="text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">展开</button></span>}
+                        </td>
+                        <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs">
+                          {expanded || !aLong
+                            ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{row.answer_content || '-'}</span>
+                            : <span title={row.answer_content}>{row.answer_content?.slice(0, 100)}… <button onClick={() => toggleFeedback(row.id)} className="text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">展开</button></span>}
+                        </td>
+                      </tr>
+                      {expanded && (qLong || aLong) && (
+                        <tr style={{ background: 'var(--secondary)' }}>
+                          <td colSpan={5} className="px-4 py-2.5">
+                            <div className="flex justify-end">
+                              <button onClick={() => toggleFeedback(row.id)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">收起</button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })}
                 {filteredFeedback.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-[var(--text-secondary)]">暂无数据</td>
