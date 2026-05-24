@@ -29,6 +29,8 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<FilterValues>(defaultFilters)
   const [modal, setModal] = useState<{ title: string; content: string } | null>(null)
+  const [sortKey, setSortKey] = useState<string>('created_at')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     recordVisit()
@@ -95,8 +97,22 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     if (filters.satisfaction === 'liked') items = items.filter(f => f.satisfied)
     if (filters.satisfaction === 'disliked') items = items.filter(f => !f.satisfied)
     if (filters.ipSearch) items = items.filter(f => f.ip.includes(filters.ipSearch))
+    items.sort((a, b) => {
+      let va: string | number = (a as any)[sortKey] ?? ''
+      let vb: string | number = (b as any)[sortKey] ?? ''
+      if (sortKey === 'satisfied') { va = va ? 1 : 0; vb = vb ? 1 : 0 }
+      if (typeof va === 'string') va = va.toLowerCase()
+      if (typeof vb === 'string') vb = vb.toLowerCase()
+      return va < vb ? -1 : va > vb ? 1 : 0
+    })
+    if (sortDir === 'desc') items.reverse()
     return items
-  }, [feedback, filters.dateFrom, filters.dateTo, filters.satisfaction, filters.ipSearch])
+  }, [feedback, filters.dateFrom, filters.dateTo, filters.satisfaction, filters.ipSearch, sortKey, sortDir])
+
+  const handleSort = useCallback((key: string) => {
+    setSortDir(prev => sortKey === key && prev === 'asc' ? 'desc' : 'asc')
+    setSortKey(key)
+  }, [sortKey])
 
   if (loading) {
     return (
@@ -238,11 +254,11 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
             <table className="w-full text-xs min-w-[550px]" style={{ background: 'var(--chat-bg)' }}>
               <thead>
                 <tr className="text-[var(--text-secondary)]" style={{ background: 'var(--secondary)' }}>
-                  <th className="text-left px-4 py-2.5 font-medium whitespace-nowrap">时间</th>
-                  <th className="text-left px-4 py-2.5 font-medium whitespace-nowrap">IP</th>
-                  <th className="text-center px-4 py-2.5 font-medium whitespace-nowrap">类型</th>
-                  <th className="text-left px-4 py-2.5 font-medium whitespace-nowrap">问题内容</th>
-                  <th className="text-left px-4 py-2.5 font-medium whitespace-nowrap">AI 回答</th>
+                  <SortTh label="时间" sortKey="created_at" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortTh label="IP" sortKey="ip" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortTh label="类型" sortKey="satisfied" currentKey={sortKey} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="问题内容" sortKey="question_content" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortTh label="AI 回答" sortKey="answer_content" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
                 </tr>
               </thead>
               <tbody>
@@ -332,6 +348,23 @@ function SectionTitle({ title, action }: { title: string; action?: React.ReactNo
       <h2 className="text-sm font-semibold text-[var(--text)]">{title}</h2>
       {action}
     </div>
+  )
+}
+
+function SortTh({ label, sortKey, currentKey, dir, onSort, center }: {
+  label: string; sortKey: string; currentKey: string; dir: 'asc' | 'desc'; onSort: (k: string) => void; center?: boolean
+}) {
+  const active = currentKey === sortKey
+  return (
+    <th
+      onClick={() => onSort(sortKey)}
+      className={`${center ? 'text-center' : 'text-left'} px-4 py-2.5 font-medium whitespace-nowrap cursor-pointer select-none hover:text-[var(--text)] transition-colors`}
+    >
+      {label}
+      <span className="ml-1 text-[10px]" style={{ color: active ? 'var(--accent)' : 'var(--muted-foreground)' }}>
+        {active ? (dir === 'asc' ? '▲' : '▼') : '▽'}
+      </span>
+    </th>
   )
 }
 
