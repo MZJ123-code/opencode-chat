@@ -59,17 +59,6 @@ npm start
 | POST | `/api/permission/question/reject` | 问题跳过 |
 | GET | `/api/agents` | 可用 AI Agent 列表 |
 
-## 已知死代码（可安全删除）
-
-| 文件 | 内容 | 原因 |
-|------|------|------|
-| `server/services/statsService.js:6` | `recordVisit()` | 从未被调用 |
-| `server/services/statsService.js:10` | `incrementSessions()` | 从未被调用 |
-| `server/services/userService.js:25` | `getVisitorInfo()` | 从未被引入 |
-| `client/src/api/permission.ts:13` | `respondPermission()` | 从未被引入 |
-| `client/src/components/ui/` | `input.tsx`, `skeleton.tsx`, `tooltip.tsx`, `separator.tsx`, `sheet.tsx`, `scroll-area.tsx`, `avatar.tsx` | shadcn 生成的占位组件，未被任何代码引用 |
-| `server/config.json:63-67` | agent 条目 `"门子俊"` (agent: "explore") | 与上方 `"代码探索"` 重复的测试数据 |
-
 ## 团队约定（源自代码，未文档化）
 
 - 所有代码用中文注释/日志/错误信息

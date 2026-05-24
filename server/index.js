@@ -4,7 +4,7 @@ import os from "os"
 import { PORT, HOSTNAME, PUBLIC_DIR, isProduction, MODEL, SMALL_MODEL, AGENT_OPTIONS } from "./config.js"
 import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
-import { startOpenCode, getServer } from "./services/opencode.js"
+import { startOpenCode, killOpenCode } from "./services/opencode.js"
 import { restoreStats, saveStatsSync } from "./services/statsService.js"
 
 restoreStats()
@@ -27,7 +27,8 @@ app.get("*", (req, res) => {
 })
 
 // 启动 HTTP 服务
-app.listen(PORT, HOSTNAME, () => {
+let httpServer
+httpServer = app.listen(PORT, HOSTNAME, () => {
   const banner = [
     `\n========================================`,
     `  AI 咨询平台已启动`,
@@ -56,14 +57,17 @@ app.listen(PORT, HOSTNAME, () => {
 function shutdown() {
   logger.info("正在关闭服务...")
   saveStatsSync()
-  try {
-    const server = getServer()
-    server.close?.()
-  } catch {
-    // Server may not be initialized yet
+  killOpenCode()
+  if (httpServer) {
+    httpServer.close(() => {
+      logger.info("HTTP 服务已关闭")
+      process.exit(0)
+    })
+    // 5 秒超时强制退出
+    setTimeout(() => process.exit(0), 5000).unref()
+  } else {
+    process.exit(0)
   }
-  logger.info("服务已关闭")
-  process.exit(0)
 }
 
 process.on("SIGINT", shutdown)

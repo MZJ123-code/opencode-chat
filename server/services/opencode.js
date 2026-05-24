@@ -50,6 +50,17 @@ export async function startOpenCode() {
   return { client: _client, server: _server }
 }
 
+export function killOpenCode() {
+  if (_server) {
+    try { _server.process?.stdout?.removeAllListeners?.() } catch {}
+    try { _server.process?.stderr?.removeAllListeners?.() } catch {}
+    try { _server.close?.() } catch {}
+    try { _server.process?.kill?.() } catch {}
+    _client = null
+    _server = null
+  }
+}
+
 /**
  * @returns {import("@opencode-ai/sdk/v2").OpencodeClient}
  */

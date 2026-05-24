@@ -13,7 +13,7 @@ export function getClientIP(req) {
 export function ensureIP(ip) {
   if (!ipUsers.has(ip)) {
     ipUsers.set(ip, { sessionIds: new Set() })
-    ipSessions.set(ip, [])
+    ipSessions.set(ip, new Set())
     stats.visitors.add(ip)
     logger.info(`新访客: ${ip}`, {
       visitor_count: stats.visitors.size,

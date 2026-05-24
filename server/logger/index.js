@@ -28,7 +28,6 @@ async function maybeArchive() {
   const dest = archiveName()
   await fsp.rename(serverLog, dest)
 
-  // prune old archives
   const entries = await fsp.readdir(LOG_DIR)
   const archives = entries
     .filter(f => f.startsWith("server-") && f.endsWith(".log"))
@@ -39,18 +38,38 @@ async function maybeArchive() {
   }
 }
 
+function safeStringify(data) {
+  if (data === undefined) return ""
+  if (typeof data !== "object") return String(data)
+  try {
+    return JSON.stringify(data)
+  } catch {
+    return String(data)
+  }
+}
+
+// debounce maybeArchive to avoid fs.stat on every log line
+let archiveTimer = null
+function debouncedArchive() {
+  if (archiveTimer) return
+  archiveTimer = setTimeout(() => {
+    archiveTimer = null
+    maybeArchive()
+  }, 5000).unref()
+}
+
 function append(line, level) {
   const prefix =
     level === "ERROR" ? "\x1b[31m" : level === "WARN" ? "\x1b[33m" : level === "INFO" ? "\x1b[36m" : "\x1b[90m"
   console.log(`${prefix}${line}\x1b[0m`)
-  enqueue(() => fsp.appendFile(serverLog, line + "\n").then(maybeArchive))
+  enqueue(() => fsp.appendFile(serverLog, line + "\n").then(() => debouncedArchive()))
 }
 
 function write(level, message, data) {
   const t = ts()
   let line = `[${t}] [${level}] ${message}`
   if (data !== undefined) {
-    line += " | " + (typeof data === "object" ? JSON.stringify(data) : data)
+    line += " | " + safeStringify(data)
   }
   append(line, level)
 }

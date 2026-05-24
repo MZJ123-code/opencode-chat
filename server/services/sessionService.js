@@ -10,9 +10,9 @@ const MAX_MESSAGES_PER_SESSION = 10_000
 
 function evictOldestSession(ip) {
   const ids = ipSessions.get(ip)
-  if (!ids || ids.length === 0) return
-  const oldestId = ids[0]
-  ids.shift()
+  if (!ids || ids.size === 0) return
+  const oldestId = ids.values().next().value
+  ids.delete(oldestId)
   ipUsers.get(ip)?.sessionIds.delete(oldestId)
   sessionMeta.delete(oldestId)
   logger.warn(`超限淘汰会话: ${oldestId}`, { ip })
@@ -20,8 +20,8 @@ function evictOldestSession(ip) {
 
 export async function createSession(ip, title, agent = null) {
   // 超过单 IP 上限时淘汰最旧会话
-  const existing = ipSessions.get(ip) || []
-  if (existing.length >= MAX_SESSIONS_PER_IP) {
+  const existing = ipSessions.get(ip)
+  if (existing && existing.size >= MAX_SESSIONS_PER_IP) {
     evictOldestSession(ip)
   }
 
@@ -39,11 +39,7 @@ export async function createSession(ip, title, agent = null) {
       const oldestMeta = sessionMeta.get(oldestId)
       const ownerIp = oldestMeta?.ip
       if (ownerIp) {
-        const ownerIds = ipSessions.get(ownerIp)
-        if (ownerIds) {
-          const idx = ownerIds.indexOf(oldestId)
-          if (idx !== -1) ownerIds.splice(idx, 1)
-        }
+        ipSessions.get(ownerIp)?.delete(oldestId)
         ipUsers.get(ownerIp)?.sessionIds.delete(oldestId)
       }
       sessionMeta.delete(oldestId)
@@ -58,7 +54,7 @@ export async function createSession(ip, title, agent = null) {
   const sessionId = result.data.id
 
   ipUsers.get(ip).sessionIds.add(sessionId)
-  ipSessions.get(ip).push(sessionId)
+  ipSessions.get(ip).add(sessionId)
   sessionMeta.set(sessionId, { ip, createdAt: Date.now(), title, messageCount: 0, agent })
   stats.totalSessions++
 
