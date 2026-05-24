@@ -255,7 +255,7 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
                         {row.satisfied ? '👍' : '👎'}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-[var(--text)] max-w-xs align-top">
+                    <td className="px-4 py-2.5 text-[var(--text)] max-w-xs align-middle">
                       {row.question_content ? (
                         <ContentView
                           text={row.question_content}
@@ -264,7 +264,7 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
                         />
                       ) : '-'}
                     </td>
-                    <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs align-top">
+                    <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs align-middle">
                       {row.answer_content ? (
                         <ContentView
                           text={row.answer_content}
