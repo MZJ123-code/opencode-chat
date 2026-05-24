@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Sidebar } from './components/layout/Sidebar'
 import { ChatArea } from './components/layout/ChatArea'
 import { SidebarHeader } from './components/sidebar/SidebarHeader'
@@ -8,10 +8,17 @@ import { MessageList } from './components/chat/MessageList'
 import { ChatInput } from './components/chat/ChatInput'
 import { AgentSelector } from './components/chat/AgentSelector'
 import { ErrorBanner } from './components/common/ErrorBanner'
+import { DashboardPage } from './components/dashboard/DashboardPage'
 import { useChatContext } from './contexts/ChatContext'
+import { recordVisit } from './api/stats'
+
+type View = 'chat' | 'dashboard'
 
 /** 应用根组件 */
 export default function App() {
+  const [view, setView] = useState<View>(() =>
+    window.location.hash === '#dashboard' ? 'dashboard' : 'chat'
+  )
   const {
     currentSessionId, setCurrentSessionId, currentSession,
     sessions, sessionsLoading, isCreating,
@@ -23,6 +30,29 @@ export default function App() {
     createSession, loadHistory, clearMessages, sendMessage, abortMessage,
     agents, agentsLoading, setSelectedAgent,
   } = useChatContext()
+
+  useEffect(() => {
+    recordVisit()
+  }, [])
+
+  // 监听 hash 变化切换看板
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.location.hash === '#dashboard') {
+        setView('dashboard')
+      } else {
+        // 只有当前在看板时才切回聊天，避免干扰正常使用
+        setView(v => v === 'dashboard' ? 'chat' : v)
+      }
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  const handleHideDashboard = useCallback(() => {
+    window.history.replaceState(null, '', window.location.pathname)
+    setView('chat')
+  }, [])
 
   const handleCreateSession = useCallback(async (agent?: string) => {
     const id = await createSession(agent)
@@ -62,6 +92,10 @@ export default function App() {
   const handleSubmitFeedback = useCallback(async (sessionId: string, satisfied: boolean, msgIdx: number) => {
     await submitFeedback(sessionId, satisfied, msgIdx)
   }, [submitFeedback])
+
+  if (view === 'dashboard') {
+    return <DashboardPage onBack={handleHideDashboard} />
+  }
 
   return (
     <>
