@@ -1,14 +1,26 @@
 import fs from "fs"
 import path from "path"
-import { STATS_FILE } from "../config.js"
-import { logger } from "../logger/index.js"
+import { LOG_DIR } from "../config.js"
+import { stats, sessionMeta } from "../storage/store.js"
 
-/** 内存统计 */
-export const stats = {
-  questions: 0,
-  sessions: 0,
-  blockedAccess: 0,
-  dailyStats: {},
+const statsPath = path.join(LOG_DIR, "_stats.json")
+
+/**
+ * 从磁盘文件恢复统计数据和活跃 IP 列表
+ */
+export function restoreStats() {
+  try {
+    const raw = fs.readFileSync(statsPath, "utf-8")
+    const data = JSON.parse(raw)
+    if (data.visitors) stats.visitors = new Set(data.activeIPs || [])
+    if (data.totalSessions) stats.totalSessions = data.totalSessions
+    if (data.totalQuestions) stats.totalQuestions = data.totalQuestions
+    if (data.satisfied) stats.satisfied = data.satisfied
+    if (data.unsatisfied) stats.unsatisfied = data.unsatisfied
+    if (data.blockedAccess) stats.blockedAccess = data.blockedAccess
+  } catch {
+    // 首次运行或无文件，使用默认值
+  }
 }
 
 /**
@@ -95,12 +107,7 @@ function writeStatsSnapshot() {
  * 同步写入统计到磁盘（进程退出时保证落盘）
  */
 export function saveStatsSync() {
-  try {
-    writeStatsSnapshot()
-    logger.info("统计数据已同步保存到磁盘")
-  } catch (err) {
-    logger.error(`统计数据同步保存失败: ${err.message}`)
-  }
+  try { writeStatsSnapshot() } catch { /* 静默失败，不阻塞退出 */ }
 }
 
 /**
@@ -113,10 +120,6 @@ export function saveStats() {
   if (writeTimer) return
   writeTimer = setTimeout(() => {
     writeTimer = null
-    try {
-      writeStatsSnapshot()
-    } catch (err) {
-      logger.error(`统计数据定时保存失败: ${err.message}`)
-    }
+    try { writeStatsSnapshot() } catch { /* 静默失败 */ }
   }, WRITE_INTERVAL).unref()
 }
