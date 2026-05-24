@@ -65,7 +65,7 @@ export async function createSession(ip, title, agent = null) {
   const sessionId = result.data.id
 
   ipUsers.get(ip).sessionIds.add(sessionId)
-  ipSessions.get(ip).add(sessionId)
+  ipSessions.get(ip).push(sessionId)
   sessionMeta.set(sessionId, { ip, createdAt: Date.now(), title, messageCount: 0, agent })
   stats.totalSessions++
 

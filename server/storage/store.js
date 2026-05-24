@@ -9,7 +9,7 @@
 
 /** @type {Map<string, {sessionIds: Set<string>}>} IP → 用户数据 */
 export const ipUsers = new Map()
-/** @type {Map<string, Set<string>>} IP → 会话 ID 集合（Set 保证无重复） */
+/** @type {Map<string, string[]>} IP → 会话 ID 列表 */
 export const ipSessions = new Map()
 /** @type {Map<string, SessionMeta>} 会话 ID → 会话元数据 */
 export const sessionMeta = new Map()

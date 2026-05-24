@@ -21,22 +21,35 @@
 
 ## 快速启动
 
-```bash
-# 1. 安装
-npm install
-cd client && npm install && cd ..
-
-# 2. 构建前端（首次或更新后）
-cd client && npm run build && cd ..
-
-# 3. 启动
-npm run dev        # 开发模式（--watch 自动重启）
-# npm start       # 生产模式
-```
-
 > **前置条件**：Node.js >= 18，本地已安装 OpenCode CLI（`opencode` 命令可用）
 
-**开发 HMR**：`cd client && npm run dev` → Vite dev server @ `:5173`，代理 `/api` → `:3000`
+> **前置条件**：Bun，本地已安装 OpenCode CLI（`opencode` 命令可用）
+
+### 后端
+
+```bash
+# 安装依赖
+bun install
+
+# 开发模式（--watch 自动重启）
+bun run dev
+
+# 生产模式
+bun start
+```
+
+### 前端
+
+```bash
+# 安装依赖
+cd client && bun install && cd ..
+
+# 开发模式（Vite HMR @ :5173）
+cd client && bun run dev
+
+# 生产构建（输出到 dist/）
+cd client && bun run build && cd ..
+```
 
 ### 环境变量
 

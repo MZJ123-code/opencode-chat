@@ -3,13 +3,13 @@
 ## 快速命令
 
 ```bash
-npm install
-cd client && npm install && cd ..
+bun install
+cd client && bun install && cd ..
 
-npm run dev              # 后端（--watch 自动重启）
-cd client && npm run dev # 前端 Vite HMR @ :5173，代理 /api → :3000
-cd client && npm run build && cd .. # tsc -b → vite build → ../dist/
-npm start                # 生产启动
+bun run dev              # 后端（--watch 自动重启）
+cd client && bun run dev # 前端 Vite HMR @ :5173，代理 /api → :3000
+cd client && bun run build && cd .. # tsc -b → vite build → ../dist/
+bun start                # 生产启动
 ```
 
 ## 架构关键点
