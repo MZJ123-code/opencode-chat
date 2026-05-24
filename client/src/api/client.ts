@@ -8,12 +8,24 @@ export async function api<T>(method: string, url: string, body?: unknown): Promi
   if (body !== undefined) opts.body = JSON.stringify(body)
 
   const res = await fetch(url, opts)
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({} as Record<string, unknown>))
+  const text = await res.text()
+
+  let data: Record<string, unknown> = {}
+  let isJSON = true
+  try {
+    data = JSON.parse(text)
+  } catch {
+    isJSON = false
+    console.warn(`[API] ${res.status} ${method} ${url} 返回非 JSON, 前200字符:`, text.slice(0, 200))
+  }
+
+  if (!res.ok || !isJSON) {
+    const msg = isJSON && (data.error as string || '')
     throw new ApiError(
-      (json.error as string) || `${res.status} ${res.statusText}`,
+      msg || `${res.status} ${res.statusText}`,
       res.status
     )
   }
-  return res.json() as Promise<T>
+
+  return data as T
 }

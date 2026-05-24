@@ -8,7 +8,8 @@ export const rateLimiter = rateLimit({
   max: maxRequests,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.clientIP || req.ip || "unknown",
+  keyGenerator: (req) => req.clientIP,
+  validate: { keyGeneratorIpFallback: false },
   skip: (req) => req.path === "/events" && req.headers.accept === "text/event-stream",
   message: { error: "请求过于频繁，请稍后再试" },
 })

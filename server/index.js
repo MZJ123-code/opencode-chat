@@ -15,6 +15,9 @@ const app = createApp()
 // 静态文件服务 & SPA fallback
 app.use(express.static(PUBLIC_DIR))
 app.get("*", (req, res) => {
+  if (req.path.startsWith("/api")) {
+    logger.warn(`API 路由未命中，返回 SPA fallback: ${req.method} ${req.path}`, { ip: req.clientIP })
+  }
   res.sendFile(path.join(PUBLIC_DIR, "index.html"))
 })
 

@@ -1,22 +1,32 @@
-import { validateOwnership, getSessionMeta } from "../services/sessionService.js"
+import { validateOwnership, getSessionMeta, tryRegisterSession } from "../services/sessionService.js"
 import { recordBlockedAccess } from "../services/statsService.js"
 import { saveStats } from "../services/statsService.js"
 import { logger } from "../logger/index.js"
 
 export function requireSessionOwnership(paramName = "id") {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     const ip = req.clientIP
     const sessionId = req.params[paramName] || req.body.sessionId
 
-    if (!sessionId || !validateOwnership(ip, sessionId)) {
+    if (!sessionId) {
       recordBlockedAccess()
-      const meta = sessionId ? getSessionMeta(sessionId) : null
-      logger.warn(`访问被拒绝: ${ip} -> ${sessionId}`, {
-        session_exists: !!meta,
-      })
       saveStats()
       return res.status(403).json({ error: "无权访问此会话" })
     }
-    next()
+
+    // 先本地检查
+    if (validateOwnership(ip, sessionId)) return next()
+
+    // 本地未找到，尝试从 OpenCode SDK 懒注册
+    const registered = await tryRegisterSession(ip, sessionId)
+    if (registered) return next()
+
+    // 最终失败
+    recordBlockedAccess()
+    logger.warn(`访问被拒绝: ${ip} -> ${sessionId}`, {
+      session_exists: !!getSessionMeta(sessionId),
+    })
+    saveStats()
+    return res.status(403).json({ error: "无权访问此会话" })
   }
 }

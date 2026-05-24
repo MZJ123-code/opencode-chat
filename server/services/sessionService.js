@@ -120,3 +120,23 @@ export function validateOwnership(ip, sessionId) {
   const user = ipUsers.get(ip)
   return user && user.sessionIds.has(sessionId)
 }
+
+// 懒注册：本地未找到会话时，从 OpenCode 验证并自动注册
+export async function tryRegisterSession(ip, sessionId) {
+  if (sessionMeta.has(sessionId)) return true
+  // 仅当用户已有本地会话时才尝试懒注册（降低越权风险）
+  const user = ipUsers.get(ip)
+  if (!user || user.sessionIds.size === 0) return false
+
+  try {
+    const client = getClient()
+    await client.session.messages({ sessionID: sessionId })
+    sessionMeta.set(sessionId, { ip, createdAt: Date.now(), title: "子任务", messageCount: 0, agent: null })
+    user.sessionIds.add(sessionId)
+    ipSessions.get(ip)?.push(sessionId)
+    logger.info(`懒注册会话: ${sessionId}`, { ip })
+    return true
+  } catch {
+    return false
+  }
+}

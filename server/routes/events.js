@@ -1,6 +1,8 @@
 import { Router } from "express"
 import { getClient } from "../services/opencode.js"
 import { logger } from "../logger/index.js"
+import { ipUsers, ipSessions, sessionMeta } from "../storage/store.js"
+import { validateOwnership } from "../services/sessionService.js"
 
 const router = Router()
 
@@ -63,6 +65,49 @@ router.get("/", async (req, res) => {
           ...(hasParentID ? { parentID: hasParentID } : {}),
         }
         logger.info(`SSE: ${event.type}`, logData)
+      }
+
+      // 自动注册 OpenCode task 工具创建的子会话
+      if (event.type === "session.created" && props.info) {
+        const info = props.info
+        const childSid = info.id
+        const parentSid = info.parentID
+        if (childSid && parentSid && !sessionMeta.has(childSid)) {
+          // 验证父会话属于当前 IP
+          if (validateOwnership(ip, parentSid)) {
+            const title = info.title || "子任务"
+            sessionMeta.set(childSid, {
+              ip,
+              createdAt: Date.now(),
+              title,
+              messageCount: 0,
+              agent: null,
+            })
+            ipUsers.get(ip)?.sessionIds.add(childSid)
+            const arr = ipSessions.get(ip)
+            if (arr) arr.push(childSid)
+            logger.info(`子会话已注册: ${childSid}`, { parent: parentSid, ip, title })
+          }
+        }
+      }
+
+      // 会话删除时清理本地记录
+      if (event.type === "session.deleted" && props.info?.id) {
+        const deletedSid = props.info.id
+        if (sessionMeta.has(deletedSid)) {
+          const meta = sessionMeta.get(deletedSid)
+          sessionMeta.delete(deletedSid)
+          const ownerIp = meta?.ip
+          if (ownerIp) {
+            ipUsers.get(ownerIp)?.sessionIds.delete(deletedSid)
+            const arr = ipSessions.get(ownerIp)
+            if (arr) {
+              const idx = arr.indexOf(deletedSid)
+              if (idx !== -1) arr.splice(idx, 1)
+            }
+          }
+          logger.info(`会话已清理: ${deletedSid}`, { ip: ownerIp })
+        }
       }
 
       const data = JSON.stringify(event)
