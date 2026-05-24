@@ -402,31 +402,60 @@ function ColHeader({ label, colKey, sortKey, sortDir, onSort, columnFilters, set
 
       {activeFilterCol === colKey && (
         <div
-          className="absolute top-full left-0 z-20 mt-1.5 p-2 rounded-xl border shadow-lg min-w-[200px]"
+          className="absolute top-full left-0 z-20 mt-1.5 p-2 rounded-xl border shadow-lg min-w-[180px]"
           style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
         >
-          <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' }} />
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder={`筛选${label}...`}
-              value={filterVal}
-              onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
-              className="w-full pl-7 pr-7 py-1.5 text-xs rounded-lg border bg-transparent text-[var(--text)] outline-none"
-              style={{ borderColor: 'var(--border)' }}
-              onKeyDown={e => e.key === 'Escape' && setActiveFilterCol(null)}
-              onBlur={() => setTimeout(() => setActiveFilterCol(null), 200)}
-            />
-            {filterVal && (
-              <button
-                onClick={() => { setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n }); setActiveFilterCol(null) }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer p-0 text-[var(--muted-foreground)] hover:text-[var(--text)]"
-              >
-                <X size={13} />
-              </button>
-            )}
-          </div>
+          {colKey === 'satisfied' ? (
+            <div className="flex gap-2">
+              {(['赞', '踩'] as const).map(opt => {
+                const active = filterVal === opt
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      if (active) {
+                        setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n })
+                      } else {
+                        setColumnFilters(prev => ({ ...prev, [colKey]: opt }))
+                      }
+                      setActiveFilterCol(null)
+                    }}
+                    className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border bg-transparent cursor-pointer transition-colors"
+                    style={{
+                      borderColor: active ? (opt === '赞' ? '#22c55e' : '#ef4444') : 'var(--border)',
+                      color: active ? '#fff' : 'var(--text-secondary)',
+                      background: active ? (opt === '赞' ? '#22c55e' : '#ef4444') : 'transparent',
+                    }}
+                  >
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' }} />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder={`筛选${label}...`}
+                value={filterVal}
+                onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
+                className="w-full pl-7 pr-7 py-1.5 text-xs rounded-lg border bg-transparent text-[var(--text)] outline-none"
+                style={{ borderColor: 'var(--border)' }}
+                onKeyDown={e => e.key === 'Escape' && setActiveFilterCol(null)}
+                onBlur={() => setTimeout(() => setActiveFilterCol(null), 200)}
+              />
+              {filterVal && (
+                <button
+                  onClick={() => { setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n }); setActiveFilterCol(null) }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer p-0 text-[var(--muted-foreground)] hover:text-[var(--text)]"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </th>
