@@ -1,11 +1,16 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import type { ChatPart } from '../types/message'
 
+/** SSE 连接状态 */
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
 
+/** SSE 事件结构 */
 export interface OpenCodeEvent {
+  /** 事件 ID */
   id: string
+  /** 事件类型 */
   type: string
+  /** 事件属性 */
   properties: Record<string, unknown>
 }
 
@@ -34,6 +39,11 @@ interface EventHandlerMap {
   onStepEnded?: (sessionID: string, finish: string, cost: number, tokens: Record<string, unknown>) => void
 }
 
+/**
+ * SSE 事件流 Hook，监听服务端推送的实时事件
+ * @param handlers - 事件处理器映射
+ * @returns 连接状态
+ */
 export function useEvents(handlers: EventHandlerMap): { connectionStatus: ConnectionStatus } {
   const handlersRef = useRef(handlers)
   handlersRef.current = handlers
@@ -179,7 +189,7 @@ export function useEvents(handlers: EventHandlerMap): { connectionStatus: Connec
         try {
           handleEvent(JSON.parse(e.data) as OpenCodeEvent)
         } catch (err) {
-          console.warn('[SSE] 事件解析失败:', err, e.data)
+          if (import.meta.env.DEV) console.warn('[SSE] 事件解析失败:', err, e.data)
         }
       }
 

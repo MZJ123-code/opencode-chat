@@ -10,6 +10,12 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
+/**
+ * 错误边界组件，捕获子组件渲染异常
+ * @param props - 组件属性
+ * @param props.children - 子组件
+ * @param props.fallback - 可选的错误回退 UI
+ */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)
@@ -21,7 +27,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[ErrorBoundary]', error, info.componentStack)
+    if (import.meta.env.DEV) console.error('[ErrorBoundary]', error, info.componentStack)
   }
 
   render() {

@@ -10,6 +10,7 @@ import { AgentSelector } from './components/chat/AgentSelector'
 import { ErrorBanner } from './components/common/ErrorBanner'
 import { useChatContext } from './contexts/ChatContext'
 
+/** 应用根组件 */
 export default function App() {
   const {
     currentSessionId, setCurrentSessionId, currentSession,

@@ -1,9 +1,17 @@
-// 每 IP 保留最近 N 条事件，断连后新连接可回放
+/** @type {number} 每 IP 事件缓冲区最大条数 */
 const MAX_BUFFER = 200
-const BUFFER_TTL = 5 * 60 * 1000 // 5 分钟空闲后清理
+/** @type {number} 缓冲区空闲 TTL（5 分钟） */
+const BUFFER_TTL = 5 * 60 * 1000
 
-const buffers = new Map() // ip -> { events: Event[], seq: number, lastAccess: number }
+/** @type {Map<string, {events: Array<Record<string, unknown>>, seq: number, lastAccess: number}>} IP → 事件缓冲区 */
+const buffers = new Map()
 
+/**
+ * 向指定 IP 的事件缓冲区推入一条新事件
+ * @param {string} ip - 客户端 IP
+ * @param {Record<string, unknown>} event - 事件对象
+ * @returns {number} 当前序列号
+ */
 export function pushEvent(ip, event) {
   let buf = buffers.get(ip)
   if (!buf) {
@@ -19,7 +27,12 @@ export function pushEvent(ip, event) {
   return buf.seq
 }
 
-// sinceSeq=0 回放全部，>0 只回放增量
+/**
+ * 获取缓冲事件，支持增量回放
+ * @param {string} ip - 客户端 IP
+ * @param {number} [sinceSeq=0] - 起始序列号，0 回放全部
+ * @returns {{ events: Array<Record<string, unknown>>, latestSeq: number }} 事件列表和最新序列号
+ */
 export function getBufferedEvents(ip, sinceSeq = 0) {
   const buf = buffers.get(ip)
   if (!buf) return { events: [], latestSeq: 0 }
@@ -33,6 +46,10 @@ export function getBufferedEvents(ip, sinceSeq = 0) {
   }
 }
 
+/**
+ * 删除指定 IP 的事件缓冲区
+ * @param {string} ip - 客户端 IP
+ */
 export function removeBuffer(ip) {
   buffers.delete(ip)
 }

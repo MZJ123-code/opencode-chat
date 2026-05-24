@@ -1,3 +1,9 @@
+/**
+ * 请求体验证中间件工厂，检查必填字段是否存在且非空
+ * 对 message 字段额外校验其类型为字符串
+ * @param {...string} fields - 必填字段名列表
+ * @returns {import("express").RequestHandler} Express 中间件
+ */
 export function requireBody(...fields) {
   return (req, res, next) => {
     for (const f of fields) {

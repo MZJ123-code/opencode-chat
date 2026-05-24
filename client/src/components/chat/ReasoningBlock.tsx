@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ReasoningPart } from '../../types/message'
-import { escapeHtml } from '../../utils/escapeHtml'
+import { escapeHtml } from '../../lib/utils'
 import styles from './ReasoningBlock.module.css'
 
+/**
+ * AI 思考过程展示组件（可折叠）
+ * @param props - 组件属性
+ * @param props.part - 推理片段数据
+ */
 export function ReasoningBlock({ part }: { part: ReasoningPart }) {
   const [collapsed, setCollapsed] = useState(false)
 

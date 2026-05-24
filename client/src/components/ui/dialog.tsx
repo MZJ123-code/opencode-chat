@@ -5,30 +5,35 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
+/** 对话弹窗根组件 */
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
+/** 对话弹窗触发器 */
 function DialogTrigger({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
+/** 对话弹窗 Portal */
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
 
+/** 对话弹窗关闭按钮 */
 function DialogClose({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
+/** 对话弹窗遮罩层 */
 function DialogOverlay({
   className,
   ...props
@@ -45,6 +50,13 @@ function DialogOverlay({
   )
 }
 
+/**
+ * 对话弹窗内容区域
+ * @param props - 组件属性
+ * @param props.className - 额外的 CSS 类名
+ * @param props.children - 子组件
+ * @param props.showCloseButton - 是否显示关闭按钮
+ */
 function DialogContent({
   className,
   children,
@@ -79,6 +91,7 @@ function DialogContent({
   )
 }
 
+/** 对话弹窗头部 */
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -89,6 +102,13 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * 对话弹窗底部操作区
+ * @param props - 组件属性
+ * @param props.className - 额外的 CSS 类名
+ * @param props.showCloseButton - 是否显示关闭按钮
+ * @param props.children - 子组件
+ */
 function DialogFooter({
   className,
   showCloseButton = false,
@@ -116,6 +136,7 @@ function DialogFooter({
   )
 }
 
+/** 对话弹窗标题 */
 function DialogTitle({
   className,
   ...props
@@ -129,6 +150,7 @@ function DialogTitle({
   )
 }
 
+/** 对话弹窗描述 */
 function DialogDescription({
   className,
   ...props

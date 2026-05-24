@@ -34,11 +34,23 @@ interface PermissionDialogProps {
   onClose: () => void
 }
 
+/**
+ * 权限询问对话框组件
+ * @param props - 组件属性
+ * @param props.request - 权限请求数据
+ * @param props.onClose - 关闭回调
+ */
 export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
-  const questions = useMemo(
-    () => (request.metadata?.questions as QuestionInfo[] | undefined) ?? [],
-    [request.metadata?.questions],
-  )
+  const questions: QuestionInfo[] = useMemo(() => {
+    const q = request.metadata?.questions
+    if (Array.isArray(q)) {
+      return q.filter(
+        (item): item is QuestionInfo =>
+          typeof item === 'object' && item !== null && 'question' in item,
+      )
+    }
+    return []
+  }, [request.metadata?.questions])
   const isQuestion =
     request.permission === 'question' || request.permission === 'tool:question'
   const total = questions.length

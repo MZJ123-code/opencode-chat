@@ -5,8 +5,15 @@ import { saveStats } from "../services/statsService.js"
 import { MODEL, SMALL_MODEL, AGENT_OPTIONS } from "../config.js"
 import { logger } from "../logger/index.js"
 
+/** @type {import("express").Router} 会话管理路由：POST / 创建会话，GET / 列出会话 */
 const router = Router()
 
+/**
+ * POST /api/sessions — 创建新会话
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.post("/", async (req, res, next) => {
   try {
     const ip = req.clientIP
@@ -29,6 +36,11 @@ router.post("/", async (req, res, next) => {
   }
 })
 
+/**
+ * GET /api/sessions — 获取用户会话列表
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 router.get("/", (req, res) => {
   const ip = req.clientIP
   ensureIP(ip)

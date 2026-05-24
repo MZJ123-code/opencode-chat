@@ -8,6 +8,10 @@ const MAX_SESSIONS_PER_IP = 100
 const MAX_TOTAL_SESSIONS = 5000
 const MAX_MESSAGES_PER_SESSION = 10_000
 
+/**
+ * 淘汰指定 IP 最旧的会话
+ * @param {string} ip - 客户端 IP
+ */
 function evictOldestSession(ip) {
   const ids = ipSessions.get(ip)
   if (!ids || ids.size === 0) return
@@ -18,6 +22,13 @@ function evictOldestSession(ip) {
   logger.warn(`超限淘汰会话: ${oldestId}`, { ip })
 }
 
+/**
+ * 创建新会话：调用 OpenCode SDK 创建，本地记录元数据
+ * @param {string} ip - 客户端 IP
+ * @param {string} title - 会话标题
+ * @param {string | null} [agent=null] - 指定 Agent
+ * @returns {Promise<{sessionId: string, title: string, agent: string | null}>} 会话信息
+ */
 export async function createSession(ip, title, agent = null) {
   // 超过单 IP 上限时淘汰最旧会话
   const existing = ipSessions.get(ip)
@@ -69,6 +80,9 @@ export async function createSession(ip, title, agent = null) {
   return { sessionId, title, agent }
 }
 
+/**
+ * 清理超过 TTL（7 天）的过期会话
+ */
 function cleanupExpiredSessions() {
   const cutoff = Date.now() - SESSION_TTL
   let removed = 0
@@ -92,6 +106,11 @@ function cleanupExpiredSessions() {
 
 setInterval(cleanupExpiredSessions, 60 * 60 * 1000).unref()
 
+/**
+ * 列出指定 IP 的所有会话
+ * @param {string} ip - 客户端 IP
+ * @returns {Array<{sessionId: string, title: string, createdAt: number, messageCount: number, agent: string | null}>} 会话列表
+ */
 export function listSessions(ip) {
   const ids = ipSessions.get(ip) || []
   return ids
@@ -104,10 +123,19 @@ export function listSessions(ip) {
     .filter(Boolean)
 }
 
+/**
+ * 获取会话元数据
+ * @param {string} sessionId - 会话 ID
+ * @returns {import("../storage/store.js").SessionMeta | undefined} 会话元数据
+ */
 export function getSessionMeta(sessionId) {
   return sessionMeta.get(sessionId)
 }
 
+/**
+ * 记录会话消息数递增，超过上限时告警
+ * @param {string} sessionId - 会话 ID
+ */
 export function recordMessage(sessionId) {
   const meta = sessionMeta.get(sessionId)
   if (!meta) return
@@ -122,12 +150,23 @@ export function recordMessage(sessionId) {
   meta.messageCount++
 }
 
+/**
+ * 验证指定 IP 是否拥有该会话
+ * @param {string} ip - 客户端 IP
+ * @param {string} sessionId - 会话 ID
+ * @returns {boolean} 是否拥有权限
+ */
 export function validateOwnership(ip, sessionId) {
   const user = ipUsers.get(ip)
   return user && user.sessionIds.has(sessionId)
 }
 
-// 懒注册：本地未找到会话时，从 OpenCode 验证并自动注册
+/**
+ * 懒注册：本地未找到会话时，从 OpenCode 验证并自动注册
+ * @param {string} ip - 客户端 IP
+ * @param {string} sessionId - 会话 ID
+ * @returns {Promise<boolean>} 是否注册成功
+ */
 export async function tryRegisterSession(ip, sessionId) {
   if (sessionMeta.has(sessionId)) return true
   // 仅当用户已有本地会话时才尝试懒注册（降低越权风险）

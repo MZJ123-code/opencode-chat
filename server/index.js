@@ -53,7 +53,9 @@ httpServer = app.listen(PORT, HOSTNAME, () => {
   })
 })
 
-// 优雅退出
+/**
+ * 优雅关闭服务：保存统计、关闭 OpenCode 进程、关闭 HTTP 服务
+ */
 function shutdown() {
   logger.info("正在关闭服务...")
   saveStatsSync()

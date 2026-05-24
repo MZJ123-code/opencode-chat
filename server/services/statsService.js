@@ -5,7 +5,9 @@ import { stats, sessionMeta } from "../storage/store.js"
 
 const statsPath = path.join(LOG_DIR, "_stats.json")
 
-// 启动时从文件恢复统计
+/**
+ * 从磁盘文件恢复统计数据和活跃 IP 列表
+ */
 export function restoreStats() {
   try {
     const raw = fs.readFileSync(statsPath, "utf-8")
@@ -21,19 +23,33 @@ export function restoreStats() {
   }
 }
 
+/**
+ * 记录一次提问（消息计数递增）
+ */
 export function incrementQuestions() {
   stats.totalQuestions++
 }
 
+/**
+ * 记录用户满意度反馈
+ * @param {boolean} satisfied - 是否满意
+ */
 export function recordFeedback(satisfied) {
   if (satisfied) stats.satisfied++
   else stats.unsatisfied++
 }
 
+/**
+ * 记录一次被限流拦截的访问
+ */
 export function recordBlockedAccess() {
   stats.blockedAccess++
 }
 
+/**
+ * 获取当前平台统计快照
+ * @returns {{ visitors: number, totalSessions: number, activeSessions: number, totalQuestions: number, satisfied: number, unsatisfied: number, agentDistribution: Record<string, number> }}
+ */
 export function getStats() {
   let activeSessions = 0
   const agentDistribution = {}
@@ -53,6 +69,10 @@ export function getStats() {
   }
 }
 
+/**
+ * 构建完整的统计快照对象，包含所有会话详情
+ * @returns {Record<string, unknown>} 统计快照
+ */
 function buildSnapshot() {
   const sessionAgents = {}
   for (const [id, meta] of sessionMeta) {
@@ -76,27 +96,30 @@ function buildSnapshot() {
   }
 }
 
-// 同步写入 — 用于进程退出时保证落盘
-export function saveStatsSync() {
-  try {
-    fs.writeFileSync(statsPath, JSON.stringify(buildSnapshot(), null, 2), "utf-8")
-  } catch {
-    // 静默失败，不阻塞退出
-  }
+/**
+ * 将统计快照写入磁盘文件
+ */
+function writeStatsSnapshot() {
+  fs.writeFileSync(statsPath, JSON.stringify(buildSnapshot(), null, 2), "utf-8")
 }
 
-// 异步 debounce 写入 — 运行时定时落盘
+/**
+ * 同步写入统计到磁盘（进程退出时保证落盘）
+ */
+export function saveStatsSync() {
+  try { writeStatsSnapshot() } catch { /* 静默失败，不阻塞退出 */ }
+}
+
+/**
+ * 异步 debounce 写入统计到磁盘（运行时定时落盘，最多每 10 秒一次）
+ */
 let writeTimer = null
-const WRITE_INTERVAL = 10_000 // 最多每 10 秒写一次
+const WRITE_INTERVAL = 10_000
 
 export function saveStats() {
   if (writeTimer) return
   writeTimer = setTimeout(() => {
     writeTimer = null
-    try {
-      fs.writeFileSync(statsPath, JSON.stringify(buildSnapshot(), null, 2), "utf-8")
-    } catch {
-      // 静默失败
-    }
+    try { writeStatsSnapshot() } catch { /* 静默失败 */ }
   }, WRITE_INTERVAL).unref()
 }

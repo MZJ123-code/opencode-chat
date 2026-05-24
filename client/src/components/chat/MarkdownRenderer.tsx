@@ -92,6 +92,11 @@ interface MarkdownRendererProps {
   content: string
 }
 
+/**
+ * Markdown 渲染组件（支持 GFM、代码高亮、Mermaid 图表）
+ * @param props - 组件属性
+ * @param props.content - Markdown 文本内容
+ */
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   if (!content) return null
 

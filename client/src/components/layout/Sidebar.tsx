@@ -11,6 +11,12 @@ interface SidebarProps {
   isOpen: boolean
 }
 
+/**
+ * 侧边栏布局组件
+ * @param props - 组件属性
+ * @param props.children - 子组件
+ * @param props.isOpen - 是否展开
+ */
 export function Sidebar({ children, isOpen }: SidebarProps) {
   const isMobile = useMediaQuery('(max-width: 640px)')
   const [width, setWidth] = useState(DEFAULT_WIDTH)
@@ -103,6 +109,11 @@ export function Sidebar({ children, isOpen }: SidebarProps) {
   )
 }
 
+/**
+ * 移动端菜单按钮
+ * @param props - 组件属性
+ * @param props.onClick - 点击回调
+ */
 export function MobileMenuButton({ onClick }: { onClick: () => void }) {
   return (
     <button

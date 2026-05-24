@@ -5,7 +5,9 @@ import { ChatProvider } from './contexts/ChatContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import './styles/global.css'
+import './styles/markdown-overrides.css'
 
+/** 应用入口 */
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ToolPart } from '../../types/message'
-import { escapeHtml } from '../../utils/escapeHtml'
+import { escapeHtml } from '../../lib/utils'
 import { JsonView } from './JsonView'
 import { useChatContext } from '../../contexts/ChatContext'
 import styles from './ToolCallBlock.module.css'
@@ -33,6 +33,11 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+/**
+ * 工具调用展示组件（已记忆化）
+ * @param props - 组件属性
+ * @param props.part - 工具片段数据
+ */
 export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolPart }) {
   const [open, setOpen] = useState(false)
   const cfg = stateConfig[part.state.status] || stateConfig.pending
@@ -41,9 +46,9 @@ export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolP
   const inputText = part.state.input ? JSON.stringify(part.state.input, null, 2) : ''
   const outputText = part.state.output?.slice(0, 2000) || ''
 
-  const partMeta = (part as unknown as { metadata?: Record<string, unknown> }).metadata
+  const partMeta = part.metadata
   const { navigateToSession, allMessages, sessionMeta, taskCallToChild } = useChatContext()
-  const childSessionId = (partMeta?.sessionId as string | undefined) ?? taskCallToChild.get(part.callID)
+  const childSessionId = typeof partMeta?.sessionId === 'string' ? partMeta.sessionId : taskCallToChild.get(part.callID)
 
   const childMeta = childSessionId ? sessionMeta.get(childSessionId) : undefined
   const childMessages = childSessionId ? (allMessages.get(childSessionId) ?? []) : []
@@ -53,8 +58,8 @@ export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolP
     const tools: string[] = []
     for (const msg of childMessages) {
       for (const p of msg.parts) {
-        if (p.type === 'tool' && 'tool' in p) {
-          const tp = p as unknown as ToolPart
+        if (p.type === 'tool') {
+          const tp = p as ToolPart
           tools.push(`${tp.tool}: ${tp.state.status}`)
         }
       }

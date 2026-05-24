@@ -5,8 +5,14 @@ import { ipUsers, ipSessions, sessionMeta } from "../storage/store.js"
 import { validateOwnership } from "../services/sessionService.js"
 import { pushEvent, getBufferedEvents } from "../services/eventBuffer.js"
 
+/** @type {import("express").Router} SSE 事件流路由：GET /api/events */
 const router = Router()
 
+/**
+ * GET /api/events — SSE 事件流，推送聊天回复和系统事件
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 router.get("/", async (req, res) => {
   const client = getClient()
   const ip = req.clientIP
@@ -30,6 +36,11 @@ router.get("/", async (req, res) => {
   // 静默响应流错误，避免客户端断连导致进程崩溃
   res.on("error", () => {})
 
+  /**
+   * 安全写入 SSE 数据，客户端断开时不抛出异常
+   * @param {string} data - SSE 数据字符串
+   * @returns {boolean} 是否成功写入
+   */
   function safeWrite(data) {
     if (closed || !res.writable) return false
     try {

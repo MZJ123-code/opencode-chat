@@ -4,6 +4,12 @@ import { recordBlockedAccess } from "../services/statsService.js"
 import { saveStats } from "../services/statsService.js"
 import { logger } from "../logger/index.js"
 
+/**
+ * 会话归属守卫中间件工厂，验证请求对指定会话的访问权限
+ * 先本地检查，再尝试懒注册，最终拒绝则记录拦截统计
+ * @param {string} [paramName="id"] - URL 路径参数名（或从 req.body.sessionId 读取）
+ * @returns {import("express").RequestHandler} Express 中间件
+ */
 export function requireSessionOwnership(paramName = "id") {
   return (req, res, next) => {
     const ip = req.clientIP

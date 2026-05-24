@@ -7,6 +7,10 @@ let _client = null
 /** @type {import("@opencode-ai/sdk/v2").OpencodeServer|null} */
 let _server = null
 
+/**
+ * 启动 OpenCode 子进程，创建 SDK 客户端和服务端连接
+ * @returns {Promise<{client: import("@opencode-ai/sdk/v2").OpencodeClient, server: import("@opencode-ai/sdk/v2").OpencodeServer}>}
+ */
 export async function startOpenCode() {
   logger.info("正在启动 OpenCode Server...")
   const start = Date.now()
@@ -50,6 +54,9 @@ export async function startOpenCode() {
   return { client: _client, server: _server }
 }
 
+/**
+ * 关闭 OpenCode 子进程，清理客户端和服务端引用
+ */
 export function killOpenCode() {
   if (_server) {
     try { _server.process?.stdout?.removeAllListeners?.() } catch {}
@@ -62,7 +69,9 @@ export function killOpenCode() {
 }
 
 /**
- * @returns {import("@opencode-ai/sdk/v2").OpencodeClient}
+ * 获取 OpenCode SDK 客户端实例
+ * @returns {import("@opencode-ai/sdk/v2").OpencodeClient} SDK 客户端
+ * @throws {Error} 客户端未初始化时抛出
  */
 export function getClient() {
   if (!_client) throw new Error("OpenCode client not initialized")
@@ -70,7 +79,9 @@ export function getClient() {
 }
 
 /**
- * @returns {import("@opencode-ai/sdk/v2").OpencodeServer}
+ * 获取 OpenCode 服务端实例
+ * @returns {import("@opencode-ai/sdk/v2").OpencodeServer} 服务端实例
+ * @throws {Error} 服务端未初始化时抛出
  */
 export function getServer() {
   if (!_server) throw new Error("OpenCode server not initialized")

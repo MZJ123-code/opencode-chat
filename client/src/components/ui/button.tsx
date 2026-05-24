@@ -4,6 +4,7 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/** 按钮变体工具函数 */
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 active:scale-[0.97]",
   {
@@ -38,6 +39,14 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * 按钮组件
+ * @param props - 组件属性
+ * @param props.className - 额外的 CSS 类名
+ * @param props.variant - 按钮变体
+ * @param props.size - 按钮尺寸
+ * @param props.asChild - 是否作为子元素渲染
+ */
 function Button({
   className,
   variant = "default",

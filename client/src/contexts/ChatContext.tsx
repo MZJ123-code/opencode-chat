@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react'
-import type { ChatMessage, ChatPart, TextPart, ReasoningPart, ToolPart, MessageInfo } from '../types/message'
+import { useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react'
+import { createCtx } from '../lib/utils'
+import type { ChatMessage, ChatPart, TextPart, ReasoningPart, ToolPart } from '../types/message'
 import type { SessionListItem } from '../types/session'
 import type { FeedbackState } from '../hooks/useFeedback'
 import * as sessionsApi from '../api/sessions'
@@ -11,9 +12,13 @@ import { useFeedback } from '../hooks/useFeedback'
 import { PermissionDialog } from '../components/common/PermissionDialog'
 import type { PermissionRequest } from '../api/permission'
 
+/** 会话元数据 */
 export interface SessionMeta {
+  /** 会话 ID */
   id: string
+  /** 父会话 ID（用于多会话导航） */
   parentID?: string
+  /** 会话标题 */
   title?: string
 }
 
@@ -66,14 +71,18 @@ interface ChatContextValue {
   connectionStatus: ConnectionStatus
 }
 
-const ChatContext = createContext<ChatContextValue | null>(null)
+const [ChatContext, useChatContext] = createCtx<ChatContextValue>('useChatContext must be used within ChatProvider')
+export { useChatContext }
 
-export function useChatContext(): ChatContextValue {
-  const ctx = useContext(ChatContext)
-  if (!ctx) throw new Error('useChatContext must be used within ChatProvider')
-  return ctx
+function isTaskToolPart(part: ChatPart): part is ToolPart {
+  return part.type === 'tool' && (part as ToolPart).tool === 'task'
 }
 
+/**
+ * 聊天上下文提供者
+ * @param props - 组件属性
+ * @param props.children - 子组件
+ */
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<SessionListItem[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
@@ -219,6 +228,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }, 500)
   }, [flushAllMessages])
 
+  const flushSession = useCallback((sessionID: string) => {
+    if (sessionID === currentSessionRef.current) scheduleFlush()
+    else scheduleBackgroundFlush()
+  }, [scheduleFlush, scheduleBackgroundFlush])
+
   // === Inject a part into a specific session's last assistant message ===
   const injectPartToSession = useCallback((sessionID: string, part: Record<string, unknown>) => {
     const msgs = getSessionMessages(sessionID)
@@ -233,23 +247,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const existingIdx = parts.findIndex((p) => p.id === part.id)
     if (existingIdx >= 0) {
       // Deep-merge state so partial updates (e.g. onToolSuccess) don't lose metadata/output
-      const existing = parts[existingIdx] as Record<string, unknown>
+      const existing = parts[existingIdx] as unknown as Record<string, unknown>
       const merged: Record<string, unknown> = { ...existing, ...part }
       if (existing.state && part.state) {
-        merged.state = { ...(existing.state as Record<string, unknown>), ...(part.state as Record<string, unknown>) }
+        merged.state = { ...(existing.state as unknown as Record<string, unknown>), ...(part.state as unknown as Record<string, unknown>) }
       }
-      parts[existingIdx] = merged as ChatPart
+      parts[existingIdx] = merged as unknown as ChatPart
     } else {
-      parts.push(part as ChatPart)
+      parts.push(part as unknown as ChatPart)
     }
     msg.parts = parts
     msgs[targetIdx] = msg
-    if (sessionID === currentSessionRef.current) {
-      scheduleFlush()
-    } else {
-      scheduleBackgroundFlush()
-    }
-  }, [getSessionMessages, scheduleFlush, scheduleBackgroundFlush])
+    flushSession(sessionID)
+  }, [getSessionMessages, flushSession])
 
   const syncMessages = useCallback((next: ChatMessage[]) => {
     if (!currentSessionRef.current) return
@@ -257,18 +267,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setAllMessages(new Map(allMessagesRef.current))
   }, [setSessionMessages])
 
-  // Type guard: check if a part is a "task" tool call
-  function isTaskToolPart(part: ChatPart): part is ToolPart {
-    return part.type === 'tool' && (part as ToolPart).tool === 'task'
-  }
-
   // Helper to get/set `info` property from a message
   function getMsgInfo(msg: ChatMessage): Record<string, unknown> | undefined {
     return msg.info as Record<string, unknown> | undefined
   }
 
   function setMsgInfo(msg: ChatMessage, info: Record<string, unknown>): ChatMessage {
-    ;(msg as { info: Record<string, unknown> }).info = info
+    ;(msg as unknown as { info: Record<string, unknown> }).info = info
     return msg
   }
 
@@ -448,16 +453,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setSessionMessages(sid, msgs)
       }
 
-      if (sid === currentSessionRef.current) scheduleFlush()
-      else scheduleBackgroundFlush()
+      flushSession(sid)
     },
 
     onMessageRemoved(sessionID, messageID) {
       if (!sessionID) return
       const msgs = getSessionMessages(sessionID).filter((m) => getMsgInfo(m)?.id !== messageID)
       setSessionMessages(sessionID, msgs)
-      if (sessionID === currentSessionRef.current) scheduleFlush()
-      else scheduleBackgroundFlush()
+      flushSession(sessionID)
     },
 
     // message.part.updated → store part in the correct session's message
@@ -487,7 +490,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (msg.role === 'user' && part.type === 'text' && existingTextIdx !== -1) {
           const updatedPart: Record<string, unknown> = { ...parts[existingTextIdx], id: part.id, messageID: part.messageID }
           updatedPart.text = 'text' in part ? (part as TextPart).text : undefined
-          parts[existingTextIdx] = updatedPart as ChatPart
+          parts[existingTextIdx] = updatedPart as unknown as ChatPart
         } else {
           parts.push(part)
         }
@@ -505,8 +508,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       msg.parts = parts
       msgs[msgIdx] = msg
       setSessionMessages(sessionID, msgs)
-      if (sessionID === currentSessionRef.current) scheduleFlush()
-      else scheduleBackgroundFlush()
+      flushSession(sessionID)
     },
 
     // message.part.delta → apply delta to part in the correct session
@@ -530,8 +532,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       msg.parts = parts
       msgs[msgIdx] = msg
       setSessionMessages(sessionID, msgs)
-      if (sessionID === currentSessionRef.current) scheduleFlush()
-      else scheduleBackgroundFlush()
+      flushSession(sessionID)
     },
 
     onPartRemoved(sessionID, messageID, partID) {

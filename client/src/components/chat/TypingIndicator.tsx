@@ -14,6 +14,7 @@ const dotVariants = {
   }),
 }
 
+/** AI 输入指示器（打字动画） */
 export function TypingIndicator() {
   return (
     <div className="flex items-center py-2">

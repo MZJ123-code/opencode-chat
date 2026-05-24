@@ -1,6 +1,6 @@
 import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ChatMessage, ChatPart, TextPart, ReasoningPart } from '../../types/message'
+import type { ChatMessage, ChatPart } from '../../types/message'
 import { PartRenderer } from './PartRenderer'
 import { ToolCallBlock } from './ToolCallBlock'
 import { FeedbackRow } from './FeedbackRow'
@@ -55,7 +55,7 @@ function isThinkingPart(part: ChatPart): boolean {
 function renderThinkingPart(part: ChatPart): ReactNode {
   switch (part.type) {
     case 'reasoning': {
-      const text = 'text' in part ? (part as ReasoningPart).text : ''
+      const text = 'text' in part ? part.text : ''
       if (!text) return null
       return (
         <div key={part.id} className={styles.thinkingPart}>{text}</div>
@@ -147,7 +147,7 @@ export function MessageList({
       if (msg.role === 'user') {
         const userText = msg.parts
           .filter((p) => p.type === 'text')
-          .map((p) => ('text' in p ? (p as TextPart).text : ''))
+          .map((p) => ('text' in p ? p.text : ''))
           .join('\n')
 
         elements.push(
@@ -159,7 +159,7 @@ export function MessageList({
             initial="hidden"
             animate="visible"
           >
-            <div className={styles.userBubble}>
+            <div className={`${styles.userBubble} user-bubble-md`}>
               <MarkdownRenderer content={userText} />
             </div>
           </motion.div>
@@ -196,7 +196,7 @@ export function MessageList({
       }
 
       textParts.forEach((part, partIdx) => {
-        const text = 'text' in part ? (part as TextPart).text : ''
+        const text = 'text' in part ? part.text : ''
         if (!text) return
         elements.push(
           <motion.div

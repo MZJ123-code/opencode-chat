@@ -5,6 +5,12 @@ interface ErrorBannerProps {
   onDismiss: () => void
 }
 
+/**
+ * 错误提示横幅组件
+ * @param props - 组件属性
+ * @param props.message - 错误消息（null 时不显示）
+ * @param props.onDismiss - 关闭回调
+ */
 export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
   return (
     <AnimatePresence>

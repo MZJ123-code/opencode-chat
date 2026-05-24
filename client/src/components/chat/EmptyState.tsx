@@ -4,6 +4,11 @@ interface EmptyStateProps {
   hasSession: boolean
 }
 
+/**
+ * 空状态占位组件
+ * @param props - 组件属性
+ * @param props.hasSession - 当前是否存在会话
+ */
 export function EmptyState({ hasSession }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">

@@ -27,6 +27,13 @@ interface JsonViewProps {
   maxHeight?: number
 }
 
+/**
+ * JSON 查看器组件（已记忆化）
+ * @param props - 组件属性
+ * @param props.data - JSON 数据对象或字符串
+ * @param props.collapsible - 是否可折叠（未使用，保留向后兼容）
+ * @param props.maxHeight - 最大高度（默认 200px）
+ */
 export const JsonView = memo(function JsonView({ data, maxHeight = 200 }: JsonViewProps) {
   const [collapsed, setCollapsed] = useState(false)
   const raw = typeof data === 'string' ? data : formatJson(data)

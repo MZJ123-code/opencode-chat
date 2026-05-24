@@ -4,8 +4,15 @@ import { recordFeedback, saveStats } from "../services/statsService.js"
 import { getSessionMeta } from "../services/sessionService.js"
 import { logger } from "../logger/index.js"
 
+/** @type {import("express").Router} 反馈路由：POST /api/sessions/:id/feedback */
 const router = Router()
 
+/**
+ * POST /api/sessions/:id/feedback — 提交会话满意度反馈
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.post("/:id/feedback", requireSessionOwnership("id"), (req, res, next) => {
   try {
     const ip = req.clientIP

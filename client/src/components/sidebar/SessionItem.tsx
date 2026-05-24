@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { motion } from 'framer-motion'
 import type { SessionListItem } from '../../types/session'
-import { formatDate } from '../../utils/formatDate'
+import { formatDate } from '../../lib/utils'
 import { cn } from '@/lib/utils'
 
 interface SessionItemProps {
@@ -10,6 +10,13 @@ interface SessionItemProps {
   onClick: () => void
 }
 
+/**
+ * 单个会话项组件（已记忆化）
+ * @param props - 组件属性
+ * @param props.session - 会话数据
+ * @param props.isActive - 是否激活
+ * @param props.onClick - 点击回调
+ */
 export const SessionItem = memo(function SessionItem({ session, isActive, onClick }: SessionItemProps) {
   return (
     <motion.div

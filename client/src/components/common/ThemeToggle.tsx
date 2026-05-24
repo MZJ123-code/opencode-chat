@@ -5,6 +5,11 @@ interface ThemeToggleProps {
   className?: string
 }
 
+/**
+ * 主题切换按钮组件
+ * @param props - 组件属性
+ * @param props.className - 额外的 CSS 类名
+ */
 export function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const { theme, toggle } = useTheme()
 

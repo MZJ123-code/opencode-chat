@@ -8,6 +8,14 @@ interface ChatInputProps {
   disabled: boolean
 }
 
+/**
+ * 聊天输入框组件（已记忆化）
+ * @param props - 组件属性
+ * @param props.value - 输入框值
+ * @param props.onChange - 值变化回调
+ * @param props.onSend - 发送消息回调
+ * @param props.disabled - 是否禁用
+ */
 export const ChatInput = memo(function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
@@ -25,7 +33,7 @@ export const ChatInput = memo(function ChatInput({ value, onChange, onSend, disa
       onSend()
     }
     if (e.key === 'Escape') {
-      (e.target as HTMLTextAreaElement).blur()
+      e.currentTarget.blur()
     }
   }, [isComposing, disabled, onSend])
 

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createCtx } from '../lib/utils'
 
 type Theme = 'light' | 'dark'
 
@@ -7,13 +8,8 @@ interface ThemeContextValue {
   toggle: () => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null)
-
-export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext)
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
-  return ctx
-}
+const [ThemeContext, useTheme] = createCtx<ThemeContextValue>('useTheme must be used within ThemeProvider')
+export { useTheme }
 
 function getSystemTheme(): Theme {
   if (typeof window === 'undefined') return 'dark'
@@ -28,6 +24,11 @@ function getStoredTheme(): Theme | null {
   return null
 }
 
+/**
+ * 主题提供者
+ * @param props - 组件属性
+ * @param props.children - 子组件
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => getStoredTheme() || getSystemTheme())
 

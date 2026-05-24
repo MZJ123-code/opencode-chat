@@ -9,6 +9,12 @@ interface PartRendererProps {
   role: 'user' | 'assistant'
 }
 
+/**
+ * 消息片段渲染组件
+ * @param props - 组件属性
+ * @param props.part - 聊天片段数据
+ * @param props.role - 消息角色
+ */
 export function PartRenderer({ part, role }: PartRendererProps) {
   switch (part.type) {
     case 'text': {
@@ -20,7 +26,7 @@ export function PartRenderer({ part, role }: PartRendererProps) {
     }
 
     case 'reasoning':
-      return <ReasoningBlock part={part as unknown as import('../../types/message').ReasoningPart} />
+      return <ReasoningBlock part={part as import('../../types/message').ReasoningPart} />
 
     case 'tool':
       return <ToolCallBlock part={part as import('../../types/message').ToolPart} />

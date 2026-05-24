@@ -6,6 +6,12 @@ interface SidebarHeaderProps {
   isCreating: boolean
 }
 
+/**
+ * 侧边栏头部组件
+ * @param props - 组件属性
+ * @param props.onCreateClick - 创建新对话回调
+ * @param props.isCreating - 是否正在创建中
+ */
 export function SidebarHeader({ onCreateClick, isCreating }: SidebarHeaderProps) {
   return (
     <div className="px-4 pt-5 pb-4 border-b border-[#2d2f4a]">

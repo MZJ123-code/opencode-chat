@@ -4,8 +4,15 @@ import { getSessionMeta } from "../services/sessionService.js"
 import { getClient } from "../services/opencode.js"
 import { logger } from "../logger/index.js"
 
+/** @type {import("express").Router} 中断路由：POST /api/sessions/:id/abort */
 const router = Router()
 
+/**
+ * POST /api/sessions/:id/abort — 中断指定会话的 AI 回复
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.post("/:id/abort", requireSessionOwnership("id"), async (req, res, next) => {
   try {
     const { id } = req.params

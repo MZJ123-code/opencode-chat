@@ -4,6 +4,11 @@ interface ChatAreaProps {
   children: ReactNode
 }
 
+/**
+ * 聊天区域主布局组件
+ * @param props - 组件属性
+ * @param props.children - 子组件
+ */
 export function ChatArea({ children }: ChatAreaProps) {
   return (
     <main className="flex flex-col flex-1 min-w-0 relative bg-mesh" style={{ background: 'var(--bg)' }}>

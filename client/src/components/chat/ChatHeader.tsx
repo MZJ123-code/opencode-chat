@@ -8,16 +8,16 @@ interface ChatHeaderProps {
   onMenuClick?: () => void
 }
 
-const statusColors: Record<string, string> = {
-  connected: '#22c55e',
-  connecting: '#eab308',
-  disconnected: '#ef4444',
-}
-
-const statusTitles: Record<string, string> = {
-  connected: '已连接',
-  connecting: '正在重连…',
-  disconnected: '连接断开',
+/**
+ * 聊天区域头部组件
+ * @param props - 组件属性
+ * @param props.title - 标题文字
+ * @param props.onMenuClick - 可选的菜单按钮点击回调
+ */
+const connectionStatusConfig: Record<string, { color: string; title: string }> = {
+  connected: { color: '#22c55e', title: '已连接' },
+  connecting: { color: '#eab308', title: '正在重连…' },
+  disconnected: { color: '#ef4444', title: '连接断开' },
 }
 
 export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
@@ -59,8 +59,8 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
 
       <motion.span
         className="inline-block w-2 h-2 rounded-full shrink-0"
-        style={{ backgroundColor: statusColors[connectionStatus] }}
-        title={statusTitles[connectionStatus]}
+        style={{ backgroundColor: connectionStatusConfig[connectionStatus]?.color }}
+        title={connectionStatusConfig[connectionStatus]?.title || connectionStatus}
         animate={{ opacity: connectionStatus === 'connecting' ? [0.4, 1, 0.4] : 1 }}
         transition={connectionStatus === 'connecting' ? { repeat: Infinity, duration: 1.5 } : undefined}
       />

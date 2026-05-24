@@ -3,9 +3,15 @@ import { getClient } from "../services/opencode.js"
 import { MODEL } from "../config.js"
 import { logger } from "../logger/index.js"
 
+/** @type {import("express").Router} 权限路由：POST /respond, /question/reply, /question/reject */
 const router = Router()
 
-// Respond to a permission request
+/**
+ * POST /api/permission/respond — 响应权限请求（允许/拒绝）
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.post("/respond", async (req, res, next) => {
   try {
     const { requestID, reply, message } = req.body
@@ -31,7 +37,12 @@ router.post("/respond", async (req, res, next) => {
   }
 })
 
-// Reply to a question (with answers)
+/**
+ * POST /api/permission/question/reply — 回复问题（带答案）
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.post("/question/reply", async (req, res, next) => {
   try {
     const { requestID, answers } = req.body
@@ -55,7 +66,12 @@ router.post("/question/reply", async (req, res, next) => {
   }
 })
 
-// Reject / skip a question
+/**
+ * POST /api/permission/question/reject — 跳过问题
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.post("/question/reject", async (req, res, next) => {
   try {
     const { requestID } = req.body

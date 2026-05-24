@@ -9,6 +9,14 @@ interface FeedbackRowProps {
   onSubmit: (sessionId: string, satisfied: boolean, msgIdx: number) => Promise<void>
 }
 
+/**
+ * 满意度反馈行组件
+ * @param props - 组件属性
+ * @param props.sessionId - 会话 ID
+ * @param props.messageIndex - 消息索引
+ * @param props.feedbackState - 反馈状态
+ * @param props.onSubmit - 提交反馈回调
+ */
 export function FeedbackRow({ sessionId, messageIndex, feedbackState, onSubmit }: FeedbackRowProps) {
   const [submitting, setSubmitting] = useState(false)
 

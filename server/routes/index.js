@@ -8,6 +8,10 @@ import permissionRouter from "./permission.js"
 import agentsRouter from "./agents.js"
 import abortRouter from "./abort.js"
 
+/**
+ * 注册所有 API 路由到 Express 应用
+ * @param {import("express").Express} app - Express 应用实例
+ */
 export function registerRoutes(app) {
   app.use("/api/sessions", sessionsRouter)
   app.use("/api/sessions", abortRouter)

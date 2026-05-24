@@ -1,0 +1,75 @@
+/* Shared user-bubble markdown overrides — white text on gradient */
+.user-bubble-md .markdown-body {
+  color: #fff;
+}
+.user-bubble-md .markdown-body p,
+.user-bubble-md .markdown-body h1,
+.user-bubble-md .markdown-body h2,
+.user-bubble-md .markdown-body h3,
+.user-bubble-md .markdown-body h4,
+.user-bubble-md .markdown-body h5,
+.user-bubble-md .markdown-body h6,
+.user-bubble-md .markdown-body li,
+.user-bubble-md .markdown-body ol,
+.user-bubble-md .markdown-body ul,
+.user-bubble-md .markdown-body blockquote,
+.user-bubble-md .markdown-body blockquote p,
+.user-bubble-md .markdown-body del,
+.user-bubble-md .markdown-body mark {
+  color: #fff;
+}
+
+.user-bubble-md .markdown-body code {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border-color: rgba(255,255,255,0.15);
+}
+
+.user-bubble-md .markdown-body pre {
+  background: rgba(0,0,0,0.15);
+  border: none;
+}
+.user-bubble-md .markdown-body pre code {
+  color: #f0f0ff;
+}
+
+.user-bubble-md .markdown-body a {
+  color: #c8d6ff;
+  border-bottom-color: rgba(255,255,255,0.3);
+}
+.user-bubble-md .markdown-body a:hover {
+  border-bottom-color: #c8d6ff;
+}
+
+.user-bubble-md .markdown-body blockquote {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.user-bubble-md .markdown-body blockquote::before {
+  background: rgba(255,255,255,0.5);
+}
+
+.user-bubble-md .markdown-body hr {
+  background: rgba(255,255,255,0.2);
+}
+
+.user-bubble-md .markdown-body th,
+.user-bubble-md .markdown-body td {
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.user-bubble-md .markdown-body th {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+.user-bubble-md .markdown-body tr:nth-child(even) {
+  background: rgba(255,255,255,0.05);
+}
+
+.user-bubble-md .markdown-body li::marker {
+  color: rgba(255,255,255,0.6);
+}
+
+.user-bubble-md .markdown-body img {
+  border-color: rgba(255,255,255,0.2);
+}

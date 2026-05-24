@@ -4,6 +4,11 @@ import { requireSessionOwnership } from "../middleware/sessionGuard.js"
 import { getSessionMeta } from "../services/sessionService.js"
 import { logger } from "../logger/index.js"
 
+/**
+ * 序列化消息 part 对象，按类型提取关键字段
+ * @param {Record<string, unknown>} p - OpenCode 消息 part
+ * @returns {Record<string, unknown>} 序列化后的 part 对象
+ */
 function serializePart(p) {
   const base = { id: p.id, type: p.type, time: p.time, metadata: p.metadata }
   switch (p.type) {
@@ -32,6 +37,11 @@ function serializePart(p) {
   }
 }
 
+/**
+ * 从消息列表中收集所有涉及的模型和 Agent 名称
+ * @param {Array<Record<string, unknown>>} messages - 消息数组
+ * @returns {{ models: string[], agents: string[] }} 模型和 Agent 列表
+ */
 function collectModelsAndAgents(messages) {
   const models = new Set()
   const agents = new Set()
@@ -60,8 +70,15 @@ function collectModelsAndAgents(messages) {
   }
 }
 
+/** @type {import("express").Router} 消息历史路由：GET /api/sessions/:id/messages */
 const router = Router()
 
+/**
+ * GET /api/sessions/:id/messages — 获取指定会话的消息历史
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 router.get("/:id/messages", requireSessionOwnership("id"), async (req, res, next) => {
   const ip = req.clientIP
   const sessionId = req.params.id

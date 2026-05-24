@@ -9,6 +9,14 @@ interface SessionListProps {
   isLoading: boolean
 }
 
+/**
+ * 会话列表组件
+ * @param props - 组件属性
+ * @param props.sessions - 会话列表数据
+ * @param props.activeId - 当前激活的会话 ID
+ * @param props.onSelect - 选择会话回调
+ * @param props.isLoading - 是否加载中
+ */
 export function SessionList({ sessions, activeId, onSelect, isLoading }: SessionListProps) {
   if (isLoading) {
     return (
