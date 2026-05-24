@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail, recordVisit } from '../../api/stats'
 import type { BasicStats, DailyStatsItem, FeedbackDetailItem, VisitDetailItem, QuestionDetailItem } from '../../api/stats'
@@ -6,6 +6,7 @@ import { ThemeToggle } from '../common/ThemeToggle'
 import type { FilterValues } from './DashboardFilters'
 import { DashboardFilters } from './DashboardFilters'
 import { DashboardCharts } from './DashboardCharts'
+import { ContentModal } from './ContentModal'
 
 interface DashboardPageProps {
   onBack: () => void
@@ -27,15 +28,7 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [questions, setQuestions] = useState<QuestionDetailItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<FilterValues>(defaultFilters)
-  const [expandedFeedback, setExpandedFeedback] = useState<Set<number>>(new Set())
-
-  const toggleFeedback = useCallback((id: number) => {
-    setExpandedFeedback(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      return next
-    })
-  }, [])
+  const [modal, setModal] = useState<{ title: string; content: string } | null>(null)
 
   useEffect(() => {
     recordVisit()
@@ -253,43 +246,35 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredFeedback.map(row => {
-                  const expanded = expandedFeedback.has(row.id)
-                  const qLong = (row.question_content?.length || 0) > 150
-                  const aLong = (row.answer_content?.length || 0) > 150
-                  return (
-                    <Fragment key={row.id}>
-                      <tr className="border-t" style={{ borderColor: 'var(--border)' }}>
-                        <td className="px-4 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{row.created_at}</td>
-                        <td className="px-4 py-2.5 text-[var(--text)] font-mono whitespace-nowrap">{row.ip}</td>
-                        <td className="px-4 py-2.5 text-center whitespace-nowrap">
-                          <span style={{ color: row.satisfied ? '#22c55e' : '#ef4444' }}>
-                            {row.satisfied ? '👍' : '👎'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-[var(--text)] max-w-xs align-top">
-                          {row.question_content
-                            ? <CellContent text={row.question_content} long={qLong} expanded={expanded} onToggle={() => toggleFeedback(row.id)} />
-                            : '-'}
-                        </td>
-                        <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs align-top">
-                          {row.answer_content
-                            ? <CellContent text={row.answer_content} long={aLong} expanded={expanded} onToggle={() => toggleFeedback(row.id)} />
-                            : '-'}
-                        </td>
-                      </tr>
-                      {expanded && (qLong || aLong) && (
-                        <tr style={{ background: 'var(--secondary)' }}>
-                          <td colSpan={5} className="px-4 py-2">
-                            <div className="flex justify-end">
-                              <button onClick={() => toggleFeedback(row.id)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">收起</button>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  )
-                })}
+                {filteredFeedback.map(row => (
+                  <tr key={row.id} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                    <td className="px-4 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{row.created_at}</td>
+                    <td className="px-4 py-2.5 text-[var(--text)] font-mono whitespace-nowrap">{row.ip}</td>
+                    <td className="px-4 py-2.5 text-center whitespace-nowrap">
+                      <span style={{ color: row.satisfied ? '#22c55e' : '#ef4444' }}>
+                        {row.satisfied ? '👍' : '👎'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--text)] max-w-xs align-top">
+                      {row.question_content ? (
+                        <ContentView
+                          text={row.question_content}
+                          label="问题内容"
+                          onView={(title, content) => setModal({ title, content })}
+                        />
+                      ) : '-'}
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs align-top">
+                      {row.answer_content ? (
+                        <ContentView
+                          text={row.answer_content}
+                          label="AI 回答"
+                          onView={(title, content) => setModal({ title, content })}
+                        />
+                      ) : '-'}
+                    </td>
+                  </tr>
+                ))}
                 {filteredFeedback.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-[var(--text-secondary)]">暂无数据</td>
@@ -300,6 +285,13 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
           </div>
         </section>
       </div>
+
+      <ContentModal
+        open={!!modal}
+        onClose={() => setModal(null)}
+        title={modal?.title || ''}
+        content={modal?.content || ''}
+      />
     </div>
   )
 }
@@ -343,19 +335,16 @@ function SectionTitle({ title, action }: { title: string; action?: React.ReactNo
   )
 }
 
-function CellContent({ text, long, expanded, onToggle }: { text: string; long: boolean; expanded: boolean; onToggle: () => void }) {
+function ContentView({ text, label, onView }: { text: string; label: string; onView: (title: string, content: string) => void }) {
+  const long = text.length > 150
   return (
     <div>
-      <div
-        className={expanded ? '' : 'line-clamp-3'}
-        style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-        title={expanded ? undefined : text}
-      >
+      <div className="line-clamp-3" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} title={text}>
         {text}
       </div>
       {long && (
-        <button onClick={onToggle} className="mt-0.5 text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer text-xs underline">
-          {expanded ? '收起' : '展开全部'}
+        <button onClick={() => onView(label, text)} className="mt-0.5 text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer text-xs underline">
+          查看详情
         </button>
       )}
     </div>
