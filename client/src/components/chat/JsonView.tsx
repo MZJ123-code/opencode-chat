@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, memo } from 'react'
 import { cn } from '@/lib/utils'
 
 function formatJson(raw: unknown, indent = 2): string {
@@ -27,7 +27,7 @@ interface JsonViewProps {
   maxHeight?: number
 }
 
-export function JsonView({ data, maxHeight = 200 }: JsonViewProps) {
+export const JsonView = memo(function JsonView({ data, maxHeight = 200 }: JsonViewProps) {
   const [collapsed, setCollapsed] = useState(false)
   const raw = typeof data === 'string' ? data : formatJson(data)
   const html = highlightJson(raw)
@@ -39,18 +39,18 @@ export function JsonView({ data, maxHeight = 200 }: JsonViewProps) {
   return (
     <div className="relative group">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[11px] text-slate-400 font-medium">输入参数</span>
+        <span className="text-[11px] text-[var(--muted-foreground)] font-medium">输入参数</span>
         <div className="flex gap-1">
           {maxHeight > 0 && raw.length > 200 && (
             <button
-              className="text-[11px] px-2 py-0.5 rounded border border-slate-200 bg-white text-slate-500 cursor-pointer hover:bg-slate-50 leading-normal"
+              className="text-[11px] px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] cursor-pointer hover:bg-[var(--accent)] leading-normal"
               onClick={() => setCollapsed(!collapsed)}
             >
               {collapsed ? '展开' : '折叠'}
             </button>
           )}
           <button
-            className="text-[11px] px-2 py-0.5 rounded border border-slate-200 bg-white text-slate-500 cursor-pointer hover:bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity leading-normal"
+            className="text-[11px] px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] cursor-pointer hover:bg-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity leading-normal"
             onClick={handleCopy}
           >
             复制
@@ -59,7 +59,7 @@ export function JsonView({ data, maxHeight = 200 }: JsonViewProps) {
       </div>
       <pre
         className={cn(
-          'm-0 p-2 bg-slate-50 rounded-md text-xs font-mono leading-relaxed overflow-x-auto overflow-y-auto whitespace-pre-wrap break-all border border-slate-100',
+          'm-0 p-2 bg-[var(--muted)] rounded-md text-xs font-mono leading-relaxed overflow-x-auto overflow-y-auto whitespace-pre-wrap break-all border border-[var(--border)]',
           collapsed ? 'max-h-10 overflow-hidden' : '',
         )}
         style={!collapsed && maxHeight ? { maxHeight } : undefined}
@@ -67,4 +67,4 @@ export function JsonView({ data, maxHeight = 200 }: JsonViewProps) {
       />
     </div>
   )
-}
+})

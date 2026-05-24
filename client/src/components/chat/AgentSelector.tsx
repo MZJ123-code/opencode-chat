@@ -1,4 +1,4 @@
-import { useRef, useCallback, type MouseEvent } from 'react'
+import { useRef, useCallback, type MouseEvent, memo } from 'react'
 import { motion } from 'framer-motion'
 import { Skeleton } from '../common/Skeleton'
 import type { AgentOption } from '../../api/agents'
@@ -37,7 +37,7 @@ const cardVariants = {
   }),
 }
 
-export function AgentSelector({ agents, loading, onSelect, creating }: AgentSelectorProps) {
+export const AgentSelector = memo(function AgentSelector({ agents, loading, onSelect, creating }: AgentSelectorProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -89,7 +89,7 @@ export function AgentSelector({ agents, loading, onSelect, creating }: AgentSele
       </div>
     </div>
   )
-}
+})
 
 function SpotlightCard({
   index,

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { useRef, useEffect, useLayoutEffect, useState, useMemo, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ChatMessage, ChatPart } from '../../types/message'
 import { PartRenderer } from './PartRenderer'
@@ -131,7 +131,7 @@ export function MessageList({
     setShowScrollBtn(false)
   }
 
-  const content = (): ReactNode => {
+  const content = useMemo((): ReactNode => {
     if (isLoading) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
@@ -239,7 +239,7 @@ export function MessageList({
     })
 
     return elements
-  }
+  }, [messages, isLoading, isStreaming, sessionId, feedbackStates, onSubmitFeedback])
 
   return (
     <div className={styles.container}>
@@ -248,7 +248,7 @@ export function MessageList({
         className={styles.scrollArea}
         onScroll={handleScroll}
       >
-        {content()}
+        {content}
         {isStreaming && <TypingIndicator />}
       </div>
 

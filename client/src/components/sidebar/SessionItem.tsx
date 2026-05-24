@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import type { SessionListItem } from '../../types/session'
 import { formatDate } from '../../utils/formatDate'
@@ -9,7 +10,7 @@ interface SessionItemProps {
   onClick: () => void
 }
 
-export function SessionItem({ session, isActive, onClick }: SessionItemProps) {
+export const SessionItem = memo(function SessionItem({ session, isActive, onClick }: SessionItemProps) {
   return (
     <motion.div
       className={cn(
@@ -29,4 +30,4 @@ export function SessionItem({ session, isActive, onClick }: SessionItemProps) {
       </div>
     </motion.div>
   )
-}
+})

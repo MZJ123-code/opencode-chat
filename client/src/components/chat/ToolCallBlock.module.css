@@ -18,23 +18,7 @@
   background: var(--muted);
   border-radius: 8px;
   user-select: none;
-  list-style: none;
   color: var(--foreground);
-}
-
-.summary::-webkit-details-marker {
-  display: none;
-}
-
-.summaryArrow {
-  font-size: 10px;
-  color: var(--muted-foreground);
-  transition: transform .15s;
-  flex-shrink: 0;
-}
-
-.container[open] .summaryArrow {
-  transform: rotate(90deg);
 }
 
 .toolIcon {
