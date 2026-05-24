@@ -8,8 +8,20 @@ interface ChatHeaderProps {
   onMenuClick?: () => void
 }
 
+const statusColors: Record<string, string> = {
+  connected: '#22c55e',
+  connecting: '#eab308',
+  disconnected: '#ef4444',
+}
+
+const statusTitles: Record<string, string> = {
+  connected: '已连接',
+  connecting: '正在重连…',
+  disconnected: '连接断开',
+}
+
 export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
-  const { parentSessionId, sessionMeta, navigateToParent, navigationStack, navigateBack } = useChatContext()
+  const { parentSessionId, sessionMeta, navigateToParent, navigationStack, navigateBack, connectionStatus } = useChatContext()
 
   const parentTitle = parentSessionId ? (sessionMeta.get(parentSessionId)?.title || '父会话') : null
   const showBack = navigationStack.length > 0 || parentSessionId
@@ -44,6 +56,14 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
       )}
 
       <span className="text-sm font-medium text-[var(--text)] truncate flex-1">{title}</span>
+
+      <motion.span
+        className="inline-block w-2 h-2 rounded-full shrink-0"
+        style={{ backgroundColor: statusColors[connectionStatus] }}
+        title={statusTitles[connectionStatus]}
+        animate={{ opacity: connectionStatus === 'connecting' ? [0.4, 1, 0.4] : 1 }}
+        transition={connectionStatus === 'connecting' ? { repeat: Infinity, duration: 1.5 } : undefined}
+      />
 
       <ThemeToggle className="text-[var(--muted-foreground)] hover:text-[var(--text)] border-[var(--border)]" />
     </div>

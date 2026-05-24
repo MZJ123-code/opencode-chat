@@ -6,7 +6,7 @@ import * as sessionsApi from '../api/sessions'
 import * as chatApi from '../api/chat'
 import * as agentsApi from '../api/agents'
 import type { AgentOption } from '../api/agents'
-import { useEvents } from '../hooks/useEvents'
+import { useEvents, type ConnectionStatus } from '../hooks/useEvents'
 import { useFeedback } from '../hooks/useFeedback'
 import { PermissionDialog } from '../components/common/PermissionDialog'
 import type { PermissionRequest } from '../api/permission'
@@ -63,6 +63,7 @@ interface ChatContextValue {
   agentsLoading: boolean
   selectedAgent: string | null
   setSelectedAgent: (agent: string | null) => void
+  connectionStatus: ConnectionStatus
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null)
@@ -400,7 +401,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // === Event handlers — route by sessionID (like opencode web's applyDirectoryEvent) ===
 
-  useEvents({
+  const { connectionStatus } = useEvents({
+    onReconnected: useCallback(() => {
+      const sid = currentSessionRef.current
+      if (!sid) return
+      sessionsApi.fetchMessages(sid).then(data => {
+        setSessionMessages(sid, data)
+        flushAllMessages()
+      }).catch(() => {
+        // 静默失败，等下一次 SSE 事件填补
+      })
+    }, [setSessionMessages, flushAllMessages]),
+
     // message.updated → store message in the correct session
     onMessageUpdated(messageInfo) {
       const sid = messageInfo.sessionID as string
@@ -757,6 +769,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     sidebarOpen, setSidebarOpen, globalError, setGlobalError,
     abortMessage,
     agents, agentsLoading, selectedAgent, setSelectedAgent,
+    connectionStatus,
   }
 
   return (

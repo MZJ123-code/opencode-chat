@@ -1,5 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import type { ChatPart } from '../types/message'
+
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
 
 export interface OpenCodeEvent {
   id: string
@@ -8,6 +10,7 @@ export interface OpenCodeEvent {
 }
 
 interface EventHandlerMap {
+  onReconnected?: () => void
   onMessageUpdated?: (messageInfo: Record<string, unknown>) => void
   onMessageRemoved?: (sessionID: string, messageID: string) => void
   onPartUpdated?: (part: ChatPart, messageID: string, sessionID: string) => void
@@ -31,13 +34,15 @@ interface EventHandlerMap {
   onStepEnded?: (sessionID: string, finish: string, cost: number, tokens: Record<string, unknown>) => void
 }
 
-export function useEvents(handlers: EventHandlerMap) {
+export function useEvents(handlers: EventHandlerMap): { connectionStatus: ConnectionStatus } {
   const handlersRef = useRef(handlers)
   handlersRef.current = handlers
   const esRef = useRef<EventSource | null>(null)
   const retryRef = useRef(1000)
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const connectingRef = useRef(false)
+  const connectionAttemptRef = useRef(0)
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting')
 
   const handleEvent = useCallback((event: OpenCodeEvent) => {
     const h = handlersRef.current
@@ -161,6 +166,8 @@ export function useEvents(handlers: EventHandlerMap) {
     function connect() {
       if (stopped || connectingRef.current) return
       connectingRef.current = true
+      connectionAttemptRef.current++
+      const isReconnect = connectionAttemptRef.current > 1
 
       if (esRef.current) esRef.current.close()
 
@@ -171,11 +178,14 @@ export function useEvents(handlers: EventHandlerMap) {
         retryRef.current = 1000
         try {
           handleEvent(JSON.parse(e.data) as OpenCodeEvent)
-        } catch { /* skip */ }
+        } catch (err) {
+          console.warn('[SSE] 事件解析失败:', err, e.data)
+        }
       }
 
       es.onerror = () => {
         connectingRef.current = false
+        setConnectionStatus('disconnected')
         if (stopped) return
         es.close()
         const delay = retryRef.current
@@ -186,6 +196,10 @@ export function useEvents(handlers: EventHandlerMap) {
       es.onopen = () => {
         connectingRef.current = false
         retryRef.current = 1000
+        setConnectionStatus('connected')
+        if (isReconnect) {
+          handlersRef.current.onReconnected?.()
+        }
       }
     }
 
@@ -197,4 +211,6 @@ export function useEvents(handlers: EventHandlerMap) {
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
     }
   }, [handleEvent])
+
+  return { connectionStatus }
 }
