@@ -91,29 +91,42 @@
   width: 100%;
   max-width: 85%;
   margin-bottom: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card-bg);
-  overflow: hidden;
 }
 
-.toolGroupSummary {
+.toolGroup details > summary {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 7px 12px;
   cursor: pointer;
   user-select: none;
   font-size: 13px;
   font-weight: 500;
   color: var(--foreground);
   background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  list-style: none;
+}
+
+.toolGroup details[open] > summary {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.toolGroup details > summary::-webkit-details-marker {
+  display: none;
 }
 
 .toolGroupArrow {
   font-size: 10px;
   color: var(--muted-foreground);
   transition: transform .15s;
+}
+
+.toolGroup details[open] .toolGroupArrow {
+  transform: rotate(90deg);
 }
 
 .toolGroupIcon {
@@ -123,6 +136,8 @@
 .toolGroupName {
   font-weight: 600;
   color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
 }
 
 .toolGroupBadge {
@@ -138,7 +153,6 @@
 .toolGroupBody {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 
