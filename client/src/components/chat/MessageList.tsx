@@ -180,9 +180,9 @@ export function MessageList({
                 variants={messageVariants}
                 initial="hidden"
                 animate="visible"
-                className={styles.toolGroup}
+                style={{ alignSelf: 'flex-start', width: '100%', maxWidth: '85%', marginBottom: 8 }}
               >
-                <details>
+                <details className={styles.toolGroup}>
                   <summary className={styles.toolGroupSummary}>
                     <span className={styles.toolGroupArrow}>▶</span>
                     <span className={styles.toolGroupIcon}>🛠</span>

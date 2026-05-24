@@ -87,17 +87,15 @@
 }
 
 .toolGroup {
-  align-self: flex-start;
+  display: block;
   width: 100%;
-  max-width: 85%;
-  margin-bottom: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
   background: var(--card);
 }
 
-.toolGroup details > summary {
+.toolGroupSummary {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -110,11 +108,11 @@
   list-style: none;
 }
 
-.toolGroup details[open] > summary {
+.toolGroup[open] .toolGroupSummary {
   border-radius: 8px 8px 0 0;
 }
 
-.toolGroup details > summary::-webkit-details-marker {
+.toolGroupSummary::-webkit-details-marker {
   display: none;
 }
 
@@ -124,7 +122,7 @@
   transition: transform .15s;
 }
 
-.toolGroup details[open] .toolGroupArrow {
+.toolGroup[open] .toolGroupArrow {
   transform: rotate(90deg);
 }
 
