@@ -1,6 +1,5 @@
 import type { ChatPart } from '../../types/message'
 import { MessageBubble } from './MessageBubble'
-import { ReasoningBlock } from './ReasoningBlock'
 import { ToolCallBlock } from './ToolCallBlock'
 import styles from './PartRenderer.module.css'
 
@@ -24,9 +23,6 @@ export function PartRenderer({ part, role }: PartRendererProps) {
         <MessageBubble role={role} parts={[text]} />
       )
     }
-
-    case 'reasoning':
-      return <ReasoningBlock part={part as import('../../types/message').ReasoningPart} />
 
     case 'tool':
       return <ToolCallBlock part={part as import('../../types/message').ToolPart} />

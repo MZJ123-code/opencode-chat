@@ -36,58 +36,6 @@
   box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
 }
 
-/* AI thinking block in message list */
-.thinkingBlock {
-  align-self: flex-start;
-  max-width: 85%;
-  width: 100%;
-  margin-bottom: 6px;
-  background: var(--secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  border-bottom-left-radius: 4px;
-  flex-shrink: 0;
-}
-
-.thinkingSummary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  user-select: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted-foreground);
-  font-family: var(--font);
-  background: var(--muted);
-  border-bottom: 1px solid var(--border);
-  border-radius: var(--radius) var(--radius) 0 0;
-}
-
-.thinkingArrow {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  transition: transform .15s;
-  flex-shrink: 0;
-}
-
-.thinkingBody {
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.thinkingPart {
-  font-size: 13px;
-  color: var(--muted-foreground);
-  line-height: 1.65;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: var(--font);
-}
-
 .stopBtn {
   position: absolute;
   bottom: 20px;
@@ -138,27 +86,4 @@
   background: var(--accent);
 }
 
-.subtaskBlock {
-  padding: 8px 12px;
-  border: 1px dashed #c4b5fd;
-  border-radius: 8px;
-  font-size: 13px;
-  background: #faf5ff;
-  color: #7c3aed;
-  flex-shrink: 0;
-}
 
-:global(.dark) .subtaskBlock {
-  background: rgba(124, 58, 237, 0.1);
-  color: #c4b5fd;
-  border-color: rgba(124, 58, 237, 0.3);
-}
-
-.subtaskAgent {
-  font-weight: 600;
-}
-
-.subtaskDesc {
-  font-size: 12px;
-  opacity: 0.8;
-}

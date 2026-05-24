@@ -1,8 +1,7 @@
 import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ChatMessage, ChatPart } from '../../types/message'
+import type { ChatMessage } from '../../types/message'
 import { PartRenderer } from './PartRenderer'
-import { ToolCallBlock } from './ToolCallBlock'
 import { FeedbackRow } from './FeedbackRow'
 import { TypingIndicator } from './TypingIndicator'
 import { EmptyState } from './EmptyState'
@@ -46,37 +45,6 @@ const stopBtnVariants = {
 
 function isNearBottom(el: HTMLElement, threshold = 30): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight < threshold
-}
-
-function isThinkingPart(part: ChatPart): boolean {
-  return part.type === 'reasoning' || part.type === 'tool' || part.type === 'subtask'
-}
-
-function renderThinkingPart(part: ChatPart): ReactNode {
-  switch (part.type) {
-    case 'reasoning': {
-      const text = 'text' in part ? part.text : ''
-      if (!text) return null
-      return (
-        <div key={part.id} className={styles.thinkingPart}>{text}</div>
-      )
-    }
-    case 'tool':
-      return <ToolCallBlock key={part.id} part={part as import('../../types/message').ToolPart} />
-    case 'subtask': {
-      const st = part as import('../../types/message').SubtaskPart
-      return (
-        <div key={part.id} className={styles.subtaskBlock}>
-          <div className={styles.subtaskAgent}>
-            {st.agent ? `subtask: ${st.agent}` : '子任务'}
-          </div>
-          <div className={styles.subtaskDesc}>{st.description}</div>
-        </div>
-      )
-    }
-    default:
-      return null
-  }
 }
 
 /**
@@ -179,36 +147,13 @@ export function MessageList({
       }
 
       const currentAiIdx = aiMsgIndex++
-      const thinkingParts = msg.parts.filter(isThinkingPart)
-      const textParts = msg.parts.filter((p) => p.type === 'text')
+      const visibleParts = msg.parts.filter((p) => p.type !== 'reasoning')
 
-      if (thinkingParts.length > 0) {
-        const label = `思考过程 (${thinkingParts.length})`
-        elements.push(
-          <motion.div
-            key={`thinking-${msgIdx}`}
-            className={styles.thinkingBlock}
-            custom={msgIdx}
-            variants={messageVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <details open style={{ fontSize: 13 }}>
-              <summary className={styles.thinkingSummary}>
-                <span className={styles.thinkingArrow}>▶</span>
-                🧠 {label}
-              </summary>
-              <div className={styles.thinkingBody}>
-                {thinkingParts.map((p) => renderThinkingPart(p))}
-              </div>
-            </details>
-          </motion.div>
-        )
-      }
-
-      textParts.forEach((part, partIdx) => {
-        const text = 'text' in part ? part.text : ''
-        if (!text) return
+      visibleParts.forEach((part, partIdx) => {
+        if (part.type === 'text') {
+          const text = 'text' in part ? part.text : ''
+          if (!text) return
+        }
         elements.push(
           <motion.div
             key={`ai-${msgIdx}-${partIdx}`}
@@ -222,7 +167,7 @@ export function MessageList({
         )
       })
 
-      const hasTextParts = textParts.length > 0
+      const hasTextParts = visibleParts.some((p) => p.type === 'text')
       const nextMsg = messages[msgIdx + 1]
       const isLastInTurn = !nextMsg || nextMsg.role === 'user'
       const isLastMsgOverall = msgIdx === messages.length - 1
