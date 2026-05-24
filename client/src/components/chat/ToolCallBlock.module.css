@@ -27,8 +27,8 @@
 
 .toolName {
   font-weight: 600;
-  color: var(--foreground);
-  font-family: var(--mono);
+  color: var(--accent);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: 14px;
 }
 
