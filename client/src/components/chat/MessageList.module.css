@@ -133,7 +133,7 @@
 .toolGroupName {
   font-weight: 600;
   color: var(--accent-foreground);
-  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: var(--font);
   font-size: 14px;
 }
 
