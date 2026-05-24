@@ -5,8 +5,9 @@ import { PORT, HOSTNAME, PUBLIC_DIR, isProduction, MODEL, SMALL_MODEL, AGENT_OPT
 import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
 import { startOpenCode, getServer } from "./services/opencode.js"
-import { saveStats } from "./services/statsService.js"
+import { restoreStats, saveStats, saveStatsSync } from "./services/statsService.js"
 
+restoreStats()
 await startOpenCode()
 
 const app = createApp()
@@ -46,7 +47,7 @@ app.listen(PORT, HOSTNAME, () => {
 // 优雅退出
 function shutdown() {
   logger.info("正在关闭服务...")
-  saveStats()
+  saveStatsSync()
   try {
     const server = getServer()
     server.close?.()
@@ -61,8 +62,7 @@ process.on("SIGINT", shutdown)
 process.on("SIGTERM", shutdown)
 process.on("uncaughtException", (err) => {
   logger.error(`未捕获异常: ${err.message}`, { stack: err.stack })
-  saveStats()
-  process.exit(1)
+  shutdown()
 })
 process.on("unhandledRejection", (reason) => {
   logger.error("未处理的 Promise 拒绝", { reason: String(reason) })

@@ -1,3 +1,3 @@
-export function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('zh-CN')
+export function formatDate(timestamp: number, locale = 'zh-CN'): string {
+  return new Date(timestamp).toLocaleDateString(locale)
 }

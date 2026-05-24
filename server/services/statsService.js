@@ -1,14 +1,24 @@
-import fsp from "fs/promises"
+import fs from "fs"
 import path from "path"
 import { LOG_DIR } from "../config.js"
 import { stats, sessionMeta } from "../storage/store.js"
 
-export function recordVisit(ip) {
-  stats.visitors.add(ip)
-}
+const statsPath = path.join(LOG_DIR, "_stats.json")
 
-export function incrementSessions() {
-  stats.totalSessions++
+// 启动时从文件恢复统计
+export function restoreStats() {
+  try {
+    const raw = fs.readFileSync(statsPath, "utf-8")
+    const data = JSON.parse(raw)
+    if (data.visitors) stats.visitors = new Set(data.activeIPs || [])
+    if (data.totalSessions) stats.totalSessions = data.totalSessions
+    if (data.totalQuestions) stats.totalQuestions = data.totalQuestions
+    if (data.satisfied) stats.satisfied = data.satisfied
+    if (data.unsatisfied) stats.unsatisfied = data.unsatisfied
+    if (data.blockedAccess) stats.blockedAccess = data.blockedAccess
+  } catch {
+    // 首次运行或无文件，使用默认值
+  }
 }
 
 export function incrementQuestions() {
@@ -43,43 +53,59 @@ export function getStats() {
   }
 }
 
-let pending = false
-const statsPath = path.join(LOG_DIR, "_stats.json")
+function buildSnapshot() {
+  const sessionAgents = {}
+  for (const [id, meta] of sessionMeta) {
+    sessionAgents[id] = {
+      agent: meta.agent || null,
+      title: meta.title,
+      messageCount: meta.messageCount,
+      createdAt: new Date(meta.createdAt).toISOString().replace("T", " ").slice(0, 23),
+    }
+  }
+  return {
+    updated: new Date().toISOString().replace("T", " ").slice(0, 23),
+    visitors: stats.visitors.size,
+    totalSessions: stats.totalSessions,
+    totalQuestions: stats.totalQuestions,
+    satisfied: stats.satisfied,
+    unsatisfied: stats.unsatisfied,
+    blockedAccess: stats.blockedAccess,
+    activeIPs: [...stats.visitors],
+    sessions: sessionAgents,
+  }
+}
+
+// 同步写入 — 用于进程退出时保证落盘
+export function saveStatsSync() {
+  try {
+    fs.writeFileSync(statsPath, JSON.stringify(buildSnapshot(), null, 2), "utf-8")
+  } catch {
+    // 静默失败，不阻塞退出
+  }
+}
+
+// 异步 debounce 写入 — 运行时定时落盘
+let writeTimer = null
+const WRITE_INTERVAL = 10_000 // 最多每 10 秒写一次
 
 export function saveStats() {
-  if (pending) return
-  pending = true
-  setImmediate(async () => {
+  if (writeTimer) return
+  writeTimer = setTimeout(() => {
+    writeTimer = null
     try {
-      const sessionAgents = {}
-      for (const [id, meta] of sessionMeta) {
-        sessionAgents[id] = {
-          agent: meta.agent || null,
-          title: meta.title,
-          messageCount: meta.messageCount,
-          createdAt: new Date(meta.createdAt).toISOString().replace("T", " ").slice(0, 23),
-        }
-      }
-      await fsp.writeFile(
-        statsPath,
-        JSON.stringify(
-          {
-            updated: new Date().toISOString().replace("T", " ").slice(0, 23),
-            visitors: stats.visitors.size,
-            totalSessions: stats.totalSessions,
-            totalQuestions: stats.totalQuestions,
-            satisfied: stats.satisfied,
-            unsatisfied: stats.unsatisfied,
-            blockedAccess: stats.blockedAccess,
-            activeIPs: [...stats.visitors],
-            sessions: sessionAgents,
-          },
-          null,
-          2
-        )
-      )
-    } catch {} finally {
-      pending = false
+      fs.writeFileSync(statsPath, JSON.stringify(buildSnapshot(), null, 2), "utf-8")
+    } catch {
+      // 静默失败
     }
-  })
+  }, WRITE_INTERVAL).unref()
+}
+
+// 立即强制写入（供手动触发使用，当前未导出）
+export function flushStats() {
+  if (writeTimer) {
+    clearTimeout(writeTimer)
+    writeTimer = null
+  }
+  saveStatsSync()
 }

@@ -59,11 +59,6 @@
       "label": "代码探索",
       "description": "快速了解和分析现有代码库的结构与逻辑",
       "agent": "explore"
-    },
-       {
-      "label": "门子俊",
-      "description": "快速了解和分析现有代码库的结构与逻辑",
-      "agent": "explore"
     }
   ],
 

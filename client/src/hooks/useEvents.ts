@@ -44,7 +44,7 @@ export function useEvents(handlers: EventHandlerMap) {
     const props = (event.properties || {}) as Record<string, unknown>
 
     // Debug: set window.__DEBUG_EVENTS__ = true in browser console to trace child session event flow
-    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__DEBUG_EVENTS__) {
+    if (import.meta.env.DEV && typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__DEBUG_EVENTS__) {
       const pi = props as Record<string, unknown>
       const sid = (pi.sessionID || (pi.info as Record<string, unknown> | undefined)?.sessionID || (pi.info as Record<string, unknown> | undefined)?.id || '?') as string
       const detail = event.type?.startsWith('session.next.')
@@ -168,6 +168,7 @@ export function useEvents(handlers: EventHandlerMap) {
       esRef.current = es
 
       es.onmessage = (e) => {
+        retryRef.current = 1000
         try {
           handleEvent(JSON.parse(e.data) as OpenCodeEvent)
         } catch { /* skip */ }

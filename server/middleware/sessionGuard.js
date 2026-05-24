@@ -13,8 +13,6 @@ export function requireSessionOwnership(paramName = "id") {
       const meta = sessionId ? getSessionMeta(sessionId) : null
       logger.warn(`访问被拒绝: ${ip} -> ${sessionId}`, {
         session_exists: !!meta,
-        session_agent: meta?.agent || null,
-        session_title: meta?.title,
       })
       saveStats()
       return res.status(403).json({ error: "无权访问此会话" })

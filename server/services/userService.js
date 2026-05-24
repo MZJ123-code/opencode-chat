@@ -22,9 +22,3 @@ export function ensureIP(ip) {
   }
 }
 
-export function getVisitorInfo() {
-  return {
-    total_visitors: stats.visitors.size,
-    active_visitors: ipUsers.size,
-  }
-}

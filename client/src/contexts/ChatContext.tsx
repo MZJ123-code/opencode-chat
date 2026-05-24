@@ -11,8 +11,6 @@ import { useFeedback } from '../hooks/useFeedback'
 import { PermissionDialog } from '../components/common/PermissionDialog'
 import type { PermissionRequest } from '../api/permission'
 
-let renderPending = false
-
 export interface SessionMeta {
   id: string
   parentID?: string
@@ -104,6 +102,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const currentSessionRef = useRef<string | null>(null)
+
+  const renderPendingRef = useRef(false)
+  const bgFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [inputValue, setInputValue] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -199,21 +200,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setSessionMeta(new Map(sessionMetaRef.current))
   }, [])
 
-  let bgFlushTimer: ReturnType<typeof setTimeout> | null = null
   const scheduleFlush = useCallback(() => {
-    if (renderPending) return
-    renderPending = true
+    if (renderPendingRef.current) return
+    renderPendingRef.current = true
     requestAnimationFrame(() => {
-      renderPending = false
+      renderPendingRef.current = false
       flushAllMessages()
     })
   }, [flushAllMessages])
 
   // Flush non-current session updates at a lower frequency (every 500ms max)
   const scheduleBackgroundFlush = useCallback(() => {
-    if (bgFlushTimer) return
-    bgFlushTimer = setTimeout(() => {
-      bgFlushTimer = null
+    if (bgFlushTimerRef.current) return
+    bgFlushTimerRef.current = setTimeout(() => {
+      bgFlushTimerRef.current = null
       flushAllMessages()
     }, 500)
   }, [flushAllMessages])
