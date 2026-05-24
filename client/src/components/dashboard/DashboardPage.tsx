@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowUpDown, ArrowUp, ArrowDown, ListFilter, X, Search } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail, recordVisit } from '../../api/stats'
 import type { BasicStats, DailyStatsItem, FeedbackDetailItem, VisitDetailItem, QuestionDetailItem } from '../../api/stats'
 import { ThemeToggle } from '../common/ThemeToggle'
@@ -33,7 +33,6 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [sortKey, setSortKey] = useState<string>('created_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({})
-  const [activeFilterCol, setActiveFilterCol] = useState<string | null>(null)
 
   useEffect(() => {
     recordVisit()
@@ -268,11 +267,11 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
             <table className="w-full text-xs min-w-[550px]" style={{ background: 'var(--chat-bg)' }}>
               <thead>
                 <tr className="text-[var(--text-secondary)]" style={{ background: 'var(--secondary)' }}>
-                  <ColHeader label="时间" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
-                  <ColHeader label="IP" colKey="ip" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
-                  <ColHeader label="类型" colKey="satisfied" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} center />
-                  <ColHeader label="问题内容" colKey="question_content" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
-                  <ColHeader label="AI 回答" colKey="answer_content" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
+                  <ColHeader label="时间" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} />
+                  <ColHeader label="IP" colKey="ip" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} />
+                  <ColHeader label="类型" colKey="satisfied" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} center />
+                  <ColHeader label="问题内容" colKey="question_content" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} />
+                  <ColHeader label="AI 回答" colKey="answer_content" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} />
                 </tr>
               </thead>
               <tbody>
@@ -365,99 +364,66 @@ function SectionTitle({ title, action }: { title: string; action?: React.ReactNo
   )
 }
 
-function ColHeader({ label, colKey, sortKey, sortDir, onSort, columnFilters, setColumnFilters, activeFilterCol, setActiveFilterCol, center }: {
+function ColHeader({ label, colKey, sortKey, sortDir, onSort, columnFilters, setColumnFilters, center }: {
   label: string; colKey: string; sortKey: string; sortDir: 'asc' | 'desc'; onSort: (k: string) => void
   columnFilters: Record<string, string>; setColumnFilters: React.Dispatch<React.SetStateAction<Record<string, string>>>
-  activeFilterCol: string | null; setActiveFilterCol: (v: string | null) => void; center?: boolean
+  center?: boolean
 }) {
-  const inputRef = useRef<HTMLInputElement>(null)
   const isSorted = sortKey === colKey
   const filterVal = columnFilters[colKey] || ''
 
-  useEffect(() => {
-    if (activeFilterCol === colKey && inputRef.current) inputRef.current.focus()
-  }, [activeFilterCol, colKey])
-
   return (
-    <th className={`${center ? 'text-center' : 'text-left'} px-4 py-3 font-medium whitespace-nowrap relative select-none`} style={{ background: 'var(--secondary)' }}>
-      <div className="inline-flex items-center gap-1.5">
-        <button
-          onClick={() => onSort(colKey)}
-          className="inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer text-inherit text-xs font-medium hover:text-[var(--text)] transition-colors px-0"
-        >
-          {label}
-          <span className="text-[var(--muted-foreground)]" style={{ color: isSorted ? 'var(--accent)' : undefined }}>
-            {isSorted ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveFilterCol(activeFilterCol === colKey ? null : colKey)}
-          className="inline-flex items-center justify-center bg-transparent border-0 cursor-pointer p-0.5 rounded hover:bg-[var(--accent)]/10 transition-colors"
-          style={{ color: filterVal ? 'var(--accent)' : 'var(--muted-foreground)' }}
-          title="筛选"
-        >
-          <ListFilter size={13} />
-        </button>
-      </div>
+    <th className={`${center ? 'text-center' : 'text-left'} px-3 py-2 font-medium whitespace-nowrap select-none align-top`} style={{ background: 'var(--secondary)' }}>
+      <button
+        onClick={() => onSort(colKey)}
+        className="inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer text-inherit text-xs font-medium hover:text-[var(--text)] transition-colors px-0 py-0.5"
+      >
+        {label}
+        <span className="text-[var(--muted-foreground)]" style={{ color: isSorted ? 'var(--accent)' : undefined }}>
+          {isSorted ? (sortDir === 'asc' ? <ArrowUp size={11} /> : <ArrowDown size={11} />) : <ArrowUpDown size={11} />}
+        </span>
+      </button>
 
-      {activeFilterCol === colKey && (
-        <div
-          className="absolute top-full left-0 z-20 mt-1.5 p-2 rounded-xl border shadow-lg min-w-[180px]"
-          style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-        >
-          {colKey === 'satisfied' ? (
-            <div className="flex gap-2">
-              {(['赞', '踩'] as const).map(opt => {
-                const active = filterVal === opt
-                return (
-                  <button
-                    key={opt}
-                    onClick={() => {
-                      if (active) {
-                        setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n })
-                      } else {
-                        setColumnFilters(prev => ({ ...prev, [colKey]: opt }))
-                      }
-                      setActiveFilterCol(null)
-                    }}
-                    className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border bg-transparent cursor-pointer transition-colors"
-                    style={{
-                      borderColor: active ? (opt === '赞' ? '#22c55e' : '#ef4444') : 'var(--border)',
-                      color: active ? '#fff' : 'var(--text-secondary)',
-                      background: active ? (opt === '赞' ? '#22c55e' : '#ef4444') : 'transparent',
-                    }}
-                  >
-                    {opt}
-                  </button>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' }} />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder={`筛选${label}...`}
-                value={filterVal}
-                onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
-                className="w-full pl-7 pr-7 py-1.5 text-xs rounded-lg border bg-transparent text-[var(--text)] outline-none"
-                style={{ borderColor: 'var(--border)' }}
-                onKeyDown={e => e.key === 'Escape' && setActiveFilterCol(null)}
-                onBlur={() => setTimeout(() => setActiveFilterCol(null), 200)}
-              />
-              {filterVal && (
+      <div className="mt-1">
+        {colKey === 'satisfied' ? (
+          <div className="flex gap-1">
+            {(['赞', '踩'] as const).map(opt => {
+              const active = filterVal === opt
+              return (
                 <button
-                  onClick={() => { setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n }); setActiveFilterCol(null) }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer p-0 text-[var(--muted-foreground)] hover:text-[var(--text)]"
+                  key={opt}
+                  onClick={() => {
+                    if (active) {
+                      setColumnFilters(prev => { const n = { ...prev }; delete n[colKey]; return n })
+                    } else {
+                      setColumnFilters(prev => ({ ...prev, [colKey]: opt }))
+                    }
+                  }}
+                  className="flex-1 px-2 py-1 text-[11px] font-medium rounded-md border bg-transparent cursor-pointer transition-all"
+                  style={{
+                    borderColor: active ? (opt === '赞' ? '#22c55e' : '#ef4444') : 'var(--border)',
+                    color: active ? '#fff' : 'var(--text-secondary)',
+                    background: active ? (opt === '赞' ? '#22c55e' : '#ef4444') : 'transparent',
+                  }}
                 >
-                  <X size={13} />
+                  {opt}
                 </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+              )
+            })}
+          </div>
+        ) : (
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="筛选..."
+              value={filterVal}
+              onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
+              className="w-full min-w-[80px] px-2 py-1 text-[11px] rounded-md border bg-transparent text-[var(--text)] outline-none placeholder:text-[var(--muted-foreground)] transition-colors"
+              style={{ borderColor: filterVal ? 'var(--accent)' : 'var(--border)' }}
+            />
+          </div>
+        )}
+      </div>
     </th>
   )
 }
