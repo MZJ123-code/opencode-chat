@@ -6,6 +6,7 @@ import { MODEL } from "../config.js"
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days
 const MAX_SESSIONS_PER_IP = 100
 const MAX_TOTAL_SESSIONS = 5000
+const MAX_MESSAGES_PER_SESSION = 10_000
 
 function evictOldestSession(ip) {
   const ids = ipSessions.get(ip)
@@ -113,7 +114,16 @@ export function getSessionMeta(sessionId) {
 
 export function recordMessage(sessionId) {
   const meta = sessionMeta.get(sessionId)
-  if (meta) meta.messageCount++
+  if (!meta) return
+  if (meta.messageCount >= MAX_MESSAGES_PER_SESSION) {
+    logger.warn(`会话消息数已达上限: ${sessionId}`, {
+      messageCount: meta.messageCount,
+      title: meta.title,
+      ip: meta.ip,
+    })
+    return
+  }
+  meta.messageCount++
 }
 
 export function validateOwnership(ip, sessionId) {

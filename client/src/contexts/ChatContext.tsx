@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react'
-import type { ChatMessage, ChatPart } from '../types/message'
+import type { ChatMessage, ChatPart, TextPart, ReasoningPart, ToolPart, MessageInfo } from '../types/message'
 import type { SessionListItem } from '../types/session'
 import type { FeedbackState } from '../hooks/useFeedback'
 import * as sessionsApi from '../api/sessions'
@@ -159,8 +159,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     for (const msg of parentMsgs) {
       if (msg.role !== 'assistant') continue
       for (const p of msg.parts) {
-        if (p.type === 'tool' && (p as unknown as Record<string, unknown>).tool === 'task') {
-          const tp = p as unknown as { callID: string; state: { status: string } }
+        if (isTaskToolPart(p)) {
+          const tp = p as ToolPart
           if (tp.callID && !mapped.has(tp.callID)) {
             taskCalls.push({ callID: tp.callID, status: tp.state?.status || '' })
           }
@@ -233,14 +233,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const existingIdx = parts.findIndex((p) => p.id === part.id)
     if (existingIdx >= 0) {
       // Deep-merge state so partial updates (e.g. onToolSuccess) don't lose metadata/output
-      const existing = parts[existingIdx] as unknown as Record<string, unknown>
+      const existing = parts[existingIdx] as Record<string, unknown>
       const merged: Record<string, unknown> = { ...existing, ...part }
       if (existing.state && part.state) {
         merged.state = { ...(existing.state as Record<string, unknown>), ...(part.state as Record<string, unknown>) }
       }
-      parts[existingIdx] = merged as unknown as ChatPart
+      parts[existingIdx] = merged as ChatPart
     } else {
-      parts.push(part as unknown as ChatPart)
+      parts.push(part as ChatPart)
     }
     msg.parts = parts
     msgs[targetIdx] = msg
@@ -257,23 +257,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setAllMessages(new Map(allMessagesRef.current))
   }, [setSessionMessages])
 
+  // Type guard: check if a part is a "task" tool call
+  function isTaskToolPart(part: ChatPart): part is ToolPart {
+    return part.type === 'tool' && (part as ToolPart).tool === 'task'
+  }
+
   // Helper to get/set `info` property from a message
   function getMsgInfo(msg: ChatMessage): Record<string, unknown> | undefined {
-    return (msg as unknown as Record<string, unknown>).info as Record<string, unknown> | undefined
+    return msg.info as Record<string, unknown> | undefined
   }
 
   function setMsgInfo(msg: ChatMessage, info: Record<string, unknown>): ChatMessage {
-    const m = msg as unknown as Record<string, unknown>
-    m.info = info
-    return m as unknown as ChatMessage
+    ;(msg as { info: Record<string, unknown> }).info = info
+    return msg
   }
 
   function getPartText(part: ChatPart): string | undefined {
-    return (part as unknown as Record<string, unknown>).text as string | undefined
+    return 'text' in part ? (part as TextPart | ReasoningPart).text : undefined
   }
 
   function setPartText(part: ChatPart, text: string): void {
-    ;(part as unknown as Record<string, unknown>).text = text
+    if ('text' in part) (part as TextPart | ReasoningPart).text = text
   }
 
   // === Navigation (following opencode web's session tree navigation) ===
@@ -481,8 +485,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (partIdx === -1) {
         const existingTextIdx = msg.parts.findIndex((p) => p.type === 'text')
         if (msg.role === 'user' && part.type === 'text' && existingTextIdx !== -1) {
-          const updatedPart = { ...parts[existingTextIdx], id: part.id, messageID: part.messageID }
-          ;(updatedPart as Record<string, unknown>).text = (part as unknown as Record<string, unknown>).text
+          const updatedPart: Record<string, unknown> = { ...parts[existingTextIdx], id: part.id, messageID: part.messageID }
+          updatedPart.text = 'text' in part ? (part as TextPart).text : undefined
           parts[existingTextIdx] = updatedPart as ChatPart
         } else {
           parts.push(part)
@@ -545,7 +549,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // session.status → only affect isStreaming for the currently viewed session
     onSessionStatus(sessionID, status) {
       if (sessionID !== currentSessionRef.current) return
-      const s = (typeof status === 'string' ? status : (status as Record<string, unknown>)?.status) as string
+      const s = typeof status === 'string' ? status : (status as Record<string, unknown>).status as string
       if (s === 'completed' || s === 'idle') setIsStreaming(false)
       else if (s === 'running') setIsStreaming(true)
     },
@@ -556,16 +560,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     onSessionError(sessionID, err) {
       if (sessionID !== currentSessionRef.current) return
-      setChatError((err as Record<string, unknown>).message as string || '未知错误')
+      setChatError(err.message as string || '未知错误')
       setIsStreaming(false)
     },
 
     // session.created / session.updated → record session metadata (parentID, title)
     onSessionUpdated(info) {
-      const sid = (info as Record<string, unknown>).id as string | undefined
+      const sid = info.id as string | undefined
       if (!sid) return
-      const parentID = (info as Record<string, unknown>).parentID as string | undefined
-      const title = (info as Record<string, unknown>).title as string | undefined
+      const parentID = info.parentID as string | undefined
+      const title = info.title as string | undefined
       const existing = sessionMetaRef.current.get(sid)
       sessionMetaRef.current.set(sid, {
         id: sid,
@@ -584,8 +588,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           if (msg.role !== 'assistant') continue
           for (let j = msg.parts.length - 1; j >= 0; j--) {
             const p = msg.parts[j]
-            if (p.type === 'tool' && (p as unknown as Record<string, unknown>).tool === 'task') {
-              const tp = p as unknown as { callID: string; state: { status: string } }
+            if (isTaskToolPart(p)) {
+              const tp = p as ToolPart
               if ((tp.state?.status === 'running' || tp.state?.status === 'completed') && tp.callID && !taskCallToChildRef.current.has(tp.callID)) {
                 taskCallToChildRef.current.set(tp.callID, sid)
                 setTaskCallToChild(new Map(taskCallToChildRef.current))
@@ -641,8 +645,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (msgs[i].role === 'assistant') { targetIdx = i; break }
       }
       if (targetIdx === -1) return
-      const existing = msgs[targetIdx].parts.find((p) => p.id === reasoningID) as Record<string, unknown> | undefined
-      const prevText = (existing?.text as string) || ''
+      const existing = msgs[targetIdx].parts.find((p) => p.id === reasoningID)
+      const prevText = existing && 'text' in existing ? (existing as ReasoningPart).text : ''
       injectPartToSession(sessionID, {
         id: reasoningID, messageID: '', sessionID, type: 'reasoning', text: prevText + delta,
       })
@@ -742,7 +746,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       .finally(() => setAgentsLoading(false))
   }, [])
 
-  useEffect(() => { loadSessions() }, [loadSessions])
+  const loadSessionsRef = useRef(loadSessions)
+  loadSessionsRef.current = loadSessions
+  useEffect(() => { loadSessionsRef.current() }, [])
 
   useEffect(() => {
     setGlobalError(sessionError || chatError)

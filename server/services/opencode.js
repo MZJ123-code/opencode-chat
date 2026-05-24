@@ -2,7 +2,9 @@ import { createOpencode } from "@opencode-ai/sdk/v2"
 import { OPENCODE_PORT, OPENCODE_HOST, buildOpenCodeConfig, MODEL, SMALL_MODEL, AGENT_OPTIONS, PROVIDER } from "../config.js"
 import { logger } from "../logger/index.js"
 
+/** @type {import("@opencode-ai/sdk/v2").OpencodeClient|null} */
 let _client = null
+/** @type {import("@opencode-ai/sdk/v2").OpencodeServer|null} */
 let _server = null
 
 export async function startOpenCode() {
@@ -48,11 +50,17 @@ export async function startOpenCode() {
   return { client: _client, server: _server }
 }
 
+/**
+ * @returns {import("@opencode-ai/sdk/v2").OpencodeClient}
+ */
 export function getClient() {
   if (!_client) throw new Error("OpenCode client not initialized")
   return _client
 }
 
+/**
+ * @returns {import("@opencode-ai/sdk/v2").OpencodeServer}
+ */
 export function getServer() {
   if (!_server) throw new Error("OpenCode server not initialized")
   return _server

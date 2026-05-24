@@ -1,6 +1,6 @@
 import { useRef, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ChatMessage, ChatPart } from '../../types/message'
+import type { ChatMessage, ChatPart, TextPart, ReasoningPart } from '../../types/message'
 import { PartRenderer } from './PartRenderer'
 import { ToolCallBlock } from './ToolCallBlock'
 import { FeedbackRow } from './FeedbackRow'
@@ -8,7 +8,7 @@ import { TypingIndicator } from './TypingIndicator'
 import { EmptyState } from './EmptyState'
 import { Skeleton } from '../common/Skeleton'
 import { MarkdownRenderer } from './MarkdownRenderer'
-import { escapeHtml } from '../../utils/escapeHtml'
+
 import type { FeedbackState } from '../../hooks/useFeedback'
 import styles from './MessageList.module.css'
 
@@ -55,14 +55,10 @@ function isThinkingPart(part: ChatPart): boolean {
 function renderThinkingPart(part: ChatPart): ReactNode {
   switch (part.type) {
     case 'reasoning': {
-      const text = (part as unknown as { text: string }).text || ''
+      const text = 'text' in part ? (part as ReasoningPart).text : ''
       if (!text) return null
       return (
-        <div
-          key={part.id}
-          className={styles.thinkingPart}
-          dangerouslySetInnerHTML={{ __html: escapeHtml(text) }}
-        />
+        <div key={part.id} className={styles.thinkingPart}>{text}</div>
       )
     }
     case 'tool':
@@ -151,7 +147,7 @@ export function MessageList({
       if (msg.role === 'user') {
         const userText = msg.parts
           .filter((p) => p.type === 'text')
-          .map((p) => ('text' in p ? (p as { text: string }).text : ''))
+          .map((p) => ('text' in p ? (p as TextPart).text : ''))
           .join('\n')
 
         elements.push(
@@ -200,7 +196,7 @@ export function MessageList({
       }
 
       textParts.forEach((part, partIdx) => {
-        const text = 'text' in part ? (part as unknown as { text: string }).text : ''
+        const text = 'text' in part ? (part as TextPart).text : ''
         if (!text) return
         elements.push(
           <motion.div

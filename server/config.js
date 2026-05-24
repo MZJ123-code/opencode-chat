@@ -17,8 +17,8 @@ export const LOG_DIR = path.join(__dirname, "..", "logs")
 export const LOG_MAX_SIZE = cfg.log.maxFileSize
 export const LOG_MAX_ARCHIVES = cfg.log.maxArchives
 
-export const MODEL = process.env.MODEL || cfg.model || "unknown"
-export const SMALL_MODEL = cfg.small_model || "unknown"
+export const MODEL = process.env.MODEL || cfg.model
+export const SMALL_MODEL = process.env.SMALL_MODEL || cfg.small_model
 export const PROVIDER = cfg.provider || {}
 
 export const AGENT_OPTIONS = cfg.agentOptions || []
@@ -31,18 +31,32 @@ export const PUBLIC_DIR = fs.existsSync(path.join(distDir, "index.html"))
   ? distDir
   : publicDir
 
-// SDK Config — passed to createOpencode({ config })
+// SDK Config — 优先环境变量覆盖，其次 config.json
+function overrideJSON(key, fallback) {
+  const raw = process.env[key]
+  if (raw) {
+    try { return JSON.parse(raw) } catch { /* 解析失败，使用 config.json 默认值 */ }
+  }
+  return fallback
+}
+
+function overrideBool(key, fallback) {
+  if (process.env[key] === "true") return true
+  if (process.env[key] === "false") return false
+  return fallback
+}
+
 export function buildOpenCodeConfig() {
   return {
-    model: process.env.MODEL || cfg.model,
-    small_model: cfg.small_model,
-    logLevel: cfg.logLevel,
-    autoupdate: cfg.autoupdate,
-    agent: cfg.agent,
-    tools: cfg.tools,
-    compaction: cfg.compaction,
+    model: MODEL,
+    small_model: SMALL_MODEL,
+    logLevel: process.env.OPENCODE_LOG_LEVEL || cfg.logLevel,
+    autoupdate: overrideBool("OPENCODE_AUTOUPDATE", cfg.autoupdate),
+    agent: overrideJSON("OPENCODE_AGENT", cfg.agent),
+    tools: overrideJSON("OPENCODE_TOOLS", cfg.tools),
+    compaction: overrideJSON("OPENCODE_COMPACTION", cfg.compaction),
     tool_output: cfg.tool_output,
-    snapshot: cfg.snapshot,
-    provider: cfg.provider,
+    snapshot: overrideBool("OPENCODE_SNAPSHOT", cfg.snapshot),
+    provider: PROVIDER,
   }
 }
