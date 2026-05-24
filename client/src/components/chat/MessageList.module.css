@@ -95,7 +95,6 @@
   border-radius: 8px;
   font-size: 13px;
   background: var(--card);
-  overflow: hidden;
 }
 
 .toolGroup details > summary {
@@ -151,10 +150,6 @@
 .toolGroupBody {
   display: flex;
   flex-direction: column;
-  padding-left: 20px;
-  border-left: 2px solid var(--accent);
-  margin-left: 8px;
-  opacity: 0.85;
 }
 
 
