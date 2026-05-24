@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail, recordVisit } from '../../api/stats'
 import type { BasicStats, DailyStatsItem, FeedbackDetailItem, VisitDetailItem, QuestionDetailItem } from '../../api/stats'
@@ -31,6 +31,8 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [modal, setModal] = useState<{ title: string; content: string } | null>(null)
   const [sortKey, setSortKey] = useState<string>('created_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({})
+  const [activeFilterCol, setActiveFilterCol] = useState<string | null>(null)
 
   useEffect(() => {
     recordVisit()
@@ -97,6 +99,17 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     if (filters.satisfaction === 'liked') items = items.filter(f => f.satisfied)
     if (filters.satisfaction === 'disliked') items = items.filter(f => !f.satisfied)
     if (filters.ipSearch) items = items.filter(f => f.ip.includes(filters.ipSearch))
+
+    for (const [key, val] of Object.entries(columnFilters)) {
+      if (!val) continue
+      const lower = val.toLowerCase()
+      if (key === 'created_at') items = items.filter(f => f.created_at?.toLowerCase().includes(lower))
+      else if (key === 'ip') items = items.filter(f => f.ip?.toLowerCase().includes(lower))
+      else if (key === 'satisfied') items = items.filter(f => (f.satisfied ? '赞' : '踩').includes(lower))
+      else if (key === 'question_content') items = items.filter(f => f.question_content?.toLowerCase().includes(lower))
+      else if (key === 'answer_content') items = items.filter(f => f.answer_content?.toLowerCase().includes(lower))
+    }
+
     items.sort((a, b) => {
       let va: string | number = (a as any)[sortKey] ?? ''
       let vb: string | number = (b as any)[sortKey] ?? ''
@@ -107,7 +120,7 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     })
     if (sortDir === 'desc') items.reverse()
     return items
-  }, [feedback, filters.dateFrom, filters.dateTo, filters.satisfaction, filters.ipSearch, sortKey, sortDir])
+  }, [feedback, filters, columnFilters, sortKey, sortDir])
 
   const handleSort = useCallback((key: string) => {
     setSortDir(prev => sortKey === key && prev === 'asc' ? 'desc' : 'asc')
@@ -254,11 +267,11 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
             <table className="w-full text-xs min-w-[550px]" style={{ background: 'var(--chat-bg)' }}>
               <thead>
                 <tr className="text-[var(--text-secondary)]" style={{ background: 'var(--secondary)' }}>
-                  <SortTh label="时间" sortKey="created_at" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
-                  <SortTh label="IP" sortKey="ip" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
-                  <SortTh label="类型" sortKey="satisfied" currentKey={sortKey} dir={sortDir} onSort={handleSort} center />
-                  <SortTh label="问题内容" sortKey="question_content" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
-                  <SortTh label="AI 回答" sortKey="answer_content" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                  <ColHeader label="时间" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
+                  <ColHeader label="IP" colKey="ip" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
+                  <ColHeader label="类型" colKey="satisfied" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} center />
+                  <ColHeader label="问题内容" colKey="question_content" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
+                  <ColHeader label="AI 回答" colKey="answer_content" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} columnFilters={columnFilters} setColumnFilters={setColumnFilters} activeFilterCol={activeFilterCol} setActiveFilterCol={setActiveFilterCol} />
                 </tr>
               </thead>
               <tbody>
@@ -267,8 +280,8 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
                     <td className="px-4 py-2.5 text-[var(--text-secondary)] whitespace-nowrap">{row.created_at}</td>
                     <td className="px-4 py-2.5 text-[var(--text)] font-mono whitespace-nowrap">{row.ip}</td>
                     <td className="px-4 py-2.5 text-center whitespace-nowrap">
-                      <span style={{ color: row.satisfied ? '#22c55e' : '#ef4444' }}>
-                        {row.satisfied ? '👍' : '👎'}
+                      <span className="text-xs font-medium" style={{ color: row.satisfied ? '#22c55e' : '#ef4444' }}>
+                        {row.satisfied ? '赞' : '踩'}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-[var(--text)] max-w-xs align-middle">
@@ -351,19 +364,54 @@ function SectionTitle({ title, action }: { title: string; action?: React.ReactNo
   )
 }
 
-function SortTh({ label, sortKey, currentKey, dir, onSort, center }: {
-  label: string; sortKey: string; currentKey: string; dir: 'asc' | 'desc'; onSort: (k: string) => void; center?: boolean
+function ColHeader({ label, colKey, sortKey, sortDir, onSort, columnFilters, setColumnFilters, activeFilterCol, setActiveFilterCol, center }: {
+  label: string; colKey: string; sortKey: string; sortDir: 'asc' | 'desc'; onSort: (k: string) => void
+  columnFilters: Record<string, string>; setColumnFilters: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  activeFilterCol: string | null; setActiveFilterCol: (v: string | null) => void; center?: boolean
 }) {
-  const active = currentKey === sortKey
+  const inputRef = useRef<HTMLInputElement>(null)
+  const active = sortKey === colKey
+  const filterVal = columnFilters[colKey] || ''
+
+  useEffect(() => {
+    if (activeFilterCol === colKey && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [activeFilterCol, colKey])
+
   return (
-    <th
-      onClick={() => onSort(sortKey)}
-      className={`${center ? 'text-center' : 'text-left'} px-4 py-2.5 font-medium whitespace-nowrap cursor-pointer select-none hover:text-[var(--text)] transition-colors`}
-    >
-      {label}
-      <span className="ml-1 text-[10px]" style={{ color: active ? 'var(--accent)' : 'var(--muted-foreground)' }}>
-        {active ? (dir === 'asc' ? '▲' : '▼') : '▽'}
-      </span>
+    <th className={`${center ? 'text-center' : 'text-left'} px-4 py-2.5 font-medium whitespace-nowrap relative`} style={{ background: 'var(--secondary)' }}>
+      <div className="flex items-center gap-1">
+        <span onClick={() => onSort(colKey)} className="cursor-pointer select-none hover:text-[var(--text)] transition-colors">
+          {label}
+          <span className="ml-1 text-[10px]" style={{ color: active ? 'var(--accent)' : 'var(--muted-foreground)' }}>
+            {active ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}
+          </span>
+        </span>
+        <button
+          onClick={() => setActiveFilterCol(activeFilterCol === colKey ? null : colKey)}
+          className="text-[11px] bg-transparent border-0 cursor-pointer px-0.5 rounded hover:bg-[var(--accent)] transition-colors"
+          style={{ color: filterVal ? 'var(--accent)' : 'var(--muted-foreground)' }}
+          title="筛选"
+        >
+          ⚬
+        </button>
+      </div>
+      {activeFilterCol === colKey && (
+        <div className="absolute top-full left-0 z-10 mt-1 p-1.5 rounded border shadow-lg" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder={`筛选${label}...`}
+            value={filterVal}
+            onChange={e => setColumnFilters(prev => ({ ...prev, [colKey]: e.target.value }))}
+            className="w-32 px-2 py-1 text-xs rounded border bg-transparent text-[var(--text)] outline-none"
+            style={{ borderColor: 'var(--border)' }}
+            onKeyDown={e => e.key === 'Escape' && setActiveFilterCol(null)}
+            onBlur={() => setTimeout(() => setActiveFilterCol(null), 200)}
+          />
+        </div>
+      )}
     </th>
   )
 }
