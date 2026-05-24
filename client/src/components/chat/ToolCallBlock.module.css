@@ -149,3 +149,87 @@
 .outputBlock:hover .copyBtn {
   opacity: 1;
 }
+
+/* Child session link — like opencode web's task tool rendering */
+.childLink {
+  padding: 4px 0;
+}
+
+.childLinkBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px dashed #818cf8;
+  border-radius: 6px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.childLinkBtn:hover {
+  background: #e0e7ff;
+}
+
+.childLinkTitle {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: left;
+}
+
+.childLinkBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #c7d2fe;
+  color: #4338ca;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.childLinkArrow {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Child session indicator on summary line */
+.childIndicator {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #6366f1;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+/* Inline child tool preview */
+.childPreview {
+  padding: 4px 0;
+}
+
+.childToolList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.childToolItem {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 3px 8px;
+  background: #f8fafc;
+  border-radius: 4px;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}

@@ -19,10 +19,14 @@ router.get("/", async (req, res) => {
 
   let closed = false
   let eventCount = 0
+  const eventTypeCount = new Map()
 
   req.on("close", () => {
     closed = true
-    logger.info(`SSE 事件流关闭: ${ip}`, { events_delivered: eventCount })
+    logger.info(`SSE 事件流关闭: ${ip}`, {
+      events_delivered: eventCount,
+      event_types: Object.fromEntries(eventTypeCount),
+    })
   })
 
   try {
@@ -31,27 +35,38 @@ router.get("/", async (req, res) => {
     for await (const event of events.stream) {
       if (closed) break
       eventCount++
+
+      // Track all event types
+      const etype = event.type || "unknown"
+      eventTypeCount.set(etype, (eventTypeCount.get(etype) || 0) + 1)
+
+      // Log all events for debugging (especially child session events)
+      const props = event.properties || {}
+      const sessionID = props.sessionID || event.sessionID || "?"
+      const partType = props.part?.type
+      const toolName = props.part?.tool || props.tool
+      const hasParentID = props.info?.parentID
+
+      // Log key event types with details
+      if (
+        event.type?.startsWith("session.") ||
+        event.type?.startsWith("message.") ||
+        event.type?.startsWith("permission.") ||
+        event.type?.startsWith("question.")
+      ) {
+        const logData = {
+          sessionID,
+          eventType: event.type,
+          seq: eventCount,
+          ...(partType ? { partType } : {}),
+          ...(toolName ? { tool: toolName } : {}),
+          ...(hasParentID ? { parentID: hasParentID } : {}),
+        }
+        logger.info(`SSE: ${event.type}`, logData)
+      }
+
       const data = JSON.stringify(event)
       res.write(`event: message\ndata: ${data}\n\n`)
-
-      // Log key event types for traceability
-      if (event.type === "tool" || event.type === "step-start" || event.type === "step-finish" || event.type === "subtask") {
-        const logData = { sessionID: event.sessionID, type: event.type }
-        if (event.type === "step-start" && event.agent) logData.agent = event.agent
-        if (event.type === "step-start" && event.model) logData.model = event.model
-        if (event.type === "subtask") {
-          logData.agent = event.agent
-          logData.description = event.description
-        }
-        if (event.type === "tool") {
-          logData.tool = event.tool
-          logData.state = event.state
-        }
-        if (event.type === "step-finish" && event.tokens) {
-          logData.tokens = event.tokens
-        }
-        logger.info(`SSE 事件: ${event.type}`, logData)
-      }
     }
   } catch (err) {
     if (!closed) {

@@ -41,6 +41,18 @@ export function useEvents(handlers: EventHandlerMap) {
     const h = handlersRef.current
     const props = (event.properties || {}) as Record<string, unknown>
 
+    // Debug: set window.__DEBUG_EVENTS__ = true in browser console to trace child session event flow
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__DEBUG_EVENTS__) {
+      const pi = props as Record<string, unknown>
+      const sid = (pi.sessionID || (pi.info as Record<string, unknown> | undefined)?.sessionID || (pi.info as Record<string, unknown> | undefined)?.id || '?') as string
+      const detail = event.type?.startsWith('session.next.')
+        ? `${event.type} tool=${pi.tool || pi.callID || ''}`
+        : event.type?.startsWith('message.part')
+          ? `${event.type} part=${(pi.part as Record<string, unknown>)?.type || ''}`
+          : event.type
+      console.debug(`[SSE] ${detail} session=${sid}`)
+    }
+
     switch (event.type) {
       case 'message.updated':
         if (props.info) h.onMessageUpdated?.(props.info as Record<string, unknown>)
