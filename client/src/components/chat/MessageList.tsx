@@ -79,6 +79,17 @@ function renderThinkingPart(part: ChatPart): ReactNode {
   }
 }
 
+/**
+ * 消息列表组件
+ * @param props - 组件属性
+ * @param props.messages - 消息列表
+ * @param props.isLoading - 是否加载中
+ * @param props.isStreaming - 是否正在流式输出
+ * @param props.sessionId - 当前会话 ID
+ * @param props.feedbackStates - 反馈状态映射
+ * @param props.onSubmitFeedback - 提交反馈回调
+ * @param props.onStop - 停止生成回调
+ */
 export function MessageList({
   messages,
   isLoading,

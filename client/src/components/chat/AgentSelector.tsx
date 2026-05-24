@@ -37,6 +37,14 @@ const cardVariants = {
   }),
 }
 
+/**
+ * AI Agent 选择器组件（已记忆化）
+ * @param props - 组件属性
+ * @param props.agents - Agent 选项列表
+ * @param props.loading - 是否加载中
+ * @param props.onSelect - 选择 Agent 回调
+ * @param props.creating - 是否正在创建会话
+ */
 export const AgentSelector = memo(function AgentSelector({ agents, loading, onSelect, creating }: AgentSelectorProps) {
   if (loading) {
     return (
