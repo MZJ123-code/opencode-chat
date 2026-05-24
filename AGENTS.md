@@ -59,8 +59,91 @@ npm start
 | POST | `/api/permission/question/reject` | 问题跳过 |
 | GET | `/api/agents` | 可用 AI Agent 列表 |
 
-## 团队约定（源自代码，未文档化）
+## 编码规范
 
-- 所有代码用中文注释/日志/错误信息
-- `logs/`、`dist/`、`node_modules/` 在 `.gitignore` 中
+### 函数级注释（强制）
+
+所有导出的函数/组件/Hook 必须带有 JSDoc（JS）或 TSDoc（TS）注释：
+
+```js
+// 服务端 JS — JSDoc
+/**
+ * 创建新会话
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
+export async function createSession(req, res) { ... }
+
+/**
+ * @param {string} ip - 客户端 IP
+ * @returns {boolean} 是否新访客
+ */
+export function ensureIP(ip) { ... }
+```
+
+```tsx
+// 前端 TSX — TSDoc
+/**
+ * 消息气泡组件
+ * @param props - 组件属性
+ * @param props.message - 消息数据
+ * @param props.isStreaming - 是否正在流式输出
+ */
+export function MessageBubble({ message, isStreaming }: Props) { ... }
+```
+
+规则：
+- **导出函数/组件**：必须写注释，说明用途 + 参数 + 返回值
+- **内部函数**：推荐注释，逻辑复杂时强制写
+- **React 组件**：Props 用 TypeScript 类型定义，`@param` 标注关键 Props
+
+### 命名规范
+
+| 类型 | 规范 | 示例 |
+|------|------|------|
+| 变量/函数 | camelCase | `getClientIP`, `sessionService` |
+| 类/类型/组件 | PascalCase | `ChatProvider`, `SessionListItem` |
+| 常量 | UPPER_SNAKE 或 camelCase | `MAX_BUFFER`, `WRITE_INTERVAL` |
+| 文件 | kebab-case（JS/TS）或 PascalCase（组件） | `session-service.js`, `MessageBubble.tsx` |
+| CSS Module | `*.module.css` | `MessageBubble.module.css` |
+| 目录 | kebab-case | `session-service.js` 在 `services/` |
+
+### 注释与日志
+
+- 所有注释、日志、错误消息使用**中文**
+- 日志分级使用：`logger.info` / `logger.warn` / `logger.error`
+- 避免 `console.log`（服务端用 `logger`，前端仅在 `import.meta.env.DEV` 时允许）
+- 前端 SSE 调试日志用 `window.__DEBUG_EVENTS__` 控制（仅开发环境）
+
+### TypeScript 规范
+
+- 禁止 `any`，优先使用精确类型或 `unknown`
+- 禁止 `as` 类型断言，除非上游 SDK 无类型
+- Props 接口命名：`${组件名}Props`（如 `MessageBubbleProps`）
+- 使用 `@/` 路径别名引用 `client/src/` 下的模块
+
+### 错误处理
+
+- 服务端异步路由必须用 `try/catch` + `next(err)` 或全局 `errorHandler`
+- SSE 流错误静默处理，禁止未捕获异常导致进程退出
+- 前端 API 调用通过 `client.ts` 的 `api()` 统一错误封装
+- 外部资源读取（文件、网络）必须 `try/catch` 静默兜底
+
+### React 规范
+
+- 优先 `function Component() { ... }` 而非箭头函数组件
+- Hook 以 `use` 开头（`useEvents`, `useFeedback`）
+- Context 拆分原则：按关注点分离，避免单 Context 过大
+- 模块级变量（模块作用域的 `let`）必须用 `useRef` 替代（StrictMode 安全）
+
+### 文件组织
+
+- 每个文件只对外导出一个主要功能（路由/Hook/Context/组件）
+- CSS Module 与组件文件同级
+- API 客户端按资源拆分（`sessions.ts`、`chat.ts`、`feedback.ts`）
+
+## 团队约定
+
+- `logs/`、`dist/`、`node_modules/` 在 `.gitignore` 中，不提交
 - 无 PR/CI/CD 配置
+- 无测试框架、无 ESLint、无 Prettier（使用内置 `tsc -b` 做类型检查）
