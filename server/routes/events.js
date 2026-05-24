@@ -109,7 +109,7 @@ router.get("/", async (req, res) => {
           ...(toolName ? { tool: toolName } : {}),
           ...(hasParentID ? { parentID: hasParentID } : {}),
         }
-        if (event.type !== "message.part.delta") {
+        if (event.type !== "message.part.delta" && event.type !== "message.part.updated") {
           logger.info(`SSE: ${event.type}`, logData)
         }
       }
