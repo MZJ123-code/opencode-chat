@@ -255,8 +255,8 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
               <tbody>
                 {filteredFeedback.map(row => {
                   const expanded = expandedFeedback.has(row.id)
-                  const qLong = (row.question_content?.length || 0) > 100
-                  const aLong = (row.answer_content?.length || 0) > 100
+                  const qLong = (row.question_content?.length || 0) > 150
+                  const aLong = (row.answer_content?.length || 0) > 150
                   return (
                     <Fragment key={row.id}>
                       <tr className="border-t" style={{ borderColor: 'var(--border)' }}>
@@ -267,20 +267,20 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
                             {row.satisfied ? '👍' : '👎'}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-[var(--text)] max-w-xs">
-                          {expanded || !qLong
-                            ? row.question_content || '-'
-                            : <span title={row.question_content}>{row.question_content?.slice(0, 100)}… <button onClick={() => toggleFeedback(row.id)} className="text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">展开</button></span>}
+                        <td className="px-4 py-2.5 text-[var(--text)] max-w-xs align-top">
+                          {row.question_content
+                            ? <CellContent text={row.question_content} long={qLong} expanded={expanded} onToggle={() => toggleFeedback(row.id)} />
+                            : '-'}
                         </td>
-                        <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs">
-                          {expanded || !aLong
-                            ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{row.answer_content || '-'}</span>
-                            : <span title={row.answer_content}>{row.answer_content?.slice(0, 100)}… <button onClick={() => toggleFeedback(row.id)} className="text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">展开</button></span>}
+                        <td className="px-4 py-2.5 text-[var(--text-secondary)] max-w-xs align-top">
+                          {row.answer_content
+                            ? <CellContent text={row.answer_content} long={aLong} expanded={expanded} onToggle={() => toggleFeedback(row.id)} />
+                            : '-'}
                         </td>
                       </tr>
                       {expanded && (qLong || aLong) && (
                         <tr style={{ background: 'var(--secondary)' }}>
-                          <td colSpan={5} className="px-4 py-2.5">
+                          <td colSpan={5} className="px-4 py-2">
                             <div className="flex justify-end">
                               <button onClick={() => toggleFeedback(row.id)} className="text-xs text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer underline">收起</button>
                             </div>
@@ -339,6 +339,25 @@ function SectionTitle({ title, action }: { title: string; action?: React.ReactNo
     <div className="flex items-center justify-between mb-3">
       <h2 className="text-sm font-semibold text-[var(--text)]">{title}</h2>
       {action}
+    </div>
+  )
+}
+
+function CellContent({ text, long, expanded, onToggle }: { text: string; long: boolean; expanded: boolean; onToggle: () => void }) {
+  return (
+    <div>
+      <div
+        className={expanded ? '' : 'line-clamp-3'}
+        style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+        title={expanded ? undefined : text}
+      >
+        {text}
+      </div>
+      {long && (
+        <button onClick={onToggle} className="mt-0.5 text-[var(--muted-foreground)] hover:text-[var(--text)] bg-transparent border-0 cursor-pointer text-xs underline">
+          {expanded ? '收起' : '展开全部'}
+        </button>
+      )}
     </div>
   )
 }
