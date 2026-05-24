@@ -90,29 +90,29 @@
   align-self: flex-start;
   width: 100%;
   max-width: 85%;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--card);
+  overflow: hidden;
 }
 
 .toolGroup details > summary {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 8px 12px;
   cursor: pointer;
   user-select: none;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground);
   background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 8px;
+  color: var(--foreground);
   list-style: none;
 }
 
 .toolGroup details[open] > summary {
-  border-bottom: none;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  border-radius: 8px 8px 0 0;
 }
 
 .toolGroup details > summary::-webkit-details-marker {
@@ -135,18 +135,17 @@
 
 .toolGroupName {
   font-weight: 600;
-  color: var(--accent);
+  color: var(--foreground);
   font-family: var(--mono);
   font-size: 12px;
 }
 
 .toolGroupBadge {
-  font-size: 11px;
-  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
   border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 500;
+  font-family: var(--font);
 }
 
 .toolGroupBody {
