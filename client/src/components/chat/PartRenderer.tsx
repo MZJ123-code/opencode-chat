@@ -27,6 +27,7 @@ export function PartRenderer({ part, role }: PartRendererProps) {
     case 'tool':
       return <ToolCallBlock part={part as import('../../types/message').ToolPart} />
 
+    case 'reasoning':
     case 'step-start':
     case 'step-finish':
       return null

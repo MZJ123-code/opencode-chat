@@ -46,14 +46,6 @@ export function getBufferedEvents(ip, sinceSeq = 0) {
   }
 }
 
-/**
- * 删除指定 IP 的事件缓冲区
- * @param {string} ip - 客户端 IP
- */
-export function removeBuffer(ip) {
-  buffers.delete(ip)
-}
-
 // 定期清理空闲缓冲区
 setInterval(() => {
   const now = Date.now()

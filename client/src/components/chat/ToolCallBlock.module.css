@@ -9,6 +9,12 @@
   min-width: 0;
 }
 
+.summaryArrow {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
 .summary {
   display: flex;
   align-items: center;

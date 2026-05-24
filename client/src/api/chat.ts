@@ -1,16 +1,4 @@
 import { api } from './client'
-import type { ChatSendResult } from '../types/message'
-
-/**
- * 同步发送消息
- * @param sessionId - 会话 ID
- * @param message - 消息内容
- * @param agent - 可选的 AI Agent 名称
- * @returns 聊天发送结果
- */
-export function sendMessage(sessionId: string, message: string, agent?: string) {
-  return api<ChatSendResult>('POST', '/api/chat', { sessionId, message, agent })
-}
 
 /**
  * 异步发送消息（通过 SSE 接收回复）

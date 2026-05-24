@@ -59,12 +59,14 @@ export async function startOpenCode() {
  */
 export function killOpenCode() {
   if (_server) {
+    logger.info("正在关闭 OpenCode Server...")
     try { _server.process?.stdout?.removeAllListeners?.() } catch {}
     try { _server.process?.stderr?.removeAllListeners?.() } catch {}
     try { _server.close?.() } catch {}
     try { _server.process?.kill?.() } catch {}
     _client = null
     _server = null
+    logger.info("OpenCode Server 已关闭")
   }
 }
 
@@ -76,14 +78,4 @@ export function killOpenCode() {
 export function getClient() {
   if (!_client) throw new Error("OpenCode client not initialized")
   return _client
-}
-
-/**
- * 获取 OpenCode 服务端实例
- * @returns {import("@opencode-ai/sdk/v2").OpencodeServer} 服务端实例
- * @throws {Error} 服务端未初始化时抛出
- */
-export function getServer() {
-  if (!_server) throw new Error("OpenCode server not initialized")
-  return _server
 }
