@@ -13,7 +13,7 @@
 | ⚡ | **SSE 实时流** | 事件环形缓冲区，断连回放，不丢消息 |
 | 🔄 | **AI 子会话导航** | Agent 可创建子任务，前端维护完整导航栈（进入/返回/回根） |
 | 💬 | **AI 权限问答** | Agent 能主动请求权限、发起多步表单问答 |
-| 🗄️ | **零数据库** | 纯内存存储，`npm install && npm start` 即用 |
+| 🗄️ | **零数据库** | 纯内存存储，`bun install && bun start` 即用 |
 | 🤖 | **多 Agent 模式** | 代码构建 / 架构规划 / 代码探索，按需切换 |
 | 🛡️ | **生产就绪** | IP 隔离+限流、会话 TTL 清理、日志轮转归档 |
 
@@ -21,34 +21,22 @@
 
 ## 快速启动
 
-> **前置条件**：Node.js >= 18，本地已安装 OpenCode CLI（`opencode` 命令可用）
-
-> **前置条件**：Bun，本地已安装 OpenCode CLI（`opencode` 命令可用）
+> **前置条件**：Bun、OpenCode CLI（`opencode` 命令可用）
 
 ### 后端
 
 ```bash
-# 安装依赖
-bun install
-
-# 开发模式（--watch 自动重启）
-bun run dev
-
-# 生产模式
-bun start
+bun install                # 安装依赖
+bun run dev                # 开发模式（--watch 自动重启）
+bun start                  # 生产模式
 ```
 
 ### 前端
 
 ```bash
-# 安装依赖
-cd client && bun install && cd ..
-
-# 开发模式（Vite HMR @ :5173）
-cd client && bun run dev
-
-# 生产构建（输出到 dist/）
-cd client && bun run build && cd ..
+cd client && bun install && cd ..       # 安装依赖
+cd client && bun run dev                # 开发模式（Vite HMR @ :5173）
+cd client && bun run build && cd ..     # 生产构建（输出到 dist/）
 ```
 
 ### 环境变量

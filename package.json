@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Multi-user AI chat service based on OpenCode SDK",
   "scripts": {
-    "dev": "node --watch server/index.js",
-    "start": "NODE_ENV=production node server/index.js"
+    "dev": "bun --watch server/index.js",
+    "start": "bun server/index.js"
   },
   "dependencies": {
     "@opencode-ai/sdk": "^1.14.29",
