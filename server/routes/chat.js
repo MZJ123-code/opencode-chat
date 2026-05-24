@@ -3,12 +3,25 @@ import { getClient } from "../services/opencode.js"
 import { getSessionMeta, recordMessage } from "../services/sessionService.js"
 import { incrementQuestions, saveStats } from "../services/statsService.js"
 import { recordQuestion } from "../services/analyticsService.js"
-import { MODEL, SMALL_MODEL } from "../config.js"
+import { MODEL, SMALL_MODEL, AGENT_DIR_MAP } from "../config.js"
 import { logger } from "../logger/index.js"
 import { requireBody } from "../middleware/validate.js"
 import { requireSessionOwnership } from "../middleware/sessionGuard.js"
 
 const router = Router()
+
+/**
+ * 为指定 Agent 构建携带 x-opencode-directory 请求头的 SDK options
+ * 仅当 Agent 在 AGENT_DIR_MAP 中配置了独立目录时生效
+ * @param {string|null|undefined} agent
+ * @returns {{ headers?: Record<string, string> }}
+ */
+function directoryOpts(agent) {
+  if (agent && AGENT_DIR_MAP.has(agent)) {
+    return { headers: { "x-opencode-directory": encodeURIComponent(AGENT_DIR_MAP.get(agent)) } }
+  }
+  return {}
+}
 
 function extractAgentInfo(meta, bodyAgent) {
   return meta?.agent || bodyAgent || null
@@ -80,7 +93,7 @@ router.post("/", requireBody("sessionId", "message"), requireSessionOwnership(),
     logger.info(`SDK 同步 prompt 开始: ${ctx.sessionId}`, { agent: ctx.agent, model: MODEL })
     const promptParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptParams.agent = ctx.agent
-    const result = await client.session.prompt(promptParams)
+    const result = await client.session.prompt(promptParams, directoryOpts(ctx.agent))
     const promptMs = Date.now() - promptStart
 
     const parts = result.data.parts || []
@@ -139,7 +152,7 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
     logger.info(`SDK 异步 prompt 开始: ${ctx.sessionId}`, { agent: ctx.agent, model: MODEL })
     const promptAsyncParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptAsyncParams.agent = ctx.agent
-    await client.session.promptAsync(promptAsyncParams)
+    await client.session.promptAsync(promptAsyncParams, directoryOpts(ctx.agent))
 
     logger.info(`异步 prompt 已提交: ${ctx.sessionId}`, { duration_ms: Date.now() - requestStart })
     res.json({ ok: true, sessionId: ctx.sessionId })

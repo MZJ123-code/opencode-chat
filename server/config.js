@@ -31,8 +31,15 @@ export const SMALL_MODEL = process.env.SMALL_MODEL || cfg.small_model
 /** @type {Record<string, unknown>} AI 提供商配置 */
 export const PROVIDER = cfg.provider || {}
 
-/** @type {Array<{label: string, agent: string}>} 可选 AI Agent 列表 */
+/** @type {Array<{label: string, agent: string, directory?: string}>} 可选 AI Agent 列表 */
 export const AGENT_OPTIONS = cfg.agentOptions || []
+
+/** @type {Map<string, string>} agent → 工作目录 映射（仅含配置了 directory 的 Agent） */
+export const AGENT_DIR_MAP = new Map(
+  (cfg.agentOptions || [])
+    .filter(a => typeof a.directory === "string" && a.directory.length > 0)
+    .map(a => [a.agent, a.directory])
+)
 
 /** @type {boolean} 是否为生产环境 */
 export const isProduction = process.env.NODE_ENV === "production"

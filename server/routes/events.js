@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { getClient } from "../services/opencode.js"
+import { AGENT_DIR_MAP } from "../config.js"
 import { logger } from "../logger/index.js"
 import { ipUsers, ipSessions, sessionMeta } from "../storage/store.js"
 import { validateOwnership } from "../services/sessionService.js"
@@ -74,10 +75,12 @@ router.get("/", async (req, res) => {
       }
     }
 
-    const events = await client.event.subscribe()
-
-    for await (const event of events.stream) {
-      if (closed) break
+    /**
+     * 处理单个 SSE 事件：记录、回放缓冲区、子会话注册、转发给浏览器
+     * @param {import("@opencode-ai/sdk/v2/types.gen.js").ServerSentEvent} event
+     */
+    function processEvent(event) {
+      if (closed) return
       eventCount++
 
       // 写入环形缓冲区
@@ -156,8 +159,31 @@ router.get("/", async (req, res) => {
         }
       }
 
-      if (!safeWrite(`event: message\ndata: ${JSON.stringify(event)}\n\n`)) break
+      safeWrite(`event: message\ndata: ${JSON.stringify(event)}\n\n`)
     }
+
+    // 订阅多个事件流：默认（无目录）+ 每个配置了独立目录的 Agent
+    const subscribeTasks = [client.event.subscribe()]
+    for (const dir of AGENT_DIR_MAP.values()) {
+      subscribeTasks.push(client.event.subscribe({ directory: dir }))
+    }
+
+    const streams = await Promise.all(subscribeTasks)
+    logger.info(`SSE 事件流已订阅: ${ip}`, { stream_count: streams.length })
+
+    // 并发消费所有事件流，等待全部结束（连接关闭时自动结束）
+    await Promise.all(streams.map(s => (async () => {
+      try {
+        for await (const event of s.stream) {
+          processEvent(event)
+          if (closed) break
+        }
+      } catch (err) {
+        if (!closed) {
+          logger.warn(`SSE 子流错误: ${ip}`, { error: err.message })
+        }
+      }
+    })()))
   } catch (err) {
     if (!closed) {
       const isSubscribeFailure = eventCount === 0

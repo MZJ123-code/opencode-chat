@@ -1,7 +1,7 @@
 import { ipUsers, ipSessions, sessionMeta, stats } from "../storage/store.js"
 import { logger } from "../logger/index.js"
 import { getClient } from "./opencode.js"
-import { MODEL } from "../config.js"
+import { MODEL, AGENT_DIR_MAP } from "../config.js"
 
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days
 const MAX_SESSIONS_PER_IP = 100
@@ -60,8 +60,13 @@ export async function createSession(ip, title, agent = null) {
 
   const client = getClient()
   const createParams = { title }
-  if (agent) createParams.agent = agent
-  const result = await client.session.create(createParams)
+  const sdkOpts = {}
+  if (agent) {
+    createParams.agent = agent
+    const dir = AGENT_DIR_MAP.get(agent)
+    if (dir) sdkOpts.headers = { "x-opencode-directory": encodeURIComponent(dir) }
+  }
+  const result = await client.session.create(createParams, sdkOpts)
   const sessionId = result.data.id
 
   ipUsers.get(ip).sessionIds.add(sessionId)

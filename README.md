@@ -87,11 +87,32 @@ AI Agent 能主动向用户请求权限（如文件读写），或发起**多步
 
 | 标签 | Agent | 用途 |
 |------|-------|------|
+| 📖 知识向导 | `knowledge-guide` | 基于独立知识库目录回答问题，只读不修改 |
 | 🛠️ 代码构建 | `build` | 编写、修改和调试代码 |
 | 📐 架构规划 | `plan` | 架构设计和技术方案 |
 | 🔍 代码探索 | `explore` | 快速分析代码库 |
 
 可在 `config.json` 的 `agentOptions` 中自由增删改 Agent。
+
+#### 按 Agent 指定工作目录
+
+可为 Agent 配置独立工作目录，使其操作特定知识库或项目：
+
+```json
+{
+  "agentOptions": [
+    {
+      "label": "知识向导",
+      "agent": "knowledge-guide",
+      "directory": "D:/workspace/knowledge-base"
+    }
+  ]
+}
+```
+
+配置 `directory` 后，该 Agent 的会话创建和消息发送都会通过 `x-opencode-directory` 请求头路由到指定目录。未配置 `directory` 的 Agent 使用默认工作目录（项目根目录）。
+
+Agent 配置文件同时需要安装在全局目录 `.config/opencode/agents/` 下，确保切换工作目录后仍能被 OpenCode 加载。
 
 ### 🛡️ 生产就绪
 

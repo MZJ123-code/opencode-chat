@@ -48,7 +48,8 @@
     {
       "label": "知识向导",
       "description": "基于工作区知识库回答用户问题，不修改任何本地内容",
-      "agent": "knowledge-guide"
+      "agent": "knowledge-guide",
+      "directory": "D:/workspace/knowledge-base"
     },
     {
       "label": "代码构建",

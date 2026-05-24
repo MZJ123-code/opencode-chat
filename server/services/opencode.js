@@ -21,7 +21,7 @@ export async function startOpenCode() {
     model: MODEL,
     small_model: SMALL_MODEL,
     provider_keys: Object.keys(PROVIDER).length > 0 ? Object.keys(PROVIDER) : undefined,
-    agents: AGENT_OPTIONS.map(a => ({ label: a.label, agent: a.agent })),
+    agents: AGENT_OPTIONS.map(a => ({ label: a.label, agent: a.agent, directory: a.directory || "(default)" })),
     tools: Object.entries(cfg.tools || {})
       .filter(([, v]) => v)
       .map(([k]) => k),
