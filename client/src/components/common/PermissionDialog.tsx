@@ -198,7 +198,7 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
                       ? 'w-6 bg-indigo-500'
                       : (answers[i]?.length ?? 0) > 0 || customOn[i]
                         ? 'w-3 bg-indigo-300'
-                        : 'w-3 bg-gray-300'
+                        : 'w-3 bg-gray-300 dark:bg-gray-600'
                   }`}
                   disabled={pending}
                   onClick={() => {
@@ -227,10 +227,10 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
           return (
             <button
               key={opt.label}
-              className={`w-full text-left rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
+              className={`w-full text-left rounded-lg border px-3 py-2 text-sm outline-none transition-colors dark:bg-[#1e2030] ${
                 picked
-                  ? 'border-indigo-400 bg-indigo-50'
-                  : 'border-[var(--border)] bg-white hover:border-indigo-300'
+                  ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
+                  : 'border-[var(--border)] bg-white dark:bg-[#1e2030] hover:border-indigo-300'
               }`}
               disabled={pending}
               onClick={() => toggleOption(opt.label)}
@@ -254,7 +254,7 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
           >
             <textarea
               ref={inputRef}
-              className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none disabled:opacity-50"
+              className="w-full rounded-lg border border-[var(--border)] bg-white dark:bg-[#1e2030] px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none disabled:opacity-50"
               placeholder="输入你的回答..."
               value={customTexts[tab] ?? ''}
               disabled={pending}
@@ -276,8 +276,8 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
             <button
               className={`w-full text-left rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
                 customOn[tab]
-                  ? 'border-indigo-400 bg-indigo-50'
-                  : 'border-dashed border-[var(--border)] bg-white hover:border-indigo-300'
+                  ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
+                  : 'border-dashed border-[var(--border)] bg-white dark:bg-[#1e2030] hover:border-indigo-300'
               }`}
               disabled={pending}
               onClick={() => {

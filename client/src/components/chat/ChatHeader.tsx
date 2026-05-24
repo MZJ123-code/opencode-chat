@@ -16,7 +16,7 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
   const showBack = navigationStack.length > 0 || parentSessionId
 
   return (
-    <div className="flex items-center px-4 h-14 shrink-0 gap-2 glass border-b border-[var(--border)]" style={{ background: 'var(--chat-bg)' }}>
+    <div className="flex items-center px-4 h-14 shrink-0 gap-2 border-b border-[var(--border)]" style={{ background: 'var(--chat-bg)' }}>
       {onMenuClick && <MobileMenuButton onClick={onMenuClick} />}
 
       {showBack && (

@@ -6,8 +6,11 @@ interface ChatAreaProps {
 
 export function ChatArea({ children }: ChatAreaProps) {
   return (
-    <main className="flex flex-col flex-1 min-w-0 bg-mesh" style={{ background: 'var(--bg)' }}>
-      <div className="relative z-10 flex flex-col flex-1 min-h-0" style={{ background: 'var(--chat-bg)' }}>
+    <main className="flex flex-col flex-1 min-w-0 relative bg-mesh" style={{ background: 'var(--bg)' }}>
+      <div className="relative z-10 flex flex-col flex-1 min-h-0" style={{
+        background: 'var(--chat-bg)',
+        margin: '0',
+      }}>
         {children}
       </div>
     </main>

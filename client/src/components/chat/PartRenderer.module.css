@@ -8,6 +8,12 @@
   color: #7c3aed;
 }
 
+:global(.dark) .subtaskBlock {
+  background: rgba(124, 58, 237, 0.1);
+  color: #c4b5fd;
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
 .subtaskAgent {
   font-weight: 600;
 }
