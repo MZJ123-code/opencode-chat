@@ -77,6 +77,7 @@ router.post("/", requireBody("sessionId", "message"), requireSessionOwnership(),
 
     const client = getClient()
     const promptStart = Date.now()
+    logger.info(`SDK 同步 prompt 开始: ${ctx.sessionId}`, { agent: ctx.agent, model: MODEL })
     const promptParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptParams.agent = ctx.agent
     const result = await client.session.prompt(promptParams)
@@ -112,12 +113,18 @@ router.post("/", requireBody("sessionId", "message"), requireSessionOwnership(),
 
     res.json({ sessionId: ctx.sessionId, reply, parts, tokens })
   } catch (err) {
+    logger.error(`同步 prompt 失败: ${ctx.sessionId}`, {
+      error: err.message,
+      duration_ms: Date.now() - requestStart,
+      agent: ctx.agent,
+    })
     next(err)
   }
 })
 
 // Async prompt (non-blocking, response comes via /api/events SSE stream)
 router.post("/async", requireBody("sessionId", "message"), requireSessionOwnership(), async (req, res, next) => {
+  const requestStart = Date.now()
   const ctx = getPromptContext(req)
 
   try {
@@ -129,12 +136,19 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
     saveStats()
 
     const client = getClient()
+    logger.info(`SDK 异步 prompt 开始: ${ctx.sessionId}`, { agent: ctx.agent, model: MODEL })
     const promptAsyncParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptAsyncParams.agent = ctx.agent
     await client.session.promptAsync(promptAsyncParams)
 
+    logger.info(`异步 prompt 已提交: ${ctx.sessionId}`, { duration_ms: Date.now() - requestStart })
     res.json({ ok: true, sessionId: ctx.sessionId })
   } catch (err) {
+    logger.error(`异步 prompt 提交失败: ${ctx.sessionId}`, {
+      error: err.message,
+      duration_ms: Date.now() - requestStart,
+      agent: ctx.agent,
+    })
     next(err)
   }
 })

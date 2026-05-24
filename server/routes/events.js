@@ -109,7 +109,9 @@ router.get("/", async (req, res) => {
           ...(toolName ? { tool: toolName } : {}),
           ...(hasParentID ? { parentID: hasParentID } : {}),
         }
-        logger.info(`SSE: ${event.type}`, logData)
+        if (event.type !== "message.part.delta") {
+          logger.info(`SSE: ${event.type}`, logData)
+        }
       }
 
       // 自动注册 OpenCode task 工具创建的子会话
@@ -158,7 +160,12 @@ router.get("/", async (req, res) => {
     }
   } catch (err) {
     if (!closed) {
-      logger.warn(`SSE stream error: ${err.message}`, { ip, events_delivered: eventCount })
+      const isSubscribeFailure = eventCount === 0
+      logger.warn(`SSE ${isSubscribeFailure ? "订阅" : "流"}错误: ${ip}`, {
+        error: err.message,
+        events_delivered: eventCount,
+        is_subscribe_failure: isSubscribeFailure,
+      })
     }
   } finally {
     if (!closed) {

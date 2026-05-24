@@ -19,17 +19,23 @@ function now() {
   return new Date().toISOString().replace("T", " ").slice(0, 19)
 }
 
+import { logger } from "../logger/index.js"
+
 /**
  * 记录一次页面访问
  * @param {string} ip - 访客 IP
  * @param {string} [ua=""] - User-Agent
  */
 export function recordPageVisit(ip, ua = "") {
-  const db = getDatabase()
-  const stmt = db.prepare(
-    "INSERT INTO page_visits (ip, user_agent, visit_date, visited_at) VALUES (?, ?, ?, ?)"
-  )
-  stmt.run(ip, ua.slice(0, 500), today(), now())
+  try {
+    const db = getDatabase()
+    const stmt = db.prepare(
+      "INSERT INTO page_visits (ip, user_agent, visit_date, visited_at) VALUES (?, ?, ?, ?)"
+    )
+    stmt.run(ip, ua.slice(0, 500), today(), now())
+  } catch (err) {
+    logger.error(`记录页面访问失败: ${ip}`, { error: err.message })
+  }
 }
 
 /**
@@ -40,11 +46,15 @@ export function recordPageVisit(ip, ua = "") {
  * @param {string} [agent=""] - 使用的 Agent
  */
 export function recordQuestion(sessionId, ip, content, agent = "") {
-  const db = getDatabase()
-  const stmt = db.prepare(
-    "INSERT INTO questions (session_id, ip, content, agent, question_date, asked_at) VALUES (?, ?, ?, ?, ?, ?)"
-  )
-  stmt.run(sessionId, ip, content.slice(0, 2000), agent, today(), now())
+  try {
+    const db = getDatabase()
+    const stmt = db.prepare(
+      "INSERT INTO questions (session_id, ip, content, agent, question_date, asked_at) VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    stmt.run(sessionId, ip, content.slice(0, 2000), agent, today(), now())
+  } catch (err) {
+    logger.error(`记录提问失败: ${sessionId}`, { ip, error: err.message })
+  }
 }
 
 /**
@@ -56,11 +66,15 @@ export function recordQuestion(sessionId, ip, content, agent = "") {
  * @param {string} [answerContent=""] - 关联回答内容
  */
 export function recordFeedback(sessionId, ip, satisfied, questionContent = "", answerContent = "") {
-  const db = getDatabase()
-  const stmt = db.prepare(
-    "INSERT INTO feedback (session_id, ip, satisfied, question_content, answer_content, feedback_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  )
-  stmt.run(sessionId, ip, satisfied ? 1 : 0, questionContent.slice(0, 2000), answerContent.slice(0, 2000), today(), now())
+  try {
+    const db = getDatabase()
+    const stmt = db.prepare(
+      "INSERT INTO feedback (session_id, ip, satisfied, question_content, answer_content, feedback_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+    stmt.run(sessionId, ip, satisfied ? 1 : 0, questionContent.slice(0, 2000), answerContent.slice(0, 2000), today(), now())
+  } catch (err) {
+    logger.error(`记录反馈失败: ${sessionId}`, { ip, satisfied, error: err.message })
+  }
 }
 
 /**

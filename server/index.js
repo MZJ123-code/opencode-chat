@@ -8,8 +8,19 @@ import { startOpenCode, killOpenCode } from "./services/opencode.js"
 import { restoreStats, saveStatsSync } from "./services/statsService.js"
 import { initDatabase } from "./storage/database.js"
 
-initDatabase()
-restoreStats()
+try {
+  initDatabase()
+  logger.info("数据库初始化完成")
+} catch (err) {
+  logger.error(`数据库初始化失败: ${err.message}`, { stack: err.stack })
+  process.exit(1)
+}
+try {
+  restoreStats()
+  logger.info("统计数据已从磁盘恢复")
+} catch (err) {
+  logger.warn(`统计数据恢复失败（首次启动或无数据）: ${err.message}`)
+}
 try {
   await startOpenCode()
 } catch (err) {

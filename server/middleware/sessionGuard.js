@@ -16,6 +16,7 @@ export function requireSessionOwnership(paramName = "id") {
     const sessionId = req.params[paramName] || req.body.sessionId
 
     if (!sessionId) {
+      logger.warn(`会话守卫: 会话 ID 为空`, { ip, path: req.path, method: req.method })
       recordBlockedAccess()
       saveStats()
       return res.status(403).json({ error: "无权访问此会话" })

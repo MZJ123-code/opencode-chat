@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit"
+import { logger } from "../logger/index.js"
 
 /** @type {number} 限流窗口时长（15 分钟） */
 const windowMs = 15 * 60 * 1000
@@ -19,4 +20,8 @@ export const rateLimiter = rateLimit({
   validate: { keyGeneratorIpFallback: false },
   skip: (req) => req.path === "/events" && req.headers.accept === "text/event-stream",
   message: { error: "请求过于频繁，请稍后再试" },
+  handler: (req, res, next, options) => {
+    logger.warn(`请求限流: ${req.clientIP}`, { path: req.path, method: req.method, windowMs, maxRequests })
+    res.status(429).json(options.message)
+  },
 })

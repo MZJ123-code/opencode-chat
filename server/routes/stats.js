@@ -28,6 +28,7 @@ router.get("/", (req, res) => {
  */
 router.get("/daily", (req, res) => {
   const days = Math.min(Math.max(parseInt(req.query.days) || 14, 1), 90)
+  logger.info(`查询每日统计: ${req.clientIP}`, { days })
   const daily = getDailyStats(days)
   const basic = getBasicStats()
   res.json({ basic, daily })
@@ -81,6 +82,7 @@ router.post("/visit", (req, res) => {
     recordPageVisit(ip, ua)
     res.json({ ok: true })
   } catch (err) {
+    logger.error(`记录页面访问失败: ${req.clientIP}`, { error: err.message })
     res.json({ ok: true })
   }
 })
