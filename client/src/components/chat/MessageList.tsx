@@ -182,12 +182,12 @@ export function MessageList({
                 animate="visible"
                 className={styles.toolGroup}
               >
-                <details open>
+                <details>
                   <summary className={styles.toolGroupSummary}>
                     <span className={styles.toolGroupArrow}>▶</span>
                     <span className={styles.toolGroupIcon}>🛠</span>
-                    <span className={styles.toolGroupName}>{toolName}</span>
                     <span className={styles.toolGroupBadge}>调用 {count} 次</span>
+                    <span className={styles.toolGroupName}>{toolName}</span>
                   </summary>
                   <div className={styles.toolGroupBody}>
                     {groupParts.map((gp) => (

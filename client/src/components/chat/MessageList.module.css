@@ -141,7 +141,6 @@
 }
 
 .toolGroupBadge {
-  margin-left: auto;
   font-size: 11px;
   padding: 1px 8px;
   border-radius: 999px;
@@ -153,6 +152,10 @@
 .toolGroupBody {
   display: flex;
   flex-direction: column;
+  padding-left: 20px;
+  border-left: 2px solid var(--accent);
+  margin-left: 8px;
+  opacity: 0.85;
 }
 
 
