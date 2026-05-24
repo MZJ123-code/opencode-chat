@@ -78,7 +78,7 @@ cd client && bun run build && cd ..     # 生产构建（输出到 dist/）
 - **隔离**：`sessionGuard` 中间件验证会话归属
 - **过期**：7 天未活跃自动清理（每小时检查）
 - **运行时**：进程内存（`Map`），重启丢失；统计快照异步写入 `logs/_stats.json`
-- **持久化**：访问/提问/赞踩明细写入 `logs/analytics.db`（SQLite）
+- **持久化**：访问/提问/赞踩明细写入 `logs/analytics.db`（SQLite），看板全量查询（单表 limit 9999）
 - **子会话**：AI `task` 工具创建子会话，SSE 事件自动维护导航栈
 
 ### 中间件链
@@ -138,6 +138,8 @@ opencode-chat/
 | `GET` | `/api/stats` | 平台统计（聚合） |
 | `GET` | `/api/stats/daily?days=30` | 每日统计明细（看板用） |
 | `GET` | `/api/stats/feedback-detail?limit=50` | 赞踩明细列表（看板用） |
+| `GET` | `/api/stats/visits?limit=500` | 访问明细列表（看板用） |
+| `GET` | `/api/stats/questions?limit=500` | 提问明细列表（看板用） |
 | `POST` | `/api/stats/visit` | 记录页面访问 |
 | `POST` | `/api/permission/respond` | 权限响应 |
 | `POST` | `/api/permission/question/reply` | 回复 AI 提问 |
@@ -200,12 +202,25 @@ opencode-chat/
 
 **访问方式**：在浏览器地址栏输入 `http://localhost:3000/#dashboard`
 
-看板包含：
-- 摘要卡片：总访客 / 总提问 / 今日访问 / 今日提问 / 反馈总数
-- 每日统计表：访问次数、访客数、提问数、点赞数、点踩数
-- 赞踩明细表：时间、IP、类型、问题内容
+### 功能
 
-看完点击「← 返回聊天」回到对话页。
+- **摘要卡片**：总访客 / 总提问 / 今日访问 / 今日提问 / 反馈总数
+- **全局筛选栏**：日期范围 / Agent 多选 / 满意度 / IP 搜索，联动所有表格和图表
+- **Agent 使用分布饼图**：recharts 环形饼图，展示各 Agent 使用占比
+- **满意度分布饼图**：展示点赞/点踩比例
+- **每日统计表**：访问次数、访客数、提问数、点赞数、点踩数
+- **访问明细表**：时间 / IP / User-Agent
+- **提问明细表**：时间 / IP / Agent / 问题内容 / 会话 ID
+- **赞踩明细表**：时间 / IP / 类型 / 问题内容 / AI 回答
+
+### 交互
+
+- Apple 风格表头设计：列名 + 排序图标 | 下方嵌入筛选输入框
+- 所有表格支持列排序（点击列名切换升降序）
+- 所有表格支持列筛选（文本输入框即时过滤，类型列用赞/踩按钮）
+- 问题 / 回答内容 3 行截断，点击弹窗查看全文
+- 弹窗支持 Markdown 渲染和源码标签切换
+- 看完点击「← 返回聊天」回到对话页
 
 ---
 
@@ -244,9 +259,12 @@ bun run db:sql "SELECT name FROM sqlite_master WHERE type='table'"
 | 前端框架 | React 19 |
 | 构建工具 | Vite 6 |
 | CSS | Tailwind CSS v4 + CSS Modules |
+| 图表 | recharts（看板饼图） |
+| 弹窗 | @radix-ui/react-dialog（看板内容查看） |
+| 图标 | lucide-react |
 | 后端 | Express.js 4.21 (ESM) |
 | AI SDK | `@opencode-ai/sdk` ^1.14 |
 | 数据库 | SQLite（`bun:sqlite` 内置） |
 | 日志 | 控制台 + 文件轮转 |
 | 运行时 | Bun |
-| 图表 | mermaid + react-markdown + highlight.js |
+| Markdown | mermaid + react-markdown + highlight.js |

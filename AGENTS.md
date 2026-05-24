@@ -23,6 +23,12 @@ bun start                # 生产启动
 - **限流**：`/api` 200 次/15 分钟/IP，SSE 不限
 - **用户识别**：IP 自动识别（`x-forwarded-for` → `x-real-ip` → `socket.remoteAddress`）
 - **中间件链**：`json → clientIP → requestLogger → rateLimiter(/api) → routes → errorHandler`
+- **看板（Dashboard）**：`#dashboard` 路由，组件位于 `client/src/components/dashboard/`
+  - `DashboardPage.tsx` — 主页面，Apple 风格表头统一排序+筛选
+  - `DashboardFilters.tsx` — 全局筛选栏（日期/Agent/满意度/IP）
+  - `DashboardCharts.tsx` — recharts Agent + 满意度饼图
+  - `ContentModal.tsx` — @radix-ui/react-dialog 弹窗（Markdown/源码）
+- **SDK v2 消息结构**：角色在 `msg.info.role`（agent/plan/build/explore）而非 `msg.role`
 
 ## 编码规范
 
@@ -107,7 +113,11 @@ export function MessageBubble({ message, isStreaming }: Props) { ... }
 | POST | `/api/chat` | 同步发送 |
 | POST | `/api/chat/async` | 异步发送（通过 SSE 接收回复） |
 | POST | `/api/sessions/:id/feedback` | 满意度反馈 |
-| GET | `/api/stats` | 平台统计 |
+| GET | `/api/stats` | 平台统计（聚合） |
+| GET | `/api/stats/daily?days=90` | 每日统计明细（看板用） |
+| GET | `/api/stats/feedback-detail?limit=9999` | 赞踩明细（看板用） |
+| GET | `/api/stats/visits?limit=9999` | 访问明细（看板用） |
+| GET | `/api/stats/questions?limit=9999` | 提问明细（看板用） |
 | GET | `/api/events` | SSE 事件流 |
 | POST | `/api/permission/respond` | 权限响应 |
 | POST | `/api/permission/question/reply` | 问题回复 |
