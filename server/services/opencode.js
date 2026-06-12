@@ -1,4 +1,4 @@
-import { createOpencode } from "@opencode-ai/sdk/v2"
+import { createOpencode, createOpencodeClient } from "@opencode-ai/sdk/v2"
 import { OPENCODE_PORT, OPENCODE_HOST, buildOpenCodeConfig, MODEL, SMALL_MODEL, AGENT_OPTIONS, PROVIDER } from "../config.js"
 import { logger } from "../logger/index.js"
 
@@ -31,14 +31,61 @@ function checkProviderConfig() {
 }
 
 /**
+ * 检测本地 OpenCode Server 是否可用
+ * @param {string} url - 服务器地址
+ * @returns {Promise<boolean>} 是否可用
+ */
+async function isServerReachable(url) {
+  try {
+    const res = await fetch(`${url}/session.list`, { method: "POST", signal: AbortSignal.timeout(2000) })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+/**
  * 启动 OpenCode 子进程，创建 SDK 客户端和服务端连接
+ * 自动检测本地是否已有 OpenCode Server，有则直接连接，无则自行启动
  * @returns {Promise<{client: import("@opencode-ai/sdk/v2").OpencodeClient, server: import("@opencode-ai/sdk/v2").OpencodeServer}>}
  */
 export async function startOpenCode() {
-  logger.info("正在启动 OpenCode Server...")
   const start = Date.now()
 
   checkProviderConfig()
+
+  // 优先使用环境变量指定的外部服务器
+  const externalUrl = process.env.OPENCODE_EXTERNAL_URL
+  if (externalUrl) {
+    logger.info("连接外部 OpenCode Server...", { url: externalUrl })
+    _client = createOpencodeClient({ baseUrl: externalUrl })
+    _server = { url: externalUrl, close() {}, process: null }
+    logger.info(`已连接外部 OpenCode Server: ${externalUrl}`, {
+      startup_duration_ms: Date.now() - start,
+      url: externalUrl,
+    })
+    return { client: _client, server: _server }
+  }
+
+  // 自动检测本地默认端口是否有 OpenCode Server 在运行
+  const localUrl = `http://${OPENCODE_HOST}:${OPENCODE_PORT}`
+  const fallbackUrl = `http://127.0.0.1:50882`
+
+  for (const candidateUrl of [localUrl, fallbackUrl]) {
+    if (await isServerReachable(candidateUrl)) {
+      logger.info("检测到本地 OpenCode Server，自动连接", { url: candidateUrl })
+      _client = createOpencodeClient({ baseUrl: candidateUrl })
+      _server = { url: candidateUrl, close() {}, process: null }
+      logger.info(`已连接 OpenCode Server: ${candidateUrl}`, {
+        startup_duration_ms: Date.now() - start,
+        url: candidateUrl,
+      })
+      return { client: _client, server: _server }
+    }
+  }
+
+  // 没有检测到已有服务器，自行启动
+  logger.info("未检测到已有 OpenCode Server，正在启动...")
 
   const cfg = buildOpenCodeConfig()
 
@@ -93,6 +140,14 @@ export function killOpenCode() {
     _server = null
     logger.info("OpenCode Server 已关闭")
   }
+}
+
+/**
+ * 判断是否连接外部 OpenCode Server
+ * @returns {boolean} 是否使用外部服务器
+ */
+export function isExternalServer() {
+  return !!process.env.OPENCODE_EXTERNAL_URL
 }
 
 /**
