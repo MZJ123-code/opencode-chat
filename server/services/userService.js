@@ -1,4 +1,4 @@
-import { ipUsers, ipSessions, userSessions, stats } from "../storage/store.js"
+import { userSessions, stats } from "../storage/store.js"
 import { logger } from "../logger/index.js"
 
 /**
@@ -13,22 +13,6 @@ export function getClientIP(req) {
     req.socket.remoteAddress?.replace("::ffff:", "") ||
     "unknown"
   )
-}
-
-/**
- * 确保 IP 已注册，首次访问时初始化（兼容旧版）
- * @param {string} ip - 客户端 IP
- */
-export function ensureIP(ip) {
-  if (!ipUsers.has(ip)) {
-    ipUsers.set(ip, { sessionIds: new Set() })
-    ipSessions.set(ip, [])
-    stats.visitors.add(ip)
-    logger.info(`新访客: ${ip}`, {
-      visitor_count: stats.visitors.size,
-      total_sessions: stats.totalSessions,
-    })
-  }
 }
 
 /**

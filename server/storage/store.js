@@ -7,11 +7,6 @@
  * @property {string | null} agent - 使用的 Agent 名称
  */
 
-/** @type {Map<string, {sessionIds: Set<string>}>} IP → 用户数据（已弃用，使用 userSessions） */
-export const ipUsers = new Map()
-/** @type {Map<string, string[]>} IP → 会话 ID 列表（已弃用，使用 userSessions） */
-export const ipSessions = new Map()
-
 /** @type {Map<string, Set<string>>} userId → 会话 ID 集合 */
 export const userSessions = new Map()
 

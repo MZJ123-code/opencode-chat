@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { Sidebar } from './components/layout/Sidebar'
 import { ChatArea } from './components/layout/ChatArea'
 import { SidebarHeader } from './components/sidebar/SidebarHeader'
@@ -9,6 +10,8 @@ import { ChatInput } from './components/chat/ChatInput'
 import { AgentSelector } from './components/chat/AgentSelector'
 import { ErrorBanner } from './components/common/ErrorBanner'
 import { DashboardPage } from './components/dashboard/DashboardPage'
+import { TaiyiAvatar } from './components/chat/TaiyiAvatar'
+import type { TaiyiMood } from './components/chat/TaiyiAvatar'
 import { useChatContext } from './contexts/ChatContext'
 import { recordVisit } from './api/stats'
 
@@ -93,6 +96,16 @@ export default function App() {
     await submitFeedback(sessionId, satisfied, msgIdx)
   }, [submitFeedback])
 
+  // 根据聊天状态计算太乙真人表情
+  const getTaiyiMood = useCallback((): TaiyiMood => {
+    if (isStreaming) return 'thinking'
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1]
+      if (lastMsg.role === 'assistant') return 'talking'
+    }
+    return 'idle'
+  }, [isStreaming, messages])
+
   if (view === 'dashboard') {
     return <DashboardPage onBack={handleHideDashboard} />
   }
@@ -143,6 +156,22 @@ export default function App() {
           />
         )}
       </ChatArea>
+
+      {/* 浮动太乙真人头像 */}
+      {currentSessionId && (
+        <motion.div
+          className="fixed bottom-24 right-6 z-50"
+          initial={{ opacity: 0, scale: 0, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.5 }}
+        >
+          <TaiyiAvatar
+            mood={getTaiyiMood()}
+            size={80}
+            interactive
+          />
+        </motion.div>
+      )}
     </>
   )
 }

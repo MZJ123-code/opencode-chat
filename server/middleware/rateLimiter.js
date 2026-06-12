@@ -18,7 +18,7 @@ export const rateLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => req.clientIP,
   validate: { keyGeneratorIpFallback: false },
-  skip: (req) => req.path === "/events" && req.headers.accept === "text/event-stream",
+  skip: (req) => req.path.startsWith("/api/events"),
   message: { error: "请求过于频繁，请稍后再试" },
   handler: (req, res, next, options) => {
     logger.warn(`请求限流: ${req.clientIP}`, { path: req.path, method: req.method, windowMs, maxRequests })

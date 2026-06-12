@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { MarkdownRenderer } from './MarkdownRenderer'
-import styles from './MessageBubble.module.css'
 
 interface MessageBubbleProps {
   role: 'user' | 'assistant'
@@ -20,8 +19,12 @@ export function MessageBubble({ role, parts, children }: MessageBubbleProps) {
   const isUser = role === 'user'
 
   return (
-    <div className={isUser ? styles.userWrapper : styles.aiWrapper}>
-      <div className={`${isUser ? styles.userBubble : styles.aiBubble}${isUser ? ' user-bubble-md' : ''}`}>
+    <div className={isUser ? 'max-w-[75%] shrink-0 self-end' : 'max-w-[75%] shrink-0 self-start'}>
+      <div className={
+        isUser
+          ? 'px-[18px] py-3 rounded-[var(--bubble-radius)] text-[15px] leading-[1.6] break-words transition-all duration-200 bg-[var(--user-bubble-gradient)] text-white border-none rounded-br-[6px] shadow-[0_4px_20px_rgba(99,102,241,0.35)] user-bubble-md'
+          : 'px-[18px] py-3 rounded-[var(--bubble-radius)] text-[15px] leading-[1.6] break-words transition-all duration-200 bg-[var(--ai-bubble)] text-[var(--text)] border-none rounded-bl-[6px] shadow-[0_2px_12px_rgba(0,0,0,0.06)]'
+      }>
         <MarkdownRenderer content={text} />
       </div>
       {children}

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo, type ReactNode } from 'react'
 import { createCtx } from '../lib/utils'
-import type { ChatMessage, ChatPart, TextPart, ReasoningPart, ToolPart } from '../types/message'
+import type { ChatMessage, ChatPart, TextPart } from '../types/message'
 import type { SessionListItem } from '../types/api-responses'
 import type { FeedbackState } from '../hooks/useFeedback'
 import * as sessionsApi from '../api/sessions'
@@ -9,18 +9,18 @@ import * as agentsApi from '../api/agents'
 import type { AgentOption } from '../types/api-responses'
 import { useEvents, type ConnectionStatus } from '../hooks/useEvents'
 import { useFeedback } from '../hooks/useFeedback'
+import {
+  useMessageStore,
+  isTaskToolPart,
+  getMsgInfo,
+  setMsgInfo,
+  getPartText,
+  setPartText,
+} from '../hooks/useMessageStore'
+import type { SessionMeta } from '../hooks/useMessageStore'
+import { useSessionNavigation } from '../hooks/useSessionNavigation'
 import { PermissionDialog } from '../components/common/PermissionDialog'
 import type { PermissionRequest } from '../api/permission'
-
-/** 会话元数据 */
-export interface SessionMeta {
-  /** 会话 ID */
-  id: string
-  /** 父会话 ID（用于多会话导航） */
-  parentID?: string
-  /** 会话标题 */
-  title?: string
-}
 
 interface ChatContextValue {
   sessions: SessionListItem[]
@@ -43,7 +43,6 @@ interface ChatContextValue {
   setCurrentSessionId: (id: string | null) => void
   currentSession: SessionListItem | undefined
 
-  // Multi-session: child navigation (following opencode web pattern)
   allMessages: Map<string, ChatMessage[]>
   sessionMeta: Map<string, SessionMeta>
   taskCallToChild: Map<string, string>
@@ -74,15 +73,6 @@ interface ChatContextValue {
 const [ChatContext, useChatContext] = createCtx<ChatContextValue>('useChatContext must be used within ChatProvider')
 export { useChatContext }
 
-function isTaskToolPart(part: ChatPart): part is ToolPart {
-  return part.type === 'tool' && (part as ToolPart).tool === 'task'
-}
-
-/**
- * 聊天上下文提供者
- * @param props - 组件属性
- * @param props.children - 子组件
- */
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<SessionListItem[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
@@ -90,31 +80,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [sessionError, setSessionError] = useState<string | null>(null)
   const sessionsLoadedRef = useRef(false)
 
-  // === Multi-session message store (like opencode web's state.message[sessionID]) ===
-  const [allMessages, setAllMessages] = useState<Map<string, ChatMessage[]>>(new Map())
-  const allMessagesRef = useRef<Map<string, ChatMessage[]>>(new Map())
-
-  // Session metadata store (like opencode web's state.session[])
-  const [sessionMeta, setSessionMeta] = useState<Map<string, SessionMeta>>(new Map())
-  const sessionMetaRef = useRef<Map<string, SessionMeta>>(new Map())
-
-  // Navigation stack for back button (pushed when navigating to child)
-  const [navigationStack, setNavigationStack] = useState<string[]>([])
-  const navigationStackRef = useRef<string[]>([])
-
   const [messagesLoading, setMessagesLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
   const loadedSessionRef = useRef<string | null>(null)
-  // Map task tool callID → child sessionID (fallback when metadata.sessionId is missing)
-  const taskCallToChildRef = useRef<Map<string, string>>(new Map())
-  const [taskCallToChild, setTaskCallToChild] = useState<Map<string, string>>(new Map())
 
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const currentSessionRef = useRef<string | null>(null)
-
-  const renderPendingRef = useRef(false)
-  const bgFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [inputValue, setInputValue] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -127,186 +99,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const { feedbackStates, submitFeedback } = useFeedback()
 
-  // Derived: parent session ID for the current session
-  const parentSessionId = useMemo(() => {
-    if (!currentSessionId) return null
-    return sessionMeta.get(currentSessionId)?.parentID ?? null
-  }, [currentSessionId, sessionMeta])
+  // === 多会话消息存储 ===
+  const {
+    allMessages, sessionMeta, taskCallToChild,
+    getSessionMessages, setSessionMessages,
+    flushAllMessages, flushSessionMeta,
+    getSessionMeta, setSessionMetaEntry, ensureSessionMeta,
+    hasSessionMessages, hasTaskCallToChild, addTaskCallToChild,
+    scheduleFlush, scheduleBackgroundFlush,
+    flushSession, injectPartToSession, syncMessages,
+    rebuildTaskCallToChildMapping,
+  } = useMessageStore(currentSessionRef)
 
-  // Derived: messages for the currently viewed session
-  const messages = useMemo(() => {
-    if (!currentSessionId) return [] as ChatMessage[]
-    return allMessages.get(currentSessionId) ?? []
-  }, [currentSessionId, allMessages])
-
-  // === Multi-session helpers ===
-
-  const getSessionMessages = useCallback((sessionID: string): ChatMessage[] => {
-    let msgs = allMessagesRef.current.get(sessionID)
-    if (!msgs) {
-      msgs = []
-      allMessagesRef.current.set(sessionID, msgs)
-    }
-    return msgs
-  }, [])
-
-  // Rebuild taskCallToChild mapping by scanning sessionMeta for child sessions
-  // and matching them to task tool parts in the current session's messages.
-  // This handles cases where: (a) child sessions existed before page load,
-  // (b) user navigates to a parent session via sidebar/history.
-  const rebuildTaskCallToChildMapping = useCallback(() => {
-    const parentID = currentSessionRef.current
-    if (!parentID) return
-    const parentMsgs = getSessionMessages(parentID)
-    if (parentMsgs.length === 0) return
-
-    const mapped = new Map(taskCallToChildRef.current)
-    let changed = false
-
-    // Find all task tool callIDs in the parent session
-    const taskCalls: { callID: string; status: string }[] = []
-    for (const msg of parentMsgs) {
-      if (msg.role !== 'assistant') continue
-      for (const p of msg.parts) {
-        if (isTaskToolPart(p)) {
-          const tp = p as ToolPart
-          if (tp.callID && !mapped.has(tp.callID)) {
-            taskCalls.push({ callID: tp.callID, status: tp.state?.status || '' })
-          }
-        }
-      }
-    }
-
-    // Find child sessions for this parent (not yet mapped)
-    const unmapped = taskCalls.filter((tc) => tc.status === 'running' || tc.status === 'completed')
-    if (unmapped.length === 0) return
-
-    let unmatchedChildren = 0
-    sessionMetaRef.current.forEach((meta, childID) => {
-      if (meta.parentID !== parentID) return
-      if (Array.from(mapped.values()).includes(childID)) return
-      const tc = unmapped.shift()
-      if (tc) {
-        mapped.set(tc.callID, childID)
-        changed = true
-      } else {
-        unmatchedChildren++
-      }
-    })
-
-    if (unmatchedChildren > 0 || unmapped.length > 0) {
-      if (import.meta.env.DEV) {
-        console.warn(`[taskCallToChild] 匹配不完整: ${unmatchedChildren} 个子会话未匹配, ${unmapped.length} 个 task 调用无子会话, parent=${parentID}`)
-      }
-    }
-
-    if (changed) {
-      taskCallToChildRef.current = mapped
-      setTaskCallToChild(new Map(mapped))
-    }
-  }, [getSessionMessages])
-
-  const setSessionMessages = useCallback((sessionID: string, msgs: ChatMessage[]) => {
-    allMessagesRef.current.set(sessionID, msgs)
-  }, [])
-
-  const flushAllMessages = useCallback(() => {
-    setAllMessages(new Map(allMessagesRef.current))
-  }, [])
-
-  const flushSessionMeta = useCallback(() => {
-    setSessionMeta(new Map(sessionMetaRef.current))
-  }, [])
-
-  const scheduleFlush = useCallback(() => {
-    if (renderPendingRef.current) return
-    renderPendingRef.current = true
-    requestAnimationFrame(() => {
-      renderPendingRef.current = false
-      flushAllMessages()
-    })
-  }, [flushAllMessages])
-
-  // Flush non-current session updates at a lower frequency (every 500ms max)
-  const scheduleBackgroundFlush = useCallback(() => {
-    if (bgFlushTimerRef.current) return
-    bgFlushTimerRef.current = setTimeout(() => {
-      bgFlushTimerRef.current = null
-      flushAllMessages()
-    }, 500)
-  }, [flushAllMessages])
-
-  const flushSession = useCallback((sessionID: string) => {
-    if (sessionID === currentSessionRef.current) scheduleFlush()
-    else scheduleBackgroundFlush()
-  }, [scheduleFlush, scheduleBackgroundFlush])
-
-  // === Inject a part into a specific session's last assistant message ===
-  const injectPartToSession = useCallback((sessionID: string, part: Record<string, unknown>) => {
-    const msgs = getSessionMessages(sessionID)
-    let targetIdx = -1
-    for (let i = msgs.length - 1; i >= 0; i--) {
-      if (msgs[i].role === 'assistant') { targetIdx = i; break }
-    }
-    if (targetIdx === -1) return
-
-    const msg = { ...msgs[targetIdx] }
-    const parts = [...msg.parts]
-    const existingIdx = parts.findIndex((p) => p.id === part.id)
-    if (existingIdx >= 0) {
-      // Deep-merge state so partial updates (e.g. onToolSuccess) don't lose metadata/output
-      const existing = parts[existingIdx] as unknown as Record<string, unknown>
-      const merged: Record<string, unknown> = { ...existing, ...part }
-      if (existing.state && part.state) {
-        merged.state = { ...(existing.state as unknown as Record<string, unknown>), ...(part.state as unknown as Record<string, unknown>) }
-      }
-      parts[existingIdx] = merged as unknown as ChatPart
-    } else {
-      parts.push(part as unknown as ChatPart)
-    }
-    msg.parts = parts
-    msgs[targetIdx] = msg
-    flushSession(sessionID)
-  }, [getSessionMessages, flushSession])
-
-  const syncMessages = useCallback((next: ChatMessage[]) => {
-    if (!currentSessionRef.current) return
-    setSessionMessages(currentSessionRef.current, next)
-    setAllMessages(new Map(allMessagesRef.current))
-  }, [setSessionMessages])
-
-  // Helper to get/set `info` property from a message
-  function getMsgInfo(msg: ChatMessage): Record<string, unknown> | undefined {
-    return msg.info as Record<string, unknown> | undefined
-  }
-
-  function setMsgInfo(msg: ChatMessage, info: Record<string, unknown>): ChatMessage {
-    ;(msg as unknown as { info: Record<string, unknown> }).info = info
-    return msg
-  }
-
-  function getPartText(part: ChatPart): string | undefined {
-    return 'text' in part ? (part as TextPart | ReasoningPart).text : undefined
-  }
-
-  function setPartText(part: ChatPart, text: string): void {
-    if ('text' in part) (part as TextPart | ReasoningPart).text = text
-  }
-
-  // === Navigation (following opencode web's session tree navigation) ===
-
-  const navigateToSession = useCallback((sessionId: string) => {
-    if (!currentSessionRef.current) return
-    // Push current session onto navigation stack
-    navigationStackRef.current = [...navigationStackRef.current, currentSessionRef.current]
-    setNavigationStack([...navigationStackRef.current])
-    // Switch to new session
-    currentSessionRef.current = sessionId
-    setCurrentSessionId(sessionId)
+  // === 导航 ===
+  const onNavigate = useCallback((sessionId: string) => {
     loadedSessionRef.current = sessionId
-    // Load history if not already loaded
-    const existing = allMessagesRef.current.get(sessionId)
-    if (!existing || existing.length === 0) {
+    setCurrentSessionId(sessionId)
+    if (!hasSessionMessages(sessionId)) {
       setMessagesLoading(true)
       sessionsApi.fetchMessages(sessionId).then(data => {
         setSessionMessages(sessionId, data)
@@ -320,45 +129,34 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } else {
       flushAllMessages()
     }
-  }, [setSessionMessages, flushAllMessages])
+  }, [hasSessionMessages, setSessionMessages, flushAllMessages])
 
-  const navigateBack = useCallback(() => {
-    const stack = navigationStackRef.current
-    if (stack.length === 0) return
-    const prevSession = stack[stack.length - 1]
-    navigationStackRef.current = stack.slice(0, -1)
-    setNavigationStack([...navigationStackRef.current])
-    currentSessionRef.current = prevSession
-    setCurrentSessionId(prevSession)
-    loadedSessionRef.current = prevSession
-    flushAllMessages()
-  }, [flushAllMessages])
+  const {
+    navigationStack, parentSessionId,
+    navigateToSession, navigateBack, navigateToParent,
+    resetNavigationStack,
+  } = useSessionNavigation(
+    currentSessionId,
+    currentSessionRef,
+    getSessionMeta,
+    onNavigate,
+  )
 
-  const navigateToParent = useCallback(() => {
-    if (!currentSessionRef.current) return
-    const meta = sessionMetaRef.current.get(currentSessionRef.current)
-    if (meta?.parentID) {
-      navigateToSession(meta.parentID)
-    }
-  }, [navigateToSession])
+  const messages = useMemo(() => {
+    if (!currentSessionId) return [] as ChatMessage[]
+    return allMessages.get(currentSessionId) ?? []
+  }, [currentSessionId, allMessages])
 
-  // === Session list management ===
+  // === 会话列表管理 ===
 
   const refreshSessions = useCallback(async () => {
     try {
       setSessionError(null)
       const data = await sessionsApi.fetchSessions()
       setSessions(data)
-      // Also update sessionMeta from session list
       for (const s of data) {
-        if (!sessionMetaRef.current.has(s.sessionId)) {
-          sessionMetaRef.current.set(s.sessionId, {
-            id: s.sessionId,
-            title: s.title,
-          })
-        }
+        ensureSessionMeta(s.sessionId, { title: s.title })
       }
-      // Rebuild child session mapping after refreshing session list
       setTimeout(() => rebuildTaskCallToChildMapping(), 0)
       return data
     } catch (e) {
@@ -368,7 +166,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setSessionsLoading(false)
     }
-  }, [rebuildTaskCallToChildMapping])
+  }, [ensureSessionMeta, rebuildTaskCallToChildMapping])
 
   const loadSessions = useCallback(async () => {
     if (sessionsLoadedRef.current) return
@@ -396,16 +194,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (loadedSessionRef.current === sessionId) return
     loadedSessionRef.current = sessionId
     currentSessionRef.current = sessionId
-    // Reset navigation when explicitly loading a session from sidebar
-    navigationStackRef.current = []
-    setNavigationStack([])
+    resetNavigationStack()
     setMessagesLoading(true)
     setChatError(null)
     try {
       const data = await sessionsApi.fetchMessages(sessionId)
       setSessionMessages(sessionId, data)
       syncMessages(data)
-      // Rebuild child session mapping after loading history
       setTimeout(() => rebuildTaskCallToChildMapping(), 0)
     } catch (e) {
       setSessionMessages(sessionId, [])
@@ -414,9 +209,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setMessagesLoading(false)
     }
-  }, [setSessionMessages, syncMessages, rebuildTaskCallToChildMapping])
+  }, [resetNavigationStack, setSessionMessages, syncMessages, rebuildTaskCallToChildMapping])
 
-  // === Event handlers — route by sessionID (like opencode web's applyDirectoryEvent) ===
+  // === SSE 事件处理 ===
 
   const { connectionStatus } = useEvents({
     onReconnected: useCallback(() => {
@@ -425,12 +220,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       sessionsApi.fetchMessages(sid).then(data => {
         setSessionMessages(sid, data)
         flushAllMessages()
-      }).catch(() => {
-        // 静默失败，等下一次 SSE 事件填补
-      })
+      }).catch(() => {})
     }, [setSessionMessages, flushAllMessages]),
 
-    // message.updated → store message in the correct session
     onMessageUpdated(messageInfo) {
       const sid = messageInfo.sessionID as string
       if (!sid) return
@@ -471,7 +263,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       flushSession(sessionID)
     },
 
-    // message.part.updated → store part in the correct session's message
     onPartUpdated(part, messageID, sessionID) {
       if (!sessionID) return
       if (part.type === 'compaction' || part.type === 'retry') return
@@ -480,7 +271,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       let msgIdx = msgs.findIndex((m) => getMsgInfo(m)?.id === messageID)
 
       if (msgIdx === -1) {
-        // New message
         const newMsg: ChatMessage = { role: 'assistant', parts: [part], time: Date.now() }
         msgs.push(setMsgInfo(newMsg, { id: messageID, sessionID }))
         setSessionMessages(sessionID, msgs)
@@ -519,7 +309,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       flushSession(sessionID)
     },
 
-    // message.part.delta → apply delta to part in the correct session
     onPartDelta(partID, messageID, sessionID, delta) {
       if (!sessionID) return
 
@@ -555,7 +344,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (sessionID === currentSessionRef.current) flushAllMessages()
     },
 
-    // session.status → only affect isStreaming for the currently viewed session
     onSessionStatus(sessionID, status) {
       if (sessionID !== currentSessionRef.current) return
       const s = typeof status === 'string' ? status : (status as Record<string, unknown>).status as string
@@ -573,23 +361,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setIsStreaming(false)
     },
 
-    // session.created / session.updated → record session metadata (parentID, title)
     onSessionUpdated(info) {
       const sid = info.id as string | undefined
       if (!sid) return
       const parentID = info.parentID as string | undefined
       const title = info.title as string | undefined
-      const existing = sessionMetaRef.current.get(sid)
-      sessionMetaRef.current.set(sid, {
-        id: sid,
-        parentID: parentID ?? existing?.parentID,
-        title: title ?? existing?.title,
-      })
+      const existing = getSessionMeta(sid)
+      setSessionMetaEntry(sid, { id: sid, parentID: parentID ?? existing?.parentID, title: title ?? existing?.title })
       flushSessionMeta()
 
-      // Map child session to its parent's task tool call.
-      // Removed `!existing` check: now also handles sessions that were created
-      // before page load or while the user was viewing a different session.
       if (parentID && parentID === currentSessionRef.current) {
         const parentMsgs = getSessionMessages(parentID)
         for (let i = parentMsgs.length - 1; i >= 0; i--) {
@@ -598,10 +378,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           for (let j = msg.parts.length - 1; j >= 0; j--) {
             const p = msg.parts[j]
             if (isTaskToolPart(p)) {
-              const tp = p as ToolPart
-              if ((tp.state?.status === 'running' || tp.state?.status === 'completed') && tp.callID && !taskCallToChildRef.current.has(tp.callID)) {
-                taskCallToChildRef.current.set(tp.callID, sid)
-                setTaskCallToChild(new Map(taskCallToChildRef.current))
+              const tp = p as unknown as Record<string, unknown>
+              const callID = tp.callID as string | undefined
+              const tpState = tp.state as Record<string, unknown> | undefined
+              const status = tpState?.status as string | undefined
+              if ((status === 'running' || status === 'completed') && callID && !hasTaskCallToChild(callID)) {
+                addTaskCallToChild(callID, sid)
                 break
               }
             }
@@ -609,14 +391,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Also run rebuild for other parent sessions that may have pending mappings
       setTimeout(() => rebuildTaskCallToChildMapping(), 0)
-
-      // Refresh session list when new sessions appear
       refreshSessions()
     },
 
-    // session.next.* events — real-time tool/reasoning display for parent session
     onToolCalled(sessionID, callID, tool, input) {
       if (!sessionID) return
       injectPartToSession(sessionID, {
@@ -624,9 +402,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         state: { status: 'running', input, title: tool, time: { start: Date.now() } },
       })
     },
+
     onToolSuccess(sessionID, callID, output, title, time) {
       if (!sessionID) return
-      // Only include defined fields so the deep-merge preserves existing state values
       const state: Record<string, unknown> = { status: 'completed' as const }
       if (output !== undefined) state.output = output
       if (title !== undefined) state.title = title
@@ -636,6 +414,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         state,
       })
     },
+
     onToolFailed(sessionID, callID, error) {
       if (!sessionID) return
       const state: Record<string, unknown> = { status: 'error' as const }
@@ -655,11 +434,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
       if (targetIdx === -1) return
       const existing = msgs[targetIdx].parts.find((p) => p.id === reasoningID)
-      const prevText = existing && 'text' in existing ? (existing as ReasoningPart).text : ''
+      const prevText = existing && 'text' in existing ? (existing as unknown as Record<string, unknown>).text as string : ''
       injectPartToSession(sessionID, {
         id: reasoningID, messageID: '', sessionID, type: 'reasoning', text: prevText + delta,
       })
     },
+
     onReasoningEnded(sessionID, reasoningID, text) {
       if (!sessionID) return
       injectPartToSession(sessionID, {
@@ -674,6 +454,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         state: { status: 'running', input: { command }, title: command, time: { start: Date.now() } },
       })
     },
+
     onShellEnded(sessionID, callID, output) {
       if (!sessionID) return
       const state: Record<string, unknown> = { status: 'completed' as const, title: 'shell' }
@@ -697,7 +478,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     },
   })
 
-  // === Message sending ===
+  // === 消息发送 ===
 
   const sendMessage = useCallback(async (text: string, sessionId: string) => {
     setChatError(null)
@@ -730,9 +511,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (!sid) return
     try {
       await chatApi.abortSession(sid)
-    } catch {
-      // ignore
-    }
+    } catch {}
     setIsStreaming(false)
   }, [])
 
@@ -743,10 +522,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     loadedSessionRef.current = null
     setChatError(null)
     setIsStreaming(false)
-    navigationStackRef.current = []
-    setNavigationStack([])
+    resetNavigationStack()
     flushAllMessages()
-  }, [setSessionMessages, flushAllMessages])
+  }, [setSessionMessages, resetNavigationStack, flushAllMessages])
+
+  // === 副作用 ===
 
   useEffect(() => {
     agentsApi.fetchAgents()
@@ -775,10 +555,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     messages, messagesLoading, isStreaming, chatError,
     loadHistory, sendMessage, clearMessages,
     currentSessionId, setCurrentSessionId, currentSession,
-    // Multi-session
     allMessages, sessionMeta, taskCallToChild, navigationStack, parentSessionId,
     navigateToSession, navigateBack, navigateToParent,
-    // Rest
     feedbackStates, submitFeedback,
     inputValue, setInputValue,
     sidebarOpen, setSidebarOpen, globalError, setGlobalError,

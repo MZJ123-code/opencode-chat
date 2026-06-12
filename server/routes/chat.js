@@ -1,7 +1,6 @@
 import { Router } from "express"
 import { getClient } from "../services/opencode.js"
 import { getSessionMeta, recordMessage } from "../services/sessionService.js"
-import { incrementQuestions, saveStats } from "../services/statsService.js"
 import { recordQuestion } from "../services/analyticsService.js"
 import { MODEL, AGENT_DIR_MAP } from "../config.js"
 import { logger } from "../logger/index.js"
@@ -40,9 +39,7 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
 
   try {
     recordMessage(ctx.sessionId)
-    incrementQuestions()
     recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
-    saveStats()
 
     const client = getClient()
     logger.info(`异步消息: ${ctx.userId} -> ${ctx.sessionId}`, {

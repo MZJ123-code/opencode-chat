@@ -13,23 +13,43 @@ bun start                # 生产启动
 bun run dev:external     # 连接已有外部 OpenCode 进程（OPENCODE_EXTERNAL_URL）
 ```
 
+## 可用命令
+
+| 命令 | 说明 |
+|------|------|
+| `bun run dev` | 开发模式（--watch 热重启） |
+| `bun start` | 生产启动 |
+| `bun run test` | 运行所有测试（vitest run） |
+| `bun run test:watch` | 监听模式 |
+| `bun run test:perf` | 性能测试 |
+| `bun run db:view` | SQLite 数据查看 |
+| `bun run db:sql` | SQLite 自定义查询 |
+
 ## 架构关键点
 
 - **根目录**是 Express ESM 服务端，`client/` 是 React 19 + Vite + TypeScript 前端
 - **配置**：`server/config.json`（环境变量覆盖 `PORT`/`NODE_ENV`/`MODEL`）
 - **静态文件**：优先 `dist/index.html`，fallback `public/index.html`（Vanilla JS）
 - **SDK**：`@opencode-ai/sdk/v2` → `createOpencode()` 自动拉起 OpenCode 进程（`:4096`）
-- **数据**：进程内存（`Map`），重启丢失；统计写入 `logs/_stats.json`
-- **会话 TTL**：7 天未活跃清理（每小时检查）
+- **数据**：SQLite 持久化（`data/opencode-chat.db`，`sessions` 表 + `_migrations` 表），启动自动恢复；统计写入 `logs/_stats.json`
+- **会话 TTL**：7 天未活跃清理（每小时检查），SQLite 同步清理
 - **限流**：`/api` 200 次/15 分钟/IP，SSE 不限
-- **用户识别**：IP 自动识别（`x-forwarded-for` → `x-real-ip` → `socket.remoteAddress`）
-- **中间件链**：`json → clientIP → requestLogger → rateLimiter(/api) → routes → errorHandler`
+- **用户识别**：UUID Token + Cookie 标识（`opencode-chat-token`），兜底 IP
+- **中间件链**：`json → clientIP → userToken → requestLogger → performanceLogger → rateLimiter(/api) → routes → errorHandler`
 - **看板（Dashboard）**：`#dashboard` 路由，组件位于 `client/src/components/dashboard/`
   - `DashboardPage.tsx` — 主页面，Apple 风格表头统一排序+筛选
   - `DashboardFilters.tsx` — 全局筛选栏（日期/Agent/满意度/IP）
   - `DashboardCharts.tsx` — recharts Agent + 满意度饼图
   - `ContentModal.tsx` — @radix-ui/react-dialog 弹窗（Markdown/源码）
 - **SDK v2 消息结构**：角色在 `msg.info.role`（agent/plan/build/explore）而非 `msg.role`
+
+## 测试
+
+```bash
+bun test                   # 运行所有测试（vitest run）
+bun run test:watch         # 监听模式
+bun run test:perf          # 性能测试（server/__tests__/performance/）
+```
 
 ## 强制流程
 

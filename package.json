@@ -8,16 +8,15 @@
     "start": "PATH=\"$HOME/.opencode/bin:$PATH\" bun server/index.js",
     "dev:external": "OPENCODE_EXTERNAL_URL=${OPENCODE_EXTERNAL_URL:-http://127.0.0.1:50882} bun --watch server/index.js",
     "start:external": "OPENCODE_EXTERNAL_URL=${OPENCODE_EXTERNAL_URL:-http://127.0.0.1:50882} bun server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:perf": "vitest run server/__tests__/performance/",
     "db:view": "bun scripts/view-db.js",
     "db:sql": "bun scripts/sql-query.js"
   },
   "dependencies": {
     "@opencode-ai/sdk": "1.14.29",
-    "better-sqlite3": "^12.10.0",
     "express": "^4.21.0",
     "express-rate-limit": "^8.5.2"
-  },
-  "devDependencies": {
-    "playwright": "^1.60.0"
   }
 }

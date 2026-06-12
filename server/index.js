@@ -6,7 +6,7 @@ import { PORT, HOSTNAME, PUBLIC_DIR, isProduction, MODEL, SMALL_MODEL, AGENT_OPT
 import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
 import { startOpenCode, killOpenCode } from "./services/opencode.js"
-import { restoreStats, saveStatsSync } from "./services/statsService.js"
+import { restoreStats } from "./services/statsService.js"
 import { restoreSessions } from "./services/sessionService.js"
 import { initDatabase } from "./storage/database.js"
 
@@ -83,7 +83,6 @@ httpServer = app.listen(PORT, HOSTNAME, () => {
  */
 function shutdown() {
   logger.info("正在关闭服务...")
-  saveStatsSync()
   killOpenCode()
   if (httpServer) {
     httpServer.close(() => {

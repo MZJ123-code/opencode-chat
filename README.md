@@ -4,7 +4,7 @@
 
 [🇺🇸 English](./README.en.md)
 
-本地启动一个 AI 对话系统，你的**文件系统就是知识库**——直接添加、修改文档或代码文件，AI 即刻感知并基于最新内容回答。无需注册登录，IP 自动识别身份，适合团队内部快速搭建 AI 助手。
+本地启动一个 AI 对话系统，你的**文件系统就是知识库**——直接添加、修改文档或代码文件，AI 即刻感知并基于最新内容回答。无需注册登录，UUID Token 自动识别身份，适合团队内部快速搭建 AI 助手。
 
 ---
 
@@ -46,7 +46,7 @@
 
 ### 🔑 零摩擦多用户
 
-抛弃传统认证体系，**IP 即身份**。用户打开浏览器即可使用，适合企业内部工具或小团队场景。会话 7 天 TTL 自动清理，每个 IP 最多 100 会话，全局上限 5000。
+抛弃传统认证体系，**UUID Token 自动识别**。用户首次访问时生成唯一 Token，存储在 Cookie 中，兜底使用 IP。用户打开浏览器即可使用，适合企业内部工具或小团队场景。会话 7 天 TTL 自动清理，每个用户最多 100 会话，全局上限 5000。
 
 ### ⚡ SSE 实时流式输出
 
@@ -56,10 +56,7 @@
 
 | 前端 | 说明 |
 |------|------|
-| **React SPA（主）** | React 19 + Vite 6 + Tailwind CSS v4，全功能体验 |
-| **Vanilla JS（兜底）** | 纯原生 JavaScript，零构建，内嵌于 HTML 直接运行 |
-
-服务端自动优先加载构建产物，无构建产物时回退到原生版本——即使前端构建完全失败，依然能提供完整聊天界面。
+| **React SPA** | React 19 + Vite 6 + Tailwind CSS v4，全功能体验 |
 
 ### 🔄 AI 子会话导航
 
@@ -117,6 +114,8 @@ Agent 配置文件同时需要安装在全局目录 `.config/opencode/agents/` �
 ### 🛡️ 生产就绪
 
 - IP 隔离 + 请求限流：`/api` 路由 200 次/15 分钟/IP
+- `userToken` 中间件：UUID Cookie 用户识别，兜底 IP
+- `performanceLogger` 中间件：请求耗时监控，辅助性能分析
 - `sessionGuard` 中间件验证会话归属
 - 日志彩色控制台输出 + 文件轮转归档（10MB 自动归档，保留最近 10 个）
 - 优雅关闭：SIGINT/SIGTERM 信号处理，保存统计快照 + 关闭 OpenCode 子进程
@@ -195,7 +194,7 @@ AI 在对话中通过 `read` / `search` 工具自动获取最新内容。
 ## 架构
 
 ```
-用户 → 浏览器 (React SPA / Vanilla JS)
+用户 → 浏览器 (React SPA)
          ↓ HTTP/SSE
     Express 服务器 (:3000) ← config.json 控制行为
          ↓
@@ -206,13 +205,12 @@ AI 在对话中通过 `read` / `search` 工具自动获取最新内容。
 
 ### 请求模式
 
-- **同步** `POST /api/chat` — 等待完整回复后返回，适合简单查询
 - **异步** `POST /api/chat/async` — 立即返回，AI 回复通过 SSE 实时推送
 
 ### 中间件链
 
 ```
-express.json() → clientIP → requestLogger → rateLimiter(/api) → routes → errorHandler
+express.json() → clientIP → userToken → requestLogger → performanceLogger → rateLimiter(/api) → routes → errorHandler
 ```
 
 ---
@@ -253,7 +251,7 @@ opencode-chat/
 │       ├── contexts/          # ChatContext (SSE/多会话/导航) + ThemeContext
 │       ├── hooks/             # useEvents (SSE 重连+退避) / useFeedback / useMediaQuery
 │       └── types/             # message / session / api 类型定义
-├── public/index.html          # Vanilla JS 零构建兜底前端
+├── 发现的问题/                # 问题跟踪与解决记录
 ├── scripts/                   # 数据库查看工具
 ├── logs/                      # 运行时日志 + analytics.db (SQLite)
 └── AGENTS.md                  # 编码规范指引
@@ -268,7 +266,6 @@ opencode-chat/
 | `GET` | `/api/sessions` | 会话列表 |
 | `POST` | `/api/sessions` | 创建会话 |
 | `GET` | `/api/sessions/:id/messages` | 消息历史 |
-| `POST` | `/api/chat` | 同步发送 |
 | `POST` | `/api/chat/async` | 异步发送（SSE 接收回复） |
 | `GET` | `/api/events` | SSE 事件流 |
 | `POST` | `/api/sessions/:id/feedback` | 满意度反馈 |

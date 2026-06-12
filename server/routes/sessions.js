@@ -1,6 +1,5 @@
 import { Router } from "express"
 import { createSession, listSessions } from "../services/sessionService.js"
-import { saveStats } from "../services/statsService.js"
 import { MODEL, SMALL_MODEL, AGENT_OPTIONS } from "../config.js"
 import { logger } from "../logger/index.js"
 
@@ -29,7 +28,6 @@ router.post("/", async (req, res, next) => {
     })
 
     const result = await createSession(userId, ip, title, agent)
-    saveStats()
     res.json(result)
   } catch (err) {
     next(err)

@@ -1,6 +1,5 @@
 import { validateOwnership, getSessionMeta, tryRegisterSession } from "../services/sessionService.js"
 import { recordBlockedAccess } from "../services/statsService.js"
-import { saveStats } from "../services/statsService.js"
 import { logger } from "../logger/index.js"
 
 /**
@@ -17,7 +16,6 @@ export function requireSessionOwnership(paramName = "id") {
     if (!sessionId) {
       logger.warn(`会话守卫: 会话 ID 为空`, { userId: userId?.slice(0, 8), path: req.path, method: req.method })
       recordBlockedAccess()
-      saveStats()
       return res.status(403).json({ error: "无权访问此会话" })
     }
 
@@ -33,7 +31,6 @@ export function requireSessionOwnership(paramName = "id") {
         logger.warn(`访问被拒绝: ${userId?.slice(0, 8)} -> ${sessionId}`, {
           session_exists: !!getSessionMeta(sessionId),
         })
-        saveStats()
         return res.status(403).json({ error: "无权访问此会话" })
       })
       .catch((err) => {

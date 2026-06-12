@@ -1,6 +1,5 @@
 import { Router } from "express"
 import { requireSessionOwnership } from "../middleware/sessionGuard.js"
-import { recordFeedback as recordStatsFeedback, saveStats } from "../services/statsService.js"
 import { recordFeedback as recordAnalyticsFeedback, getLatestQuestion } from "../services/analyticsService.js"
 import { getSessionMeta } from "../services/sessionService.js"
 import { getClient } from "../services/opencode.js"
@@ -89,7 +88,6 @@ router.post("/:id/feedback", requireSessionOwnership("id"), async (req, res, nex
 
     const answerContent = await getLastAssistantReply(sessionId)
 
-    recordStatsFeedback(!!satisfied)
     recordAnalyticsFeedback(sessionId, ip, !!satisfied, latestQuestion?.content || "", answerContent)
 
     logger.info(`满意度反馈: ${sessionId}`, {
@@ -97,7 +95,6 @@ router.post("/:id/feedback", requireSessionOwnership("id"), async (req, res, nex
       satisfied: !!satisfied,
       message_count: meta?.messageCount,
     })
-    saveStats()
     res.json({ ok: true })
   } catch (err) {
     next(err)

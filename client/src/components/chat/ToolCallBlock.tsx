@@ -4,7 +4,6 @@ import type { ToolPart } from '../../types/message'
 import { escapeHtml } from '../../lib/utils'
 import { JsonView } from './JsonView'
 import { useChatContext } from '../../contexts/ChatContext'
-import styles from './ToolCallBlock.module.css'
 
 const stateConfig: Record<string, { icon: string; label: string; color: string }> = {
   pending: { icon: '⏳', label: '等待中', color: '#9ca3af' },
@@ -25,7 +24,11 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <button
-      className={copied ? styles.copyBtnCopied : styles.copyBtn}
+      className={
+        copied
+          ? 'absolute top-[6px] right-[6px] px-[10px] py-[3px] text-[11px] font-[var(--mono)] border border-[var(--border)] rounded-[5px] bg-[#dcfce7] text-[#16a34a] opacity-100 cursor-pointer transition-all duration-150 leading-[1.5] dark:bg-[rgba(34,197,94,0.15)] dark:text-[#86efac]'
+          : 'absolute top-[6px] right-[6px] px-[10px] py-[3px] text-[11px] font-[var(--mono)] border border-[var(--border)] rounded-[5px] bg-[var(--card)] text-[var(--muted-foreground)] cursor-pointer opacity-0 transition-all duration-150 leading-[1.5] group-hover:opacity-100'
+      }
       onClick={handleCopy}
     >
       {copied ? '已复制' : '复制'}
@@ -79,38 +82,38 @@ export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolP
 
   return (
     <motion.div
-      className={styles.container}
+      className="mb-2 border border-[var(--border)] rounded-[10px] text-[15px] bg-[var(--card)] shrink-0 min-w-0"
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
       <div
-        className={styles.summary}
+        className="flex items-center gap-[6px] px-3 py-2 cursor-pointer bg-[var(--muted)] rounded-[8px] select-none text-[var(--foreground)]"
         onClick={handleToggle}
         style={{ cursor: canOpen ? 'pointer' : 'default' }}
       >
         <motion.span
-          className={styles.summaryArrow}
+          className="shrink-0 text-[10px] text-[var(--muted-foreground)]"
           animate={{ rotate: open ? 90 : 0 }}
           transition={{ duration: 0.15 }}
         >
           ▶
         </motion.span>
-        <span className={styles.toolIcon} style={{ color: cfg.color }}>{cfg.icon}</span>
-        <span className={styles.toolName}>{part.tool}</span>
-        <span className={styles.badge} style={{ color: cfg.color, background: `${cfg.color}15` }}>
+        <span className="text-[14px]" style={{ color: cfg.color }}>{cfg.icon}</span>
+        <span className="font-semibold text-[var(--foreground)] font-[var(--mono)] text-xs">{part.tool}</span>
+        <span className="text-[10px] font-semibold px-2 py-[2px] rounded-full" style={{ color: cfg.color, background: `${cfg.color}15` }}>
           {cfg.label}
         </span>
         {part.state.title && (
-          <span className={styles.title}>{part.state.title.slice(0, 50)}</span>
+          <span className="text-[var(--muted-foreground)] text-[11px] overflow-hidden text-ellipsis whitespace-nowrap">{part.state.title.slice(0, 50)}</span>
         )}
         {part.state.time?.end && (
-          <span className={styles.duration}>
+          <span className="text-[var(--muted-foreground)] text-[11px] ml-auto shrink-0 font-[var(--mono)]">
             {((part.state.time.end - part.state.time.start) / 1000).toFixed(1)}s
           </span>
         )}
         {childSessionId && (
-          <span className={styles.childIndicator}>
+          <span className="text-[10px] px-[6px] py-[2px] rounded-full bg-[#eef2ff] text-[#6366f1] font-medium shrink-0 ml-[4px] dark:bg-[rgba(99,102,241,0.15)] dark:text-[#a5b4fc]">
             {childMessages.length > 0 ? `${childMessages.length}条消息` : '子会话'}
           </span>
         )}
@@ -119,7 +122,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolP
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
-            className={styles.body}
+            className="px-3 py-2 flex flex-col gap-2 border-t border-[var(--border)]"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -130,36 +133,36 @@ export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolP
             )}
 
             {childToolSummary && childToolSummary.length > 0 && (
-              <div className={styles.childPreview}>
-                <div className={styles.sectionLabel}>
+              <div className="py-[4px]">
+                <div className="text-[11px] text-[var(--muted-foreground)] mb-[4px] font-medium">
                   子会话执行过程
                 </div>
-                <div className={styles.childToolList}>
+                <div className="flex flex-col gap-[3px] max-h-[200px] overflow-y-auto">
                   {childToolSummary.map((t, i) => (
-                    <div key={i} className={styles.childToolItem}>{t}</div>
+                    <div key={i} className="text-[11px] font-[var(--mono)] px-2 py-[3px] bg-[var(--muted)] rounded-[4px] text-[var(--muted-foreground)] border border-[var(--border)]">{t}</div>
                   ))}
                 </div>
               </div>
             )}
 
             {childSessionId && (
-              <div className={styles.childLink}>
-                <motion.button className={styles.childLinkBtn} onClick={handleNavigateToChild} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
-                  <span className={styles.childLinkTitle}>
+              <div className="py-[4px]">
+                <motion.button className="flex items-center gap-2 w-full px-3 py-2 border border-dashed border-[#818cf8] rounded-[6px] bg-[#eef2ff] text-[#4338ca] text-xs cursor-pointer transition-colors duration-150 hover:bg-[#e0e7ff] dark:bg-[rgba(99,102,241,0.1)] dark:text-[#a5b4fc] dark:border-[rgba(99,102,241,0.3)] dark:hover:bg-[rgba(99,102,241,0.15)]" onClick={handleNavigateToChild} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+                  <span className="font-medium overflow-hidden text-ellipsis whitespace-nowrap flex-1 text-left">
                     {childMeta?.title || childSessionId.slice(0, 12) + '...'}
                   </span>
                   {childMessages.length > 0 && (
-                    <span className={styles.childLinkBadge}>{childMessages.length} 条消息</span>
+                    <span className="text-[10px] px-[6px] py-[2px] rounded-full bg-[#c7d2fe] text-[#4338ca] font-medium shrink-0 dark:bg-[rgba(99,102,241,0.2)] dark:text-[#a5b4fc]">{childMessages.length} 条消息</span>
                   )}
-                  <span className={styles.childLinkArrow}>查看 →</span>
+                  <span className="font-semibold shrink-0">查看 →</span>
                 </motion.button>
               </div>
             )}
 
             {outputText && (
               <div>
-                <div className={styles.sectionLabel}>输出结果</div>
-                <pre className={styles.outputBlock}>
+                <div className="text-[11px] text-[var(--muted-foreground)] mb-[4px] font-medium">输出结果</div>
+                <pre className="m-0 px-[10px] py-2 bg-[#f0fdf4] text-[#166534] rounded-[6px] text-xs font-[var(--mono)] leading-[1.5] overflow-x-auto whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto relative dark:bg-[rgba(34,197,94,0.1)] dark:text-[#86efac] group">
                   {escapeHtml(outputText)}
                   <CopyButton text={outputText} />
                 </pre>
@@ -167,7 +170,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ part }: { part: ToolP
             )}
 
             {part.state.error && (
-              <div className={styles.errorBlock}>{part.state.error}</div>
+              <div className="text-[#dc2626] text-xs px-[10px] py-2 bg-[#fef2f2] rounded-[6px] font-[var(--mono)] dark:bg-[rgba(239,68,68,0.1)] dark:text-[#fca5a5]">{part.state.error}</div>
             )}
           </motion.div>
         )}

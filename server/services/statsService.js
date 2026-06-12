@@ -14,17 +14,6 @@ export function restoreStats() {
 }
 
 /**
- * 记录一次提问（保留向后兼容，计数查询走 SQLite）
- */
-export function incrementQuestions() {}
-
-/**
- * 记录用户满意度反馈（保留向后兼容，计数查询走 SQLite）
- * @param {boolean} satisfied
- */
-export function recordFeedback(satisfied) {}
-
-/**
  * 记录一次被限流拦截的访问
  */
 export function recordBlockedAccess() {
@@ -71,12 +60,4 @@ export function getStats() {
   }
 }
 
-/**
- * 持久化统计（保留向后兼容，现为无操作——SQLite 负责持久化）
- */
-export function saveStatsSync() {}
 
-/**
- * 异步写入统计（保留向后兼容，现为无操作）
- */
-export function saveStats() {}

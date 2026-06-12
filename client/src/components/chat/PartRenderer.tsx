@@ -1,7 +1,6 @@
 import type { ChatPart } from '../../types/message'
 import { MessageBubble } from './MessageBubble'
 import { ToolCallBlock } from './ToolCallBlock'
-import styles from './PartRenderer.module.css'
 
 interface PartRendererProps {
   part: ChatPart
@@ -35,11 +34,11 @@ export function PartRenderer({ part, role }: PartRendererProps) {
     case 'subtask': {
       const st = part as import('../../types/message').SubtaskPart
       return (
-        <div className={styles.subtaskBlock}>
-          <div className={styles.subtaskAgent}>
+        <div className="mb-2 px-3 py-2 border border-dashed border-[#c4b5fd] rounded-lg text-[13px] bg-[#faf5ff] text-[#7c3aed] dark:bg-[rgba(124,58,237,0.1)] dark:text-[#c4b5fd] dark:border-[rgba(124,58,237,0.3)]">
+          <div className="font-semibold">
             {st.agent ? `subtask: ${st.agent}` : '子任务'}
           </div>
-          <div className={styles.subtaskDesc}>{st.description}</div>
+          <div className="text-xs opacity-80">{st.description}</div>
         </div>
       )
     }

@@ -10,7 +10,6 @@ import { Skeleton } from '../common/Skeleton'
 import { MarkdownRenderer } from './MarkdownRenderer'
 
 import type { FeedbackState } from '../../hooks/useFeedback'
-import styles from './MessageList.module.css'
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -117,7 +116,7 @@ export function MessageList({
     }
 
     if (messages.length === 0) {
-      return <EmptyState hasSession={!!sessionId} />
+      return <EmptyState hasSession={!!sessionId} isStreaming={isStreaming} />
     }
 
     const elements: ReactNode[] = []
@@ -133,13 +132,13 @@ export function MessageList({
         elements.push(
           <motion.div
             key={`user-${msgIdx}`}
-            className={styles.userMsg}
+            className="self-end max-w-[72%] shrink-0 mb-[2px]"
             custom={msgIdx}
             variants={messageVariants}
             initial="hidden"
             animate="visible"
           >
-            <div className={`${styles.userBubble} user-bubble-md`}>
+            <div className={`px-4 py-[10px] rounded-[var(--bubble-radius)] text-[15px] leading-[1.5] whitespace-pre-wrap break-words bg-[var(--user-bubble-gradient)] text-white rounded-br-[5px] shadow-[0_4px_14px_rgba(0,122,255,0.3)] user-bubble-md`}>
               <MarkdownRenderer content={userText} />
             </div>
           </motion.div>
@@ -182,14 +181,14 @@ export function MessageList({
                 animate="visible"
                 style={{ alignSelf: 'flex-start', width: '100%', maxWidth: '85%', marginBottom: 8 }}
               >
-                <details className={styles.toolGroup}>
-                  <summary className={styles.toolGroupSummary}>
-                    <span className={styles.toolGroupArrow}>▶</span>
-                    <span className={styles.toolGroupIcon}>🛠</span>
-                    <span className={styles.toolGroupBadge}>调用 {count} 次</span>
-                    <span className={styles.toolGroupName}>{toolName}</span>
+                <details className="block w-full border border-[var(--border)] rounded-[10px] text-[15px] bg-[var(--card)]">
+                  <summary className="flex items-center gap-2 px-[14px] py-[10px] cursor-pointer select-none bg-[var(--muted)] rounded-[10px] text-[var(--foreground)] [&::-webkit-details-marker]:hidden open:rounded-[10px_10px_0_0]">
+                    <span className="text-xs text-[var(--muted-foreground)] transition-transform duration-[150ms] open:rotate-90">▶</span>
+                    <span className="text-base">🛠</span>
+                    <span className="text-xs font-semibold px-[10px] py-[2px] rounded-full">调用 {count} 次</span>
+                    <span className="font-semibold text-[var(--accent-foreground)] font-[var(--font)] text-sm">{toolName}</span>
                   </summary>
-                  <div className={styles.toolGroupBody}>
+                  <div className="flex flex-col">
                     {groupParts.map((gp) => (
                       <ToolCallBlock key={gp.id} part={gp} />
                     ))}
@@ -254,10 +253,10 @@ export function MessageList({
   }
 
   return (
-    <div className={styles.container}>
+    <div className="relative flex-1 flex flex-col min-h-0">
       <div
         ref={containerRef}
-        className={styles.scrollArea}
+        className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex flex-col gap-[4px]"
         onScroll={handleScroll}
       >
         {content()}
@@ -267,7 +266,7 @@ export function MessageList({
       <AnimatePresence>
         {isStreaming && (
           <motion.button
-            className={styles.stopBtn}
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 px-[22px] py-2 border-none rounded-full bg-[var(--danger)] text-white text-[13px] font-semibold cursor-pointer shadow-[0_4px_14px_rgba(239,68,68,0.35)] transition-all duration-150 leading-[1.4] hover:bg-[#dc2626] hover:shadow-[0_6px_20px_rgba(239,68,68,0.5)] hover:-translate-x-1/2 hover:-translate-y-[1px]"
             onClick={onStop}
             variants={stopBtnVariants}
             initial="hidden"
@@ -282,7 +281,7 @@ export function MessageList({
       <AnimatePresence>
         {showScrollBtn && (
           <motion.button
-            className={styles.scrollBtn}
+            className="absolute bottom-4 right-6 w-9 h-9 rounded-full border border-[var(--border)] bg-[var(--chat-bg)] text-[var(--muted-foreground)] cursor-pointer flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.12)] z-10 transition-all duration-150 text-base leading-none hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)] hover:bg-[var(--accent)]"
             onClick={scrollToBottom}
             title="滚动到底部"
             initial={{ opacity: 0, scale: 0.8 }}

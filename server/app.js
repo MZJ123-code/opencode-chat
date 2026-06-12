@@ -2,6 +2,7 @@ import express from "express"
 import { clientIPMiddleware } from "./middleware/clientIP.js"
 import { userTokenMiddleware } from "./middleware/userToken.js"
 import { requestLogger } from "./middleware/requestLogger.js"
+import { performanceLogger } from "./middleware/performanceLogger.js"
 import { rateLimiter } from "./middleware/rateLimiter.js"
 import { errorHandler } from "./middleware/errorHandler.js"
 import { registerRoutes } from "./routes/index.js"
@@ -17,6 +18,7 @@ export function createApp() {
   app.use(clientIPMiddleware)
   app.use(userTokenMiddleware)
   app.use(requestLogger)
+  app.use(performanceLogger)
   app.use("/api", rateLimiter)
   registerRoutes(app)
   app.use(errorHandler)
