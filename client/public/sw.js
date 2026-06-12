@@ -1,4 +1,4 @@
-const CACHE = "opencode-chat-v1"
+const CACHE = "opencode-chat-v2"
 
 const PRECACHE_URLS = ["/", "/index.html"]
 

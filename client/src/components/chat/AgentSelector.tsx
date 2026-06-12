@@ -11,28 +11,30 @@ interface AgentSelectorProps {
 }
 
 const agentColors: Record<string, string> = {
-  build: 'from-indigo-600 to-indigo-500',
-  plan: 'from-emerald-600 to-emerald-500',
-  explore: 'from-amber-600 to-amber-500',
+  knowledge: 'from-emerald-500 to-teal-600',
+  build: 'from-indigo-500 to-violet-600',
+  plan: 'from-amber-500 to-orange-600',
+  explore: 'from-rose-500 to-pink-600',
 }
 
 const agentIcons: Record<string, string> = {
+  knowledge: '📚',
   build: '⚡',
   plan: '📐',
   explore: '🔍',
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  hidden: { opacity: 0, y: 40, scale: 0.9 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
       type: 'spring' as const,
-      stiffness: 300,
-      damping: 24,
-      delay: i * 0.1,
+      stiffness: 200,
+      damping: 20,
+      delay: i * 0.12,
     },
   }),
 }
@@ -62,24 +64,32 @@ export const AgentSelector = memo(function AgentSelector({ agents, loading, onSe
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <motion.div
-        className="text-lg font-semibold text-[var(--text)] mb-2"
-        initial={{ opacity: 0, y: -10 }}
+        className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-6"
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+      >
+        <span className="text-4xl">✨</span>
+      </motion.div>
+      <motion.div
+        className="text-2xl font-bold text-[var(--text)] mb-2"
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
       >
         选择对话模式
       </motion.div>
       <motion.div
-        className="text-sm text-[var(--text-secondary)] mb-8"
+        className="text-sm text-[var(--text-secondary)] mb-10 max-w-md"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.15, duration: 0.4 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
       >
-        选择一个 AI 助手来开始新的对话
+        选择一个 AI 助手来开始新的对话，每个助手都有独特的专长
       </motion.div>
-      <div className="flex flex-wrap justify-center gap-4 px-4">
+      <div className="grid grid-cols-2 gap-5 px-6 max-w-2xl w-full">
         {agents.map((opt, i) => {
-          const gradient = agentColors[opt.agent] || 'from-indigo-600 to-indigo-500'
+          const gradient = agentColors[opt.agent] || 'from-indigo-500 to-violet-600'
           const icon = agentIcons[opt.agent] || '🤖'
           return (
             <SpotlightCard
@@ -136,32 +146,36 @@ function SpotlightCard({
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      whileHover={{ y: -6, scale: 1.02 }}
+      whileHover={{ y: -8, scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
-      className="card-spotlight group relative flex flex-col items-start p-5 w-[220px] rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm cursor-pointer text-left transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+      className="card-spotlight group relative flex flex-col items-start p-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] cursor-pointer text-left transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:border-transparent"
       style={{
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
       }}
     >
       <motion.div
-        className={`inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br ${gradient} text-white text-lg mb-3`}
-        whileHover={{ rotate: [0, -10, 10, 0], transition: { duration: 0.4 } }}
+        className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} text-white text-2xl mb-4 shadow-lg`}
+        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+        transition={{ duration: 0.4 }}
       >
         {icon}
       </motion.div>
-      <div className="text-sm font-semibold text-[var(--text)] mb-1 relative z-10">
+      <div className="text-base font-bold text-[var(--text)] mb-2 relative z-10">
         {label}
       </div>
-      <div className="text-xs text-[var(--text-secondary)] leading-relaxed relative z-10">
+      <div className="text-sm text-[var(--text-secondary)] leading-relaxed relative z-10">
         {description}
       </div>
       <motion.div
-        className="mt-3 text-xs font-medium relative z-10"
+        className="mt-4 text-sm font-semibold relative z-10 flex items-center gap-1.5"
         style={{ color: 'var(--primary)' }}
-        initial={{ opacity: 0, x: -5 }}
+        initial={{ opacity: 0, x: -10 }}
         whileHover={{ opacity: 1, x: 0 }}
       >
-        开始对话 →
+        开始对话
+        <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
       </motion.div>
     </motion.button>
   )

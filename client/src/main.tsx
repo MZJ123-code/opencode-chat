@@ -7,16 +7,19 @@ import { ErrorBoundary } from './components/common/ErrorBoundary'
 import './styles/global.css'
 import './styles/markdown-overrides.css'
 
-/** 注册 Service Worker（PWA 离线支持） */
-function registerSW() {
-  if ('serviceWorker' in navigator && import.meta.env.PROD) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-    })
-  }
+/** 清理旧 Service Worker */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister()
+    }
+  })
+  caches.keys().then((keys) => {
+    for (const key of keys) {
+      caches.delete(key)
+    }
+  })
 }
-
-registerSW()
 
 /** 应用入口 */
 createRoot(document.getElementById('root')!).render(

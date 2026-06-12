@@ -27,7 +27,10 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
   const showBack = navigationStack.length > 0 || parentSessionId
 
   return (
-    <div className="flex items-center px-4 h-14 shrink-0 gap-2 border-b border-[var(--border)]" style={{ background: 'var(--chat-bg)' }}>
+    <div className="flex items-center px-5 h-16 shrink-0 gap-3 border-b border-[var(--border)]" style={{ 
+      background: 'var(--chat-bg)',
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    }}>
       {onMenuClick && <MobileMenuButton onClick={onMenuClick} />}
 
       {showBack && (
@@ -39,12 +42,14 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
               navigateToParent()
             }
           }}
-          className="flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--text)] transition-colors shrink-0"
+          className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--text)] transition-colors shrink-0 px-2 py-1 rounded-lg hover:bg-[var(--accent)]"
           title={parentTitle ? `返回 ${parentTitle}` : '返回'}
           whileHover={{ x: -2 }}
           whileTap={{ scale: 0.95 }}
         >
-          <span className="text-base leading-none">←</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
           {parentTitle && (
             <span className="max-w-[120px] truncate hidden sm:inline">{parentTitle}</span>
           )}
@@ -55,17 +60,28 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
         <span className="text-[var(--muted-foreground)] text-xs shrink-0">/</span>
       )}
 
-      <span className="text-sm font-medium text-[var(--text)] truncate flex-1">{title}</span>
+      <span className="text-sm font-semibold text-[var(--text)] truncate flex-1">{title}</span>
 
-      <motion.span
-        className="inline-block w-2 h-2 rounded-full shrink-0"
-        style={{ backgroundColor: connectionStatusConfig[connectionStatus]?.color }}
-        title={connectionStatusConfig[connectionStatus]?.title || connectionStatus}
-        animate={{ opacity: connectionStatus === 'connecting' ? [0.4, 1, 0.4] : 1 }}
-        transition={connectionStatus === 'connecting' ? { repeat: Infinity, duration: 1.5 } : undefined}
-      />
-
-      <ThemeToggle className="text-[var(--muted-foreground)] hover:text-[var(--text)] border-[var(--border)]" />
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <motion.span
+            className="inline-block w-2.5 h-2.5 rounded-full"
+            style={{ backgroundColor: connectionStatusConfig[connectionStatus]?.color }}
+            title={connectionStatusConfig[connectionStatus]?.title || connectionStatus}
+            animate={{ opacity: connectionStatus === 'connecting' ? [0.4, 1, 0.4] : 1 }}
+            transition={connectionStatus === 'connecting' ? { repeat: Infinity, duration: 1.5 } : undefined}
+          />
+          {connectionStatus === 'connected' && (
+            <motion.span
+              className="absolute inset-0 rounded-full"
+              style={{ backgroundColor: connectionStatusConfig[connectionStatus]?.color }}
+              animate={{ scale: [1, 1.8, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+          )}
+        </div>
+        <ThemeToggle className="text-[var(--muted-foreground)] hover:text-[var(--text)] border-[var(--border)] hover:bg-[var(--accent)]" />
+      </div>
     </div>
   )
 }

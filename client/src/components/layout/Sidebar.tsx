@@ -77,7 +77,7 @@ export function Sidebar({ children, isOpen }: SidebarProps) {
               style={{
                 width: DEFAULT_WIDTH,
                 background: 'var(--sidebar-bg)',
-                color: '#cbd5e1',
+                color: '#e2e8f0',
               }}
             >
               {children}
@@ -95,7 +95,7 @@ export function Sidebar({ children, isOpen }: SidebarProps) {
         width,
         minWidth: MIN_WIDTH,
         background: 'var(--sidebar-bg)',
-        color: '#cbd5e1',
+        color: '#e2e8f0',
       }}
       animate={{ width }}
       transition={{ type: 'spring', stiffness: 400, damping: 35 }}

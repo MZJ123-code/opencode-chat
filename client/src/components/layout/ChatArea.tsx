@@ -15,6 +15,7 @@ export function ChatArea({ children }: ChatAreaProps) {
       <div className="relative z-10 flex flex-col flex-1 min-h-0" style={{
         background: 'var(--chat-bg)',
         margin: '0',
+        boxShadow: 'inset 1px 0 0 0 var(--border)',
       }}>
         {children}
       </div>
