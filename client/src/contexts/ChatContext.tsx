@@ -181,16 +181,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const unmapped = taskCalls.filter((tc) => tc.status === 'running' || tc.status === 'completed')
     if (unmapped.length === 0) return
 
+    let unmatchedChildren = 0
     sessionMetaRef.current.forEach((meta, childID) => {
       if (meta.parentID !== parentID) return
       if (Array.from(mapped.values()).includes(childID)) return
-      // Match to the next unmapped task call
       const tc = unmapped.shift()
       if (tc) {
         mapped.set(tc.callID, childID)
         changed = true
+      } else {
+        unmatchedChildren++
       }
     })
+
+    if (unmatchedChildren > 0 || unmapped.length > 0) {
+      if (import.meta.env.DEV) {
+        console.warn(`[taskCallToChild] 匹配不完整: ${unmatchedChildren} 个子会话未匹配, ${unmapped.length} 个 task 调用无子会话, parent=${parentID}`)
+      }
+    }
 
     if (changed) {
       taskCallToChildRef.current = mapped

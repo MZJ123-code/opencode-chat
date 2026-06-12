@@ -1,5 +1,6 @@
 import express from "express"
 import path from "path"
+import fs from "fs"
 import os from "os"
 import { PORT, HOSTNAME, PUBLIC_DIR, isProduction, MODEL, SMALL_MODEL, AGENT_OPTIONS } from "./config.js"
 import { logger } from "./logger/index.js"
@@ -42,7 +43,12 @@ app.get("*", (req, res) => {
   if (req.path.startsWith("/api")) {
     logger.warn(`API 路由未命中，返回 SPA fallback: ${req.method} ${req.path}`, { ip: req.clientIP })
   }
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"))
+  const indexPath = path.join(PUBLIC_DIR, "index.html")
+  if (!fs.existsSync(indexPath)) {
+    res.status(503).type("html").send(`<h1>前端构建未就绪</h1><p>React 前端未构建，请运行：<code>cd client && bun run build</code></p>`)
+    return
+  }
+  res.sendFile(indexPath)
 })
 
 // 启动 HTTP 服务
