@@ -7,6 +7,29 @@ let _client = null
 /** @type {import("@opencode-ai/sdk/v2").OpencodeServer|null} */
 let _server = null
 
+/** 常见 API Key 环境变量名列表 */
+const API_KEY_ENVVARS = [
+  "DEEPSEEK_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY",
+  "GEMINI_API_KEY", "GROQ_API_KEY", "TOGETHER_API_KEY",
+  "MISTRAL_API_KEY", "PERPLEXITY_API_KEY", "OPENROUTER_API_KEY",
+]
+
+/**
+ * 启动前检查 Provider API Key 是否配置
+ * 仅输出警告，不阻止启动——用户在运行时配置也合法
+ */
+function checkProviderConfig() {
+  const configured = API_KEY_ENVVARS.filter(k => process.env[k])
+  if (configured.length === 0 && Object.keys(PROVIDER).length === 0) {
+    logger.warn("未检测到任何 API Key 环境变量（如 DEEPSEEK_API_KEY），模型调用可能失败", {
+      hint: "请设置对应模型的 API Key，或在 config.json 中配置 provider",
+      model: MODEL,
+    })
+  } else {
+    logger.info("检测到 API Key 环境变量", { keys: configured })
+  }
+}
+
 /**
  * 启动 OpenCode 子进程，创建 SDK 客户端和服务端连接
  * @returns {Promise<{client: import("@opencode-ai/sdk/v2").OpencodeClient, server: import("@opencode-ai/sdk/v2").OpencodeServer}>}
@@ -14,6 +37,8 @@ let _server = null
 export async function startOpenCode() {
   logger.info("正在启动 OpenCode Server...")
   const start = Date.now()
+
+  checkProviderConfig()
 
   const cfg = buildOpenCodeConfig()
 

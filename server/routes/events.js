@@ -33,6 +33,7 @@ router.get("/", async (req, res) => {
   let closed = false
   let eventCount = 0
   const eventTypeCount = new Map()
+  const abortController = new AbortController()
 
   // 静默响应流错误，避免客户端断连导致进程崩溃
   res.on("error", () => {})
@@ -55,6 +56,7 @@ router.get("/", async (req, res) => {
 
   req.on("close", () => {
     closed = true
+    abortController.abort()
     logger.info(`SSE 事件流关闭: ${userId.slice(0, 8)}`, {
       events_delivered: eventCount,
       event_types: Object.fromEntries(eventTypeCount),
@@ -65,7 +67,7 @@ router.get("/", async (req, res) => {
     // 先回放断连期间缓冲的事件
     const { events: buffered } = getBufferedEvents(userId, sinceSeq)
     if (buffered.length > 0) {
-      logger.info(`SSE 回放缓冲事件: ${ip}`, { count: buffered.length })
+      logger.info(`SSE 回放缓冲事件: ${userId.slice(0, 8)}`, { count: buffered.length })
       for (const ev of buffered) {
         if (closed) break
         eventCount++
@@ -153,23 +155,25 @@ router.get("/", async (req, res) => {
     }
 
     // 订阅多个事件流：默认（无目录）+ 每个配置了独立目录的 Agent
-    const subscribeTasks = [client.event.subscribe()]
+    // 传入 AbortSignal 使 SDK 在客户端断开时自动释放底层资源
+    const signal = abortController.signal
+    const subscribeTasks = [client.event.subscribe({ signal })]
     for (const dir of AGENT_DIR_MAP.values()) {
-      subscribeTasks.push(client.event.subscribe({ directory: dir }))
+      subscribeTasks.push(client.event.subscribe({ directory: dir, signal }))
     }
 
     const streams = await Promise.all(subscribeTasks)
     logger.info(`SSE 事件流已订阅: ${userId.slice(0, 8)}`, { stream_count: streams.length })
 
-    // 并发消费所有事件流，等待全部结束（连接关闭时自动结束）
+    // 并发消费所有事件流，断开时取消订阅
     await Promise.all(streams.map(s => (async () => {
       try {
         for await (const event of s.stream) {
           processEvent(event)
-          if (closed) break
+          if (closed || signal.aborted) break
         }
       } catch (err) {
-        if (!closed) {
+        if (!closed && err.name !== "AbortError") {
           logger.warn(`SSE 子流错误: ${userId.slice(0, 8)}`, { error: err.message })
         }
       }
