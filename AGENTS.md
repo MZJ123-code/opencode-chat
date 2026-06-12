@@ -114,7 +114,6 @@ export function MessageBubble({ message, isStreaming }: Props) { ... }
 | GET | `/api/sessions` | 用户会话列表 |
 | POST | `/api/sessions` | 创建会话 |
 | GET | `/api/sessions/:id/messages` | 消息历史 |
-| POST | `/api/chat` | 同步发送 |
 | POST | `/api/chat/async` | 异步发送（通过 SSE 接收回复） |
 | POST | `/api/sessions/:id/feedback` | 满意度反馈 |
 | GET | `/api/stats` | 平台统计（聚合） |
