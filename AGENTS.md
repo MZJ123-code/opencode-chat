@@ -30,6 +30,10 @@ bun start                # 生产启动
   - `ContentModal.tsx` — @radix-ui/react-dialog 弹窗（Markdown/源码）
 - **SDK v2 消息结构**：角色在 `msg.info.role`（agent/plan/build/explore）而非 `msg.role`
 
+## 强制流程
+
+- **跟踪更新**：每次代码修改后必须更新 `发现的问题/解决跟踪.md`，标记已解决问题的状态和解决方式
+
 ## 编码规范
 
 ### 函数级注释（强制）
