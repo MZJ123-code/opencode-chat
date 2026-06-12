@@ -6,10 +6,11 @@
 bun install
 cd client && bun install && cd ..
 
-bun run dev              # 后端（--watch 自动重启）
+bun run dev              # 后端（自动拉起 OpenCode 子进程 + --watch 重启）
 cd client && bun run dev # 前端 Vite HMR @ :5173，代理 /api → :3000
 cd client && bun run build && cd .. # tsc -b → vite build → ../dist/
 bun start                # 生产启动
+bun run dev:external     # 连接已有外部 OpenCode 进程（OPENCODE_EXTERNAL_URL）
 ```
 
 ## 架构关键点
