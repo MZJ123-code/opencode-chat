@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import type { QuestionDetailItem, FeedbackDetailItem } from '../../api/stats'
+import type { QuestionDetailItem, FeedbackDetailItem } from '../../types/api-responses'
 
 const COLORS = ['#6366f1', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444']
 

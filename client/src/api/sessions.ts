@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { SessionListItem, SessionCreateResult } from '../types/session'
+import type { SessionListItem, SessionCreateResult } from '../types/api-responses'
 import type { ChatMessage } from '../types/message'
 
 /**

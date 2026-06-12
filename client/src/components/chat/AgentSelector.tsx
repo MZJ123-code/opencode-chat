@@ -1,7 +1,7 @@
 import { useRef, useCallback, type MouseEvent, memo } from 'react'
 import { motion } from 'framer-motion'
 import { Skeleton } from '../common/Skeleton'
-import type { AgentOption } from '../../api/agents'
+import type { AgentOption } from '../../types/api-responses'
 
 interface AgentSelectorProps {
   agents: AgentOption[]

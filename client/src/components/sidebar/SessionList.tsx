@@ -1,4 +1,4 @@
-import type { SessionListItem } from '../../types/session'
+import type { SessionListItem } from '../../types/api-responses'
 import { SessionItem } from './SessionItem'
 import { Skeleton } from '../common/Skeleton'
 
