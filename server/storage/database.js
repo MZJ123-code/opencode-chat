@@ -55,12 +55,25 @@ export function initDatabase() {
   // 兼容旧表：已有表可能缺少 answer_content 列
   try { db.run("ALTER TABLE feedback ADD COLUMN answer_content TEXT DEFAULT ''") } catch {}
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      title TEXT DEFAULT '',
+      agent TEXT,
+      message_count INTEGER DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      ip TEXT DEFAULT ''
+    )
+  `)
+
   // 索引
   db.run("CREATE INDEX IF NOT EXISTS idx_page_visits_date ON page_visits(visit_date)")
   db.run("CREATE INDEX IF NOT EXISTS idx_questions_date ON questions(question_date)")
   db.run("CREATE INDEX IF NOT EXISTS idx_feedback_date ON feedback(feedback_date)")
   db.run("CREATE INDEX IF NOT EXISTS idx_questions_session ON questions(session_id)")
   db.run("CREATE INDEX IF NOT EXISTS idx_feedback_session ON feedback(session_id)")
+  db.run("CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)")
 
   return db
 }

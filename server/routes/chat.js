@@ -23,10 +23,6 @@ function directoryOpts(agent) {
   return {}
 }
 
-function extractAgentInfo(meta, bodyAgent) {
-  return meta?.agent || bodyAgent || null
-}
-
 function extractModelFromParts(parts) {
   for (const p of parts || []) {
     if (p.type === "step-start" && p.model) return p.model
@@ -47,33 +43,14 @@ function extractToolCalls(parts) {
     .map(p => ({ tool: p.tool, state: p.state, callID: p.callID }))
 }
 
-/** 提取请求公共前置信息并记录基本日志 */
+/** 提取请求公共前置信息 */
 function getPromptContext(req) {
+  const userId = req.userId
   const ip = req.clientIP
   const { sessionId, message, agent: bodyAgent } = req.body
   const meta = getSessionMeta(sessionId)
-  const agent = extractAgentInfo(meta, bodyAgent)
-  return { ip, sessionId, message, meta, agent }
-}
-
-function logPromptStart(ip, sessionId, message, agent, meta) {
-  logger.info(`收到消息: ${ip} -> ${sessionId}`, {
-    message_length: message.length,
-    message_preview: message.slice(0, 100),
-    agent,
-    model: MODEL,
-    small_model: SMALL_MODEL,
-    session_agent: meta?.agent || null,
-  })
-}
-
-function logPromptAsync(ip, sessionId, preview, agent, meta) {
-  logger.info(`异步消息: ${ip} -> ${sessionId}: "${preview}"`, {
-    agent,
-    model: MODEL,
-    small_model: SMALL_MODEL,
-    session_agent: meta?.agent || null,
-  })
+  const agent = meta?.agent || bodyAgent || null
+  return { userId: userId?.slice(0, 8), ip, sessionId, message, meta, agent }
 }
 
 // Sync prompt (waits for full response, returns complete data)
@@ -82,15 +59,18 @@ router.post("/", requireBody("sessionId", "message"), requireSessionOwnership(),
   const ctx = getPromptContext(req)
 
   try {
-    logPromptStart(ctx.ip, ctx.sessionId, ctx.message, ctx.agent, ctx.meta)
-
     recordMessage(ctx.sessionId)
     incrementQuestions()
     recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
 
     const client = getClient()
     const promptStart = Date.now()
-    logger.info(`SDK 同步 prompt 开始: ${ctx.sessionId}`, { agent: ctx.agent, model: MODEL })
+    logger.info(`收到消息: ${ctx.userId} -> ${ctx.sessionId}`, {
+      message_length: ctx.message.length,
+      message_preview: ctx.message.slice(0, 100),
+      agent: ctx.agent,
+      model: MODEL,
+    })
     const promptParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptParams.agent = ctx.agent
     const result = await client.session.prompt(promptParams, directoryOpts(ctx.agent))
@@ -141,15 +121,17 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
   const ctx = getPromptContext(req)
 
   try {
-    logPromptAsync(ctx.ip, ctx.sessionId, ctx.message.slice(0, 80), ctx.agent, ctx.meta)
-
     recordMessage(ctx.sessionId)
     incrementQuestions()
     recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
     saveStats()
 
     const client = getClient()
-    logger.info(`SDK 异步 prompt 开始: ${ctx.sessionId}`, { agent: ctx.agent, model: MODEL })
+    logger.info(`异步消息: ${ctx.userId} -> ${ctx.sessionId}`, {
+      message_preview: ctx.message.slice(0, 80),
+      agent: ctx.agent,
+      model: MODEL,
+    })
     const promptAsyncParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptAsyncParams.agent = ctx.agent
     await client.session.promptAsync(promptAsyncParams, directoryOpts(ctx.agent))

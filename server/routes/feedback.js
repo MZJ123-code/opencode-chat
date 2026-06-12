@@ -75,6 +75,7 @@ async function getLastAssistantReply(sessionId) {
  */
 router.post("/:id/feedback", requireSessionOwnership("id"), async (req, res, next) => {
   try {
+    const userId = req.userId?.slice(0, 8)
     const ip = req.clientIP
     const sessionId = req.params.id
     const { satisfied } = req.body
@@ -86,25 +87,15 @@ router.post("/:id/feedback", requireSessionOwnership("id"), async (req, res, nex
     const meta = getSessionMeta(sessionId)
     const latestQuestion = getLatestQuestion(sessionId)
 
-    // 异步获取 AI 回复内容用于看板展示
     const answerContent = await getLastAssistantReply(sessionId)
-
-    logger.info(`反馈提交: 即将写入数据库`, {
-      sessionId,
-      hasLatestQuestion: !!latestQuestion,
-      answerContentLength: answerContent.length,
-      answerContentPreview: answerContent.slice(0, 200),
-      satisfied: !!satisfied,
-    })
 
     recordStatsFeedback(!!satisfied)
     recordAnalyticsFeedback(sessionId, ip, !!satisfied, latestQuestion?.content || "", answerContent)
 
     logger.info(`满意度反馈: ${sessionId}`, {
-      ip,
+      userId,
       satisfied: !!satisfied,
       message_count: meta?.messageCount,
-      question_preview: (latestQuestion?.content || "").slice(0, 100),
     })
     saveStats()
     res.json({ ok: true })

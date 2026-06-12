@@ -6,6 +6,7 @@ import { logger } from "./logger/index.js"
 import { createApp } from "./app.js"
 import { startOpenCode, killOpenCode } from "./services/opencode.js"
 import { restoreStats, saveStatsSync } from "./services/statsService.js"
+import { restoreSessions } from "./services/sessionService.js"
 import { initDatabase } from "./storage/database.js"
 
 try {
@@ -20,6 +21,11 @@ try {
   logger.info("统计数据已从磁盘恢复")
 } catch (err) {
   logger.warn(`统计数据恢复失败（首次启动或无数据）: ${err.message}`)
+}
+try {
+  restoreSessions()
+} catch (err) {
+  logger.warn(`会话数据恢复失败: ${err.message}`)
 }
 try {
   await startOpenCode()

@@ -1,4 +1,4 @@
-import { ipUsers, ipSessions, stats } from "../storage/store.js"
+import { ipUsers, ipSessions, userSessions, stats } from "../storage/store.js"
 import { logger } from "../logger/index.js"
 
 /**
@@ -16,9 +16,8 @@ export function getClientIP(req) {
 }
 
 /**
- * 确保 IP 已注册，首次访问时初始化用户数据
+ * 确保 IP 已注册，首次访问时初始化（兼容旧版）
  * @param {string} ip - 客户端 IP
- * @returns {void}
  */
 export function ensureIP(ip) {
   if (!ipUsers.has(ip)) {
@@ -32,3 +31,13 @@ export function ensureIP(ip) {
   }
 }
 
+/**
+ * 确保 userId 已注册，首次访问时初始化
+ * @param {string} userId - 用户 Token
+ */
+export function ensureUser(userId) {
+  if (!userSessions.has(userId)) {
+    userSessions.set(userId, new Set())
+    logger.info(`新用户: ${userId.slice(0, 8)}...`)
+  }
+}

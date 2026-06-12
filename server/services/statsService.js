@@ -1,7 +1,7 @@
 import fs from "fs"
 import path from "path"
 import { LOG_DIR } from "../config.js"
-import { stats, sessionMeta } from "../storage/store.js"
+import { stats, sessionMeta, userSessions } from "../storage/store.js"
 
 const statsPath = path.join(LOG_DIR, "_stats.json")
 
@@ -12,7 +12,7 @@ export function restoreStats() {
   try {
     const raw = fs.readFileSync(statsPath, "utf-8")
     const data = JSON.parse(raw)
-    if (data.visitors) stats.visitors = new Set(data.activeIPs || [])
+    if (data.activeIPs) stats.visitors = new Set(data.activeIPs)
     if (data.totalSessions) stats.totalSessions = data.totalSessions
     if (data.totalQuestions) stats.totalQuestions = data.totalQuestions
     if (data.satisfied) stats.satisfied = data.satisfied
@@ -59,7 +59,7 @@ export function getStats() {
     agentDistribution[a] = (agentDistribution[a] || 0) + 1
   }
   return {
-    visitors: stats.visitors.size,
+    visitors: userSessions.size,
     totalSessions: stats.totalSessions,
     activeSessions,
     totalQuestions: stats.totalQuestions,

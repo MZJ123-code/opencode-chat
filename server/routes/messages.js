@@ -80,12 +80,12 @@ const router = Router()
  * @param {import("express").NextFunction} next
  */
 router.get("/:id/messages", requireSessionOwnership("id"), async (req, res, next) => {
-  const ip = req.clientIP
+  const userId = req.userId?.slice(0, 8)
   const sessionId = req.params.id
   const meta = getSessionMeta(sessionId)
 
   try {
-    logger.info(`查询消息历史: ${ip} -> ${sessionId}`, {
+    logger.info(`查询消息历史: ${userId} -> ${sessionId}`, {
       session_agent: meta?.agent || null,
       session_title: meta?.title,
     })

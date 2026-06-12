@@ -7,6 +7,7 @@ import statsRouter from "./stats.js"
 import permissionRouter from "./permission.js"
 import agentsRouter from "./agents.js"
 import abortRouter from "./abort.js"
+import healthRouter from "./health.js"
 
 /**
  * 注册所有 API 路由到 Express 应用
@@ -22,4 +23,5 @@ export function registerRoutes(app) {
   app.use("/api/stats", statsRouter)
   app.use("/api/permission", permissionRouter)
   app.use("/api/agents", agentsRouter)
+  app.use("/api", healthRouter)
 }

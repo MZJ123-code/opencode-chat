@@ -2,7 +2,7 @@ import { Router } from "express"
 import { getClient } from "../services/opencode.js"
 import { AGENT_DIR_MAP } from "../config.js"
 import { logger } from "../logger/index.js"
-import { ipUsers, ipSessions, sessionMeta } from "../storage/store.js"
+import { sessionMeta, userSessions } from "../storage/store.js"
 import { validateOwnership } from "../services/sessionService.js"
 import { pushEvent, getBufferedEvents } from "../services/eventBuffer.js"
 
@@ -16,12 +16,12 @@ const router = Router()
  */
 router.get("/", async (req, res) => {
   const client = getClient()
+  const userId = req.userId
   const ip = req.clientIP
 
-  // 客户端可携带 lastSeq 参数增量回放（浏览器 EventSource 不支持自定义参数，预留扩展）
   const sinceSeq = parseInt(req.query.since || "0", 10) || 0
 
-  logger.info(`SSE 事件流连接: ${ip}`, { sinceSeq: sinceSeq || "全部" })
+  logger.info(`SSE 事件流连接: ${userId.slice(0, 8)}`, { sinceSeq: sinceSeq || "全部" })
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -55,7 +55,7 @@ router.get("/", async (req, res) => {
 
   req.on("close", () => {
     closed = true
-    logger.info(`SSE 事件流关闭: ${ip}`, {
+    logger.info(`SSE 事件流关闭: ${userId.slice(0, 8)}`, {
       events_delivered: eventCount,
       event_types: Object.fromEntries(eventTypeCount),
     })
@@ -63,7 +63,7 @@ router.get("/", async (req, res) => {
 
   try {
     // 先回放断连期间缓冲的事件
-    const { events: buffered } = getBufferedEvents(ip, sinceSeq)
+    const { events: buffered } = getBufferedEvents(userId, sinceSeq)
     if (buffered.length > 0) {
       logger.info(`SSE 回放缓冲事件: ${ip}`, { count: buffered.length })
       for (const ev of buffered) {
@@ -84,7 +84,7 @@ router.get("/", async (req, res) => {
       eventCount++
 
       // 写入环形缓冲区
-      pushEvent(ip, event)
+      pushEvent(userId, event)
 
       // Track all event types
       const etype = event.type || "unknown"
@@ -123,7 +123,7 @@ router.get("/", async (req, res) => {
         const childSid = info.id
         const parentSid = info.parentID
         if (childSid && parentSid && !sessionMeta.has(childSid)) {
-          if (validateOwnership(ip, parentSid)) {
+          if (validateOwnership(userId, parentSid)) {
             const title = info.title || "子任务"
             sessionMeta.set(childSid, {
               ip,
@@ -132,10 +132,7 @@ router.get("/", async (req, res) => {
               messageCount: 0,
               agent: null,
             })
-            ipUsers.get(ip)?.sessionIds.add(childSid)
-            const arr = ipSessions.get(ip)
-            if (arr) arr.push(childSid)
-            logger.info(`子会话已注册: ${childSid}`, { parent: parentSid, ip, title })
+            logger.info(`子会话已注册: ${childSid}`, { parent: parentSid, userId: userId.slice(0, 8), title })
           }
         }
       }
@@ -144,18 +141,11 @@ router.get("/", async (req, res) => {
       if (event.type === "session.deleted" && props.info?.id) {
         const deletedSid = props.info.id
         if (sessionMeta.has(deletedSid)) {
-          const meta = sessionMeta.get(deletedSid)
           sessionMeta.delete(deletedSid)
-          const ownerIp = meta?.ip
-          if (ownerIp) {
-            ipUsers.get(ownerIp)?.sessionIds.delete(deletedSid)
-            const arr = ipSessions.get(ownerIp)
-            if (arr) {
-              const idx = arr.indexOf(deletedSid)
-              if (idx !== -1) arr.splice(idx, 1)
-            }
+          for (const [, sessions] of userSessions) {
+            sessions.delete(deletedSid)
           }
-          logger.info(`会话已清理: ${deletedSid}`, { ip: ownerIp })
+          logger.info(`会话已清理: ${deletedSid}`)
         }
       }
 
@@ -169,7 +159,7 @@ router.get("/", async (req, res) => {
     }
 
     const streams = await Promise.all(subscribeTasks)
-    logger.info(`SSE 事件流已订阅: ${ip}`, { stream_count: streams.length })
+    logger.info(`SSE 事件流已订阅: ${userId.slice(0, 8)}`, { stream_count: streams.length })
 
     // 并发消费所有事件流，等待全部结束（连接关闭时自动结束）
     await Promise.all(streams.map(s => (async () => {
@@ -180,14 +170,14 @@ router.get("/", async (req, res) => {
         }
       } catch (err) {
         if (!closed) {
-          logger.warn(`SSE 子流错误: ${ip}`, { error: err.message })
+          logger.warn(`SSE 子流错误: ${userId.slice(0, 8)}`, { error: err.message })
         }
       }
     })()))
   } catch (err) {
     if (!closed) {
       const isSubscribeFailure = eventCount === 0
-      logger.warn(`SSE ${isSubscribeFailure ? "订阅" : "流"}错误: ${ip}`, {
+      logger.warn(`SSE ${isSubscribeFailure ? "订阅" : "流"}错误: ${userId.slice(0, 8)}`, {
         error: err.message,
         events_delivered: eventCount,
         is_subscribe_failure: isSubscribeFailure,
