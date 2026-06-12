@@ -79,6 +79,19 @@ function overrideBool(key, fallback) {
 }
 
 /**
+ * 将工具配置归一化为布尔值（opencode 二进制不支持 "ask" 等非布尔值）
+ * @param {Record<string, unknown>} tools - 原始工具配置
+ * @returns {Record<string, boolean>} 布尔化后的工具配置
+ */
+function normalizeToolConfig(tools) {
+  const result = {}
+  for (const [key, value] of Object.entries(tools || {})) {
+    result[key] = value === true || value === "ask"
+  }
+  return result
+}
+
+/**
  * 构建 OpenCode SDK 配置对象，环境变量优先于 config.json
  * @returns {import("@opencode-ai/sdk/v2").OpenCodeConfig} OpenCode 配置
  */
@@ -89,7 +102,7 @@ export function buildOpenCodeConfig() {
     logLevel: process.env.OPENCODE_LOG_LEVEL || cfg.logLevel,
     autoupdate: overrideBool("OPENCODE_AUTOUPDATE", cfg.autoupdate),
     agent: overrideJSON("OPENCODE_AGENT", cfg.agent),
-    tools: overrideJSON("OPENCODE_TOOLS", cfg.tools),
+    tools: normalizeToolConfig(overrideJSON("OPENCODE_TOOLS", cfg.tools)),
     compaction: overrideJSON("OPENCODE_COMPACTION", cfg.compaction),
     tool_output: cfg.tool_output,
     snapshot: overrideBool("OPENCODE_SNAPSHOT", cfg.snapshot),
