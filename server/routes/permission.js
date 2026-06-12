@@ -2,6 +2,7 @@ import { Router } from "express"
 import { getClient } from "../services/opencode.js"
 import { MODEL } from "../config.js"
 import { logger } from "../logger/index.js"
+import { AppError } from "../middleware/errorHandler.js"
 
 /** @type {import("express").Router} 权限路由：POST /respond, /question/reply, /question/reject */
 const router = Router()
@@ -16,7 +17,7 @@ router.post("/respond", async (req, res, next) => {
   try {
     const { requestID, reply, message } = req.body
     if (!requestID || !["once", "always", "reject"].includes(reply)) {
-      return res.status(400).json({ error: "Missing or invalid fields" })
+      throw new AppError("缺少必要参数", "MISSING_PARAMS", 400)
     }
 
     const client = getClient()
@@ -47,10 +48,10 @@ router.post("/question/reply", async (req, res, next) => {
   try {
     const { requestID, answers } = req.body
     if (!requestID) {
-      return res.status(400).json({ error: "Missing requestID" })
+      throw new AppError("缺少 requestID", "MISSING_REQUEST_ID", 400)
     }
     if (!Array.isArray(answers)) {
-      return res.status(400).json({ error: "answers 必须是数组" })
+      throw new AppError("answers 必须是数组", "INVALID_ANSWERS", 400)
     }
 
     const client = getClient()
@@ -76,7 +77,7 @@ router.post("/question/reject", async (req, res, next) => {
   try {
     const { requestID } = req.body
     if (!requestID) {
-      return res.status(400).json({ error: "Missing requestID" })
+      throw new AppError("缺少 requestID", "MISSING_REQUEST_ID", 400)
     }
 
     const client = getClient()

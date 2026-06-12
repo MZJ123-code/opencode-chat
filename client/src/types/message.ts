@@ -154,15 +154,3 @@ export interface ChatMessage {
   /** 消息时间戳 */
   time?: number
 }
-
-/** 聊天发送结果 */
-export interface ChatSendResult {
-  /** 会话 ID */
-  sessionId: string
-  /** 回复文本 */
-  reply: string
-  /** 回复片段列表 */
-  parts: ChatPart[]
-  /** Token 用量 */
-  tokens?: { input?: number; output?: number }
-}

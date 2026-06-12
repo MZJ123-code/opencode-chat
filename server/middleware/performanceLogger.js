@@ -8,7 +8,9 @@ import { logger } from "../logger/index.js"
  * @param {import("express").NextFunction} next
  */
 export function performanceLogger(req, res, next) {
-  const start = Date.now()
+  // 仅监控 API 请求，跳过高频路径和静态文件
+  if (!req.path.startsWith('/api') || req.path === '/api/events' || req.path === '/api/health') return next()
+  const start = req._startTime || Date.now()
 
   res.on('finish', () => {
     const duration = Date.now() - start

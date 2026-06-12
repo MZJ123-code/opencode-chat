@@ -212,8 +212,11 @@ export function recordMessage(sessionId) {
   meta.messageCount++
   try {
     const db = getDatabase()
-    db.run("UPDATE sessions SET message_count = ? WHERE id = ?", [meta.messageCount, sessionId])
-  } catch {}
+    // 使用原子 UPDATE 防止并发写入导致计数丢失
+    db.run("UPDATE sessions SET message_count = message_count + 1 WHERE id = ?", [sessionId])
+  } catch (e) {
+    logger.warn(`消息计数写入失败: ${sessionId}`, { error: e.message })
+  }
 }
 
 /**

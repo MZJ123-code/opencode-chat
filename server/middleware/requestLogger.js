@@ -14,8 +14,9 @@ const SKIP_PATHS = ["/api/events", "/api/health"]
 export function requestLogger(req, res, next) {
   if (SKIP_PATHS.some(p => req.path.startsWith(p))) return next()
   const start = Date.now()
+  req._startTime = start
   res.on("finish", () => {
-    logger.access(req.method, req.path, res.statusCode, Date.now() - start, req.clientIP)
+    logger.access(req.method, req.path, res.statusCode, Date.now() - start, req.clientIP, req.userId?.slice(0, 8))
   })
   next()
 }

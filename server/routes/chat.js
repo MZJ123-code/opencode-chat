@@ -38,9 +38,6 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
   const ctx = getPromptContext(req)
 
   try {
-    recordMessage(ctx.sessionId)
-    recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
-
     const client = getClient()
     logger.info(`异步消息: ${ctx.userId} -> ${ctx.sessionId}`, {
       message_preview: ctx.message.slice(0, 80),
@@ -50,6 +47,10 @@ router.post("/async", requireBody("sessionId", "message"), requireSessionOwnersh
     const promptAsyncParams = { sessionID: ctx.sessionId, parts: [{ type: "text", text: ctx.message }] }
     if (ctx.agent) promptAsyncParams.agent = ctx.agent
     await client.session.promptAsync(promptAsyncParams, directoryOpts(ctx.agent))
+
+    // SDK 调用成功后再记录分析数据，避免失败时产生脏数据
+    recordMessage(ctx.sessionId)
+    recordQuestion(ctx.sessionId, ctx.ip, ctx.message, ctx.agent)
 
     logger.info(`异步 prompt 已提交: ${ctx.sessionId}`, { duration_ms: Date.now() - requestStart })
     res.json({ ok: true, sessionId: ctx.sessionId })

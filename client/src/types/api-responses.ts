@@ -83,6 +83,12 @@ export interface FeedbackDetailItem {
   created_at: string
 }
 
+/** 分页响应 */
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+}
+
 // ====== Health ======
 
 export interface HealthResponse {

@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
-import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail, recordVisit } from '../../api/stats'
+import { ArrowUpDown, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react'
+import { fetchDailyStats, fetchFeedbackDetail, fetchVisitsDetail, fetchQuestionsDetail } from '../../api/stats'
 import type { BasicStats, DailyStatsItem, FeedbackDetailItem, VisitDetailItem, QuestionDetailItem } from '../../types/api-responses'
 import { ThemeToggle } from '../common/ThemeToggle'
 import type { FilterValues } from './DashboardFilters'
 import { DashboardFilters } from './DashboardFilters'
 import { DashboardCharts } from './DashboardCharts'
 import { ContentModal } from './ContentModal'
+
+/** 每页加载条数 */
+const PAGE_SIZE = 300
 
 interface DashboardPageProps {
   onBack: () => void
@@ -28,8 +31,17 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [visits, setVisits] = useState<VisitDetailItem[]>([])
   const [questions, setQuestions] = useState<QuestionDetailItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState<Record<string, boolean>>({})
   const [filters, setFilters] = useState<FilterValues>(defaultFilters)
   const [modal, setModal] = useState<{ title: string; content: string } | null>(null)
+
+  // 分页状态
+  const [fbOffset, setFbOffset] = useState(0)
+  const [fbTotal, setFbTotal] = useState(0)
+  const [visitOffset, setVisitOffset] = useState(0)
+  const [visitTotal, setVisitTotal] = useState(0)
+  const [qOffset, setQOffset] = useState(0)
+  const [qTotal, setQTotal] = useState(0)
 
   // 赞踩明细排序+筛选
   const [fbSortKey, setFbSortKey] = useState('created_at')
@@ -52,26 +64,60 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
   const [qFilters, setQFilters] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    recordVisit()
     loadData()
   }, [])
 
   const loadData = useCallback(() => {
     setLoading(true)
+    setFbOffset(0); setVisitOffset(0); setQOffset(0)
     Promise.all([
       fetchDailyStats(90),
-      fetchFeedbackDetail(9999),
-      fetchVisitsDetail(9999),
-      fetchQuestionsDetail(9999),
+      fetchFeedbackDetail(PAGE_SIZE, 0),
+      fetchVisitsDetail(PAGE_SIZE, 0),
+      fetchQuestionsDetail(PAGE_SIZE, 0),
     ]).then(([dailyRes, feedbackRes, visitsRes, questionsRes]) => {
       setBasic(dailyRes.basic)
       setDaily(dailyRes.daily)
-      setFeedback(feedbackRes)
-      setVisits(visitsRes)
-      setQuestions(questionsRes)
+      setFeedback(feedbackRes.items)
+      setFbTotal(feedbackRes.total)
+      setVisits(visitsRes.items)
+      setVisitTotal(visitsRes.total)
+      setQuestions(questionsRes.items)
+      setQTotal(questionsRes.total)
     }).catch(() => {
     }).finally(() => setLoading(false))
   }, [])
+
+  /** 加载更多明细数据 */
+  const loadMoreFeedback = useCallback(() => {
+    const offset = fbOffset + PAGE_SIZE
+    setLoadingMore(prev => ({ ...prev, feedback: true }))
+    fetchFeedbackDetail(PAGE_SIZE, offset).then(res => {
+      setFeedback(prev => [...prev, ...res.items])
+      setFbOffset(offset)
+      setFbTotal(res.total)
+    }).finally(() => setLoadingMore(prev => ({ ...prev, feedback: false })))
+  }, [fbOffset])
+
+  const loadMoreVisits = useCallback(() => {
+    const offset = visitOffset + PAGE_SIZE
+    setLoadingMore(prev => ({ ...prev, visits: true }))
+    fetchVisitsDetail(PAGE_SIZE, offset).then(res => {
+      setVisits(prev => [...prev, ...res.items])
+      setVisitOffset(offset)
+      setVisitTotal(res.total)
+    }).finally(() => setLoadingMore(prev => ({ ...prev, visits: false })))
+  }, [visitOffset])
+
+  const loadMoreQuestions = useCallback(() => {
+    const offset = qOffset + PAGE_SIZE
+    setLoadingMore(prev => ({ ...prev, questions: true }))
+    fetchQuestionsDetail(PAGE_SIZE, offset).then(res => {
+      setQuestions(prev => [...prev, ...res.items])
+      setQOffset(offset)
+      setQTotal(res.total)
+    }).finally(() => setLoadingMore(prev => ({ ...prev, questions: false })))
+  }, [qOffset])
 
   const handleRefresh = useCallback(() => loadData(), [loadData])
 
@@ -81,7 +127,8 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     return Array.from(set).sort()
   }, [questions])
 
-  const makeSorter = (sortKey: string) => (a: any, b: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 通用排序工具，操作异构数据项
+  const makeSorter = (sortKey: string) => (a: Record<string, any>, b: Record<string, any>) => {
     let va: string | number = a[sortKey] ?? ''
     let vb: string | number = b[sortKey] ?? ''
     if (typeof va === 'string') va = va.toLowerCase()
@@ -89,7 +136,8 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     return va < vb ? -1 : va > vb ? 1 : 0
   }
 
-  const makeTextFilter = (items: any[], colFilters: Record<string, string>, colMap?: Record<string, (item: any) => string>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 通用筛选工具
+  const makeTextFilter = <T extends Record<string, any>>(items: T[], colFilters: Record<string, string>, colMap?: Record<string, (item: T) => string>) => {
     for (const [key, val] of Object.entries(colFilters)) {
       if (!val) continue
       const lower = val.toLowerCase()
@@ -221,7 +269,7 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
 
         {/* 访问明细 */}
         <section>
-          <SectionTitle title={`访问明细 (${filteredVisits.length} 条)`} />
+          <SectionTitle title={`访问明细 (${filteredVisits.length} / ${visitTotal || '?'} 条)`} />
           <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--border)' }}>
             <table className="w-full text-xs min-w-[500px]" style={{ background: 'var(--chat-bg)' }}>
               <thead>
@@ -245,11 +293,14 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
               </tbody>
             </table>
           </div>
+          {(visitTotal > visits.length) && (
+            <LoadMoreButton loading={!!loadingMore['visits']} onClick={loadMoreVisits} loaded={visits.length} total={visitTotal} />
+          )}
         </section>
 
         {/* 提问明细 */}
         <section>
-          <SectionTitle title={`提问明细 (${filteredQuestions.length} 条)`} />
+          <SectionTitle title={`提问明细 (${filteredQuestions.length} / ${qTotal || '?'} 条)`} />
           <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--border)' }}>
             <table className="w-full text-xs min-w-[550px]" style={{ background: 'var(--chat-bg)' }}>
               <thead>
@@ -275,11 +326,14 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
               </tbody>
             </table>
           </div>
+          {(qTotal > questions.length) && (
+            <LoadMoreButton loading={!!loadingMore['questions']} onClick={loadMoreQuestions} loaded={questions.length} total={qTotal} />
+          )}
         </section>
 
         {/* 赞踩明细 */}
         <section>
-          <SectionTitle title={`赞踩明细 (${filteredFeedback.length} 条)`} />
+          <SectionTitle title={`赞踩明细 (${filteredFeedback.length} / ${fbTotal || '?'} 条)`} />
           <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--border)' }}>
             <table className="w-full text-xs min-w-[550px]" style={{ background: 'var(--chat-bg)' }}>
               <thead>
@@ -311,10 +365,25 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
               </tbody>
             </table>
           </div>
+          {(fbTotal > feedback.length) && (
+            <LoadMoreButton loading={!!loadingMore['feedback']} onClick={loadMoreFeedback} loaded={feedback.length} total={fbTotal} />
+          )}
         </section>
       </div>
 
       <ContentModal open={!!modal} onClose={() => setModal(null)} title={modal?.title || ''} content={modal?.content || ''} />
+    </div>
+  )
+}
+
+function LoadMoreButton({ loading, onClick, loaded, total }: { loading: boolean; onClick: () => void; loaded: number; total: number }) {
+  return (
+    <div className="flex justify-center mt-3">
+      <button onClick={onClick} disabled={loading}
+        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg border bg-transparent cursor-pointer transition-all disabled:opacity-50"
+        style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+        {loading ? '加载中...' : <><ChevronDown size={14} /> 加载更多 ({loaded}/{total})</>}
+      </button>
     </div>
   )
 }

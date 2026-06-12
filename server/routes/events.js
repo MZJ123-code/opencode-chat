@@ -4,7 +4,7 @@ import { AGENT_DIR_MAP } from "../config.js"
 import { logger } from "../logger/index.js"
 import { sessionMeta, userSessions } from "../storage/store.js"
 import { validateOwnership } from "../services/sessionService.js"
-import { pushEvent, getBufferedEvents } from "../services/eventBuffer.js"
+import { pushEvent, getBufferedEvents, clearBuffer } from "../services/eventBuffer.js"
 
 /** @type {import("express").Router} SSE 事件流路由：GET /api/events */
 const router = Router()
@@ -40,13 +40,18 @@ router.get("/", async (req, res) => {
 
   /**
    * 安全写入 SSE 数据，客户端断开时不抛出异常
+   * 处理背压：写入返回 false 时等待 drain 事件
    * @param {string} data - SSE 数据字符串
    * @returns {boolean} 是否成功写入
    */
+  let drainPromise = null
   function safeWrite(data) {
     if (closed || !res.writable) return false
     try {
-      res.write(data)
+      const ok = res.write(data)
+      if (!ok && !drainPromise) {
+        drainPromise = new Promise((resolve) => res.once('drain', () => { drainPromise = null; resolve() }))
+      }
       return true
     } catch {
       closed = true
@@ -57,6 +62,7 @@ router.get("/", async (req, res) => {
   req.on("close", () => {
     closed = true
     abortController.abort()
+    clearBuffer(userId)
     logger.info(`SSE 事件流关闭: ${userId.slice(0, 8)}`, {
       events_delivered: eventCount,
       event_types: Object.fromEntries(eventTypeCount),
@@ -179,6 +185,7 @@ router.get("/", async (req, res) => {
     }
   } finally {
     if (!closed) {
+      abortController.abort()
       res.end()
     }
   }

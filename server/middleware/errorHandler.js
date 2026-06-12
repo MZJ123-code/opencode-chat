@@ -32,8 +32,10 @@ export function errorHandler(err, req, res, _next) {
   const sessionId = req.params?.id || req.body?.sessionId
   const status = err.statusCode || err.status || 500
   const code = err.code || 'INTERNAL_ERROR'
+  // SDK 错误或其他未知错误默认视为可操作错误（非程序缺陷）
+  const isOperational = err.isOperational !== undefined ? err.isOperational : true
 
-  if (!err.isOperational) {
+  if (!isOperational) {
     logger.error(`[${code}] ${err.message}`, {
       stack: err.stack,
       path: req.path,

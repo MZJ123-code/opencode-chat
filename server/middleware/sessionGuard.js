@@ -35,7 +35,7 @@ export function requireSessionOwnership(paramName = "id") {
       })
       .catch((err) => {
         logger.error(`会话守卫异常: ${err.message}`, { userId: userId?.slice(0, 8), sessionId, stack: err.stack })
-        return res.status(500).json({ error: "会话验证失败" })
+        return next(err)
       })
   }
 }

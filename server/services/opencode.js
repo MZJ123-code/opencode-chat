@@ -37,7 +37,7 @@ function checkProviderConfig() {
  */
 async function isServerReachable(url) {
   try {
-    const res = await fetch(`${url}/session.list`, { method: "POST", signal: AbortSignal.timeout(2000) })
+    const res = await fetch(new URL("/session.list", url).href, { method: "POST", signal: AbortSignal.timeout(2000) })
     return res.ok
   } catch {
     return false

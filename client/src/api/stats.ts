@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { DailyStatsResponse, VisitDetailItem, QuestionDetailItem, FeedbackDetailItem } from '../types/api-responses'
+import type { DailyStatsResponse, VisitDetailItem, QuestionDetailItem, FeedbackDetailItem, PaginatedResponse } from '../types/api-responses'
 
 /**
  * 获取每日统计数据
@@ -10,30 +10,30 @@ export function fetchDailyStats(days = 14) {
 }
 
 /**
- * 获取反馈详情列表
- * @param limit - 每页数量，默认 50
+ * 获取反馈详情列表（分页）
+ * @param limit - 每页数量，默认 200
  * @param offset - 偏移量，默认 0
  */
-export function fetchFeedbackDetail(limit = 50, offset = 0) {
-  return api<FeedbackDetailItem[]>('GET', `/api/stats/feedback-detail?limit=${limit}&offset=${offset}`)
+export function fetchFeedbackDetail(limit = 200, offset = 0) {
+  return api<PaginatedResponse<FeedbackDetailItem>>('GET', `/api/stats/feedback-detail?limit=${limit}&offset=${offset}`)
 }
 
 /**
- * 获取访问明细列表
- * @param limit - 每页数量，默认 500
+ * 获取访问明细列表（分页）
+ * @param limit - 每页数量，默认 200
  * @param offset - 偏移量，默认 0
  */
-export function fetchVisitsDetail(limit = 500, offset = 0) {
-  return api<VisitDetailItem[]>('GET', `/api/stats/visits?limit=${limit}&offset=${offset}`)
+export function fetchVisitsDetail(limit = 200, offset = 0) {
+  return api<PaginatedResponse<VisitDetailItem>>('GET', `/api/stats/visits?limit=${limit}&offset=${offset}`)
 }
 
 /**
- * 获取提问明细列表
- * @param limit - 每页数量，默认 500
+ * 获取提问明细列表（分页）
+ * @param limit - 每页数量，默认 200
  * @param offset - 偏移量，默认 0
  */
-export function fetchQuestionsDetail(limit = 500, offset = 0) {
-  return api<QuestionDetailItem[]>('GET', `/api/stats/questions?limit=${limit}&offset=${offset}`)
+export function fetchQuestionsDetail(limit = 200, offset = 0) {
+  return api<PaginatedResponse<QuestionDetailItem>>('GET', `/api/stats/questions?limit=${limit}&offset=${offset}`)
 }
 
 /**

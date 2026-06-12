@@ -20,7 +20,7 @@ export function useFeedback() {
         return next
       })
     } catch {
-      // Silent fail for feedback
+      // 静默失败，不更新 UI 状态避免误反馈
     }
   }, [])
 

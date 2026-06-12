@@ -46,6 +46,14 @@ export function getBufferedEvents(userId, sinceSeq = 0) {
   }
 }
 
+/**
+ * 清除指定用户的缓冲区（客户端断开时立即调用）
+ * @param {string} userId - 用户 ID
+ */
+export function clearBuffer(userId) {
+  buffers.delete(userId)
+}
+
 // 定期清理空闲缓冲区
 setInterval(() => {
   const now = Date.now()

@@ -130,50 +130,56 @@ export function getDailyStats(days = 14) {
 
 /**
  * 获取反馈详情列表（含问题和回答内容）
- * @param {number} [limit=50]
+ * @param {number} [limit=200]
  * @param {number} [offset=0]
- * @returns {Array<{id: number, session_id: string, ip: string, satisfied: number, question_content: string, answer_content: string, created_at: string}>}
+ * @returns {{ items: Array, total: number }}
  */
-export function getFeedbackDetail(limit = 50, offset = 0) {
+export function getFeedbackDetail(limit = 200, offset = 0) {
   const db = getDatabase()
-  return db.prepare(`
+  const items = db.prepare(`
     SELECT id, session_id, ip, satisfied, question_content, answer_content, created_at
     FROM feedback
     ORDER BY id DESC
     LIMIT ? OFFSET ?
   `).all(limit, offset)
+  const { total } = db.prepare("SELECT COUNT(*) AS total FROM feedback").get()
+  return { items, total }
 }
 
 /**
  * 获取访问明细列表
- * @param {number} [limit=500]
+ * @param {number} [limit=200]
  * @param {number} [offset=0]
- * @returns {Array<{id: number, ip: string, user_agent: string, visit_date: string, visited_at: string}>}
+ * @returns {{ items: Array, total: number }}
  */
-export function getVisitsDetail(limit = 500, offset = 0) {
+export function getVisitsDetail(limit = 200, offset = 0) {
   const db = getDatabase()
-  return db.prepare(`
+  const items = db.prepare(`
     SELECT id, ip, user_agent, visit_date, visited_at
     FROM page_visits
     ORDER BY id DESC
     LIMIT ? OFFSET ?
   `).all(limit, offset)
+  const { total } = db.prepare("SELECT COUNT(*) AS total FROM page_visits").get()
+  return { items, total }
 }
 
 /**
  * 获取提问明细列表
- * @param {number} [limit=500]
+ * @param {number} [limit=200]
  * @param {number} [offset=0]
- * @returns {Array<{id: number, session_id: string, ip: string, content: string, agent: string, question_date: string, asked_at: string}>}
+ * @returns {{ items: Array, total: number }}
  */
-export function getQuestionsDetail(limit = 500, offset = 0) {
+export function getQuestionsDetail(limit = 200, offset = 0) {
   const db = getDatabase()
-  return db.prepare(`
+  const items = db.prepare(`
     SELECT id, session_id, ip, content, agent, question_date, asked_at
     FROM questions
     ORDER BY id DESC
     LIMIT ? OFFSET ?
   `).all(limit, offset)
+  const { total } = db.prepare("SELECT COUNT(*) AS total FROM questions").get()
+  return { items, total }
 }
 
 /**

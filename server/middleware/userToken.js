@@ -20,6 +20,9 @@ function getCookie(cookieHeader, name) {
   return undefined
 }
 
+/** 匹配 UUID v4 格式的正则（宽松兼容） */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 /**
  * 用户 Token 中间件
  * 通过 Cookie 或 Header 识别用户身份，替代 IP 作为用户标识
@@ -27,8 +30,13 @@ function getCookie(cookieHeader, name) {
  */
 export function userTokenMiddleware(req, res, next) {
   let token = getCookie(req.headers.cookie, TOKEN_COOKIE) || req.headers[TOKEN_HEADER]
-  if (!token || typeof token !== "string" || token.length < 16) {
+  if (!token || typeof token !== "string" || !UUID_RE.test(token)) {
     token = crypto.randomUUID()
+    res.setHeader(TOKEN_HEADER, token)
+    res.append("Set-Cookie", `${TOKEN_COOKIE}=${token}; Path=/; Max-Age=${365 * 24 * 60 * 60}; HttpOnly; SameSite=Lax`)
+  }
+  // 仅新 Token 时设置 Cookie（避免每请求重复设置）
+  else if (!getCookie(req.headers.cookie, TOKEN_COOKIE)) {
     res.setHeader(TOKEN_HEADER, token)
     res.append("Set-Cookie", `${TOKEN_COOKIE}=${token}; Path=/; Max-Age=${365 * 24 * 60 * 60}; HttpOnly; SameSite=Lax`)
   }

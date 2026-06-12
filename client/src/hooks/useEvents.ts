@@ -52,6 +52,7 @@ export function useEvents(handlers: EventHandlerMap): { connectionStatus: Connec
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const connectingRef = useRef(false)
   const connectionAttemptRef = useRef(0)
+  const lastSeqRef = useRef(0)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting')
 
   const handleEvent = useCallback((event: OpenCodeEvent) => {
@@ -181,13 +182,21 @@ export function useEvents(handlers: EventHandlerMap): { connectionStatus: Connec
 
       if (esRef.current) esRef.current.close()
 
-      const es = new EventSource('/api/events')
+      const es = new EventSource(`/api/events${lastSeqRef.current > 0 ? `?since=${lastSeqRef.current}` : ''}`)
       esRef.current = es
 
       es.onmessage = (e) => {
         retryRef.current = 1000
         try {
-          handleEvent(JSON.parse(e.data) as OpenCodeEvent)
+          const event = JSON.parse(e.data) as OpenCodeEvent
+          handleEvent(event)
+          // 跟踪最新序列号用于重连增量回放
+          if (e.lastEventId) {
+            const seq = parseInt(e.lastEventId, 10)
+            if (!isNaN(seq)) lastSeqRef.current = Math.max(lastSeqRef.current, seq)
+          } else {
+            lastSeqRef.current++
+          }
         } catch (err) {
           if (import.meta.env.DEV) console.warn('[SSE] 事件解析失败:', err, e.data)
         }
@@ -205,7 +214,6 @@ export function useEvents(handlers: EventHandlerMap): { connectionStatus: Connec
 
       es.onopen = () => {
         connectingRef.current = false
-        retryRef.current = 1000
         setConnectionStatus('connected')
         if (isReconnect) {
           handlersRef.current.onReconnected?.()

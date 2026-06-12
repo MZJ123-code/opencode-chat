@@ -36,6 +36,10 @@ export function useSessionNavigation(
 ) {
   const navigationStackRef = useRef<string[]>([])
   const [navState, dispatch] = useReducer(navigationReducer, { stack: [] })
+  const onNavigateRef = useRef(onNavigate)
+  onNavigateRef.current = onNavigate
+  const getSessionMetaRef = useRef(getSessionMeta)
+  getSessionMetaRef.current = getSessionMeta
 
   const parentSessionId = useMemo(() => {
     if (!currentSessionId) return null
@@ -47,8 +51,8 @@ export function useSessionNavigation(
     navigationStackRef.current = [...navigationStackRef.current, currentSessionRef.current]
     dispatch({ type: 'SET_STACK', payload: navigationStackRef.current })
     currentSessionRef.current = sessionId
-    onNavigate(sessionId)
-  }, [currentSessionRef, onNavigate])
+    onNavigateRef.current(sessionId)
+  }, [currentSessionRef])
 
   const navigateBack = useCallback(() => {
     const stack = navigationStackRef.current
@@ -57,16 +61,16 @@ export function useSessionNavigation(
     navigationStackRef.current = stack.slice(0, -1)
     dispatch({ type: 'SET_STACK', payload: navigationStackRef.current })
     currentSessionRef.current = prevSession
-    onNavigate(prevSession)
-  }, [currentSessionRef, onNavigate])
+    onNavigateRef.current(prevSession)
+  }, [currentSessionRef])
 
   const navigateToParent = useCallback(() => {
     if (!currentSessionRef.current) return
-    const meta = getSessionMeta(currentSessionRef.current)
+    const meta = getSessionMetaRef.current(currentSessionRef.current)
     if (meta?.parentID) {
       navigateToSession(meta.parentID)
     }
-  }, [currentSessionRef, getSessionMeta, navigateToSession])
+  }, [currentSessionRef, navigateToSession])
 
   const resetNavigationStack = useCallback(() => {
     navigationStackRef.current = []

@@ -8,7 +8,7 @@ import type { Components } from 'react-markdown'
 mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
-  securityLevel: 'loose',
+  securityLevel: 'strict',
 })
 
 function MermaidBlock({ code }: { code: string }) {

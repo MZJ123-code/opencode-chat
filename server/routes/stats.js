@@ -40,10 +40,10 @@ router.get("/daily", (req, res) => {
  * @param {import("express").Response} res
  */
 router.get("/feedback-detail", (req, res) => {
-  const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200)
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 200, 1), 500)
   const offset = Math.max(parseInt(req.query.offset) || 0, 0)
-  const list = getFeedbackDetail(limit, offset)
-  res.json(list)
+  const { items, total } = getFeedbackDetail(limit, offset)
+  res.json({ items, total })
 })
 
 /**
@@ -52,10 +52,10 @@ router.get("/feedback-detail", (req, res) => {
  * @param {import("express").Response} res
  */
 router.get("/visits", (req, res) => {
-  const limit = Math.min(Math.max(parseInt(req.query.limit) || 500, 1), 2000)
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 200, 1), 500)
   const offset = Math.max(parseInt(req.query.offset) || 0, 0)
-  const list = getVisitsDetail(limit, offset)
-  res.json(list)
+  const { items, total } = getVisitsDetail(limit, offset)
+  res.json({ items, total })
 })
 
 /**
@@ -64,10 +64,10 @@ router.get("/visits", (req, res) => {
  * @param {import("express").Response} res
  */
 router.get("/questions", (req, res) => {
-  const limit = Math.min(Math.max(parseInt(req.query.limit) || 500, 1), 2000)
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 200, 1), 500)
   const offset = Math.max(parseInt(req.query.offset) || 0, 0)
-  const list = getQuestionsDetail(limit, offset)
-  res.json(list)
+  const { items, total } = getQuestionsDetail(limit, offset)
+  res.json({ items, total })
 })
 
 /**

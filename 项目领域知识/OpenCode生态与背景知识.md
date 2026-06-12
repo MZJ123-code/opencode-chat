@@ -86,30 +86,58 @@ OpenCode 是一款**开源 AI 编程助手**，可在终端、IDE 或桌面环�
 
 ## SDK（`@opencode-ai/sdk`）
 
-- npm: `@opencode-ai/sdk`，每周 800 万+ 下载
+- npm: `@opencode-ai/sdk`，每周 460 万+ 下载（最新 v1.17.4）
 - 由 [Stainless](https://www.stainless.com/) 从 OpenAPI 规范自动生成
 - 两种使用方式：
   1. `createOpencode()` — 启动服务端 + 客户端
   2. `createOpencodeClient()` — 纯客户端模式
 
-### SDK v2（本项目使用）
+### 本项目版本与最新版差距
 
-`@opencode-ai/sdk/v2` 入口，变更包括：
-- 请求/响应路由使用 v2 参数结构（顶层 `sessionID` 参数）
-- 新增设置：`permission`、`variant`、`directory`、`outputFormatRetryCount`
-- 结构化输出使用原生 `json_schema` 模式
-- 旧版 `cwd` 和 `tools` 路径已弃用
+- **本项目**: `@opencode-ai/sdk` v1.14.29，使用 `/v2` 导入路径
+- **最新版**: v1.17.4（2026-06-12），差距约 300 个版本
+- **关键变更**: 新版本不再区分 `/v2` 入口，API 已统一到主入口
+- **风险**: 存在 API breaking change 风险（如 `promptAsync` 已演变为 `session.prompt()` + `noReply: false`）
 
-### 关键 API 方法
+### SDK 核心 API（v1.17.x 官方文档）
 
-| 方法 | 用途 |
-|--------|------|
-| `client.session.list()` | 列出会话 |
-| `client.session.create()` | 创建会话 |
-| `client.session.prompt()` | 同步提示（等待完成） |
-| `client.session.promptAsync()` | 异步提示（通过 SSE 获取结果） |
-| `client.message.list()` | 列出消息 |
-| `client.event.subscribe()` | SSE 事件流订阅 |
+| 命名空间 | 方法 | 用途 |
+|---------|------|------|
+| `session` | `list()` | 列出所有会话 |
+| `session` | `create({ body })` | 创建会话 |
+| `session` | `get({ path })` | 获取会话详情 |
+| `session` | `delete({ path })` | 删除会话 |
+| `session` | `update({ path, body })` | 更新会话属性 |
+| `session` | `prompt({ path, body })` | 发送消息（支持 `noReply: true` 上下文注入，默认等待 AI 回复） |
+| `session` | `command({ path, body })` | 执行斜杠命令 |
+| `session` | `shell({ path, body })` | 运行 Shell 命令 |
+| `session` | `abort({ path })` | 中断运行中的会话 |
+| `session` | `children({ path })` | 列出子会话 |
+| `session` | `messages({ path })` | 列出消息历史 |
+| `session` | `message({ path })` | 获取单条消息详情 |
+| `session` | `fork({ path, body })` | 从某个消息分叉会话 |
+| `session` | `share({ path })` / `unshare({ path })` | 分享/取消分享会话 |
+| `session` | `init({ path })` | 分析项目并生成 AGENTS.md |
+| `session` | `summarize({ path, body })` | 摘要会话 |
+| `session` | `revert({ path, body })` / `unrevert({ path })` | 撤销/恢复消息 |
+| `event` | `subscribe()` | SSE 事件流订阅（路径 `/event`） |
+| `global` | `health()` | 健康检查 |
+| `app` | `agents()` | 列出可用 Agent |
+| `config` | `get()` / `providers()` | 配置信息 |
+| `find` | `text({ query })` / `files({ query })` / `symbols({ query })` | 文件搜索 |
+| `file` | `read({ query })` / `status()` | 文件读取 |
+
+### 新增特性（本项目未使用）
+
+- **结构化输出**: `prompt({ body: { format: { type: 'json_schema', schema: {...} } } })`，模型返回符合 JSON Schema 的结构化数据
+- **Server 认证**: `OPENCODE_SERVER_PASSWORD` / `OPENCODE_SERVER_USERNAME` 环境变量，HTTP Basic Auth
+- **OpenAPI 3.1 Spec**: `http://host:port/doc` 可查看完整 API 文档，支持 Swagger 浏览器
+- **会话分叉**: `session.fork()` 在任意消息点分叉会话
+- **会话分享**: `session.share()` 生成可分享链接
+- **会话 Diff**: `session.diff()` 获取变更摘要
+- **Todo 列表**: `session.todo()` 获取会话任务列表
+- **mDNS 发现**: `--mdns` 标志启用局域网服务发现
+- **CORS 多源**: `--cors` 可多次传入允许多个浏览器源
 
 ## CLI 命令
 

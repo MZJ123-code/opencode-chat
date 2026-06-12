@@ -116,7 +116,7 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
     })
   }
 
-  const next = useCallback(() => {
+  function next() {
     if (pending) return
     if (editing) commitCustom()
     if (last) {
@@ -125,7 +125,7 @@ export function PermissionDialog({ request, onClose }: PermissionDialogProps) {
       setTab((t) => t + 1)
       setEditing(false)
     }
-  }, [pending, editing, last])
+  }
 
   const back = useCallback(() => {
     if (pending || tab <= 0) return
