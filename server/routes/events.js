@@ -78,7 +78,39 @@ router.get("/", async (req, res) => {
     }
 
     /**
-     * 处理单个 SSE 事件：记录、回放缓冲区、子会话注册、转发给浏览器
+     * 事件分发映射表 — 各事件类型对应的处理函数
+     * 新增事件类型只需要在此注册处理函数
+     */
+    const eventHandlers = {
+      "session.created"(props) {
+        if (!props.info) return
+        const { id: childSid, parentID: parentSid, title } = props.info
+        if (!childSid || !parentSid || sessionMeta.has(childSid)) return
+        if (!validateOwnership(userId, parentSid)) return
+        sessionMeta.set(childSid, {
+          ip, createdAt: Date.now(),
+          title: title || "子任务",
+          messageCount: 0, agent: null,
+        })
+        logger.info(`子会话已注册: ${childSid}`, { parent: parentSid, userId: userId.slice(0, 8), title: title || "子任务" })
+      },
+      "session.deleted"(props) {
+        if (!props.info?.id) return
+        const deletedSid = props.info.id
+        if (!sessionMeta.has(deletedSid)) return
+        sessionMeta.delete(deletedSid)
+        for (const [, sessions] of userSessions) sessions.delete(deletedSid)
+        logger.info(`会话已清理: ${deletedSid}`)
+      },
+    }
+
+    /** 需要记录日志的事件类型名前缀 */
+    const LOGGED_EVENT_PREFIXES = ["session.", "message.", "permission.", "question."]
+    /** 高频事件类型，跳过日志 */
+    const SKIP_LOG_EVENTS = new Set(["message.part.delta", "message.part.updated"])
+
+    /**
+     * 处理单个 SSE 事件：记录 → 分发 → 转发给浏览器
      * @param {import("@opencode-ai/sdk/v2/types.gen.js").ServerSentEvent} event
      */
     function processEvent(event) {
@@ -88,68 +120,26 @@ router.get("/", async (req, res) => {
       // 写入环形缓冲区
       pushEvent(userId, event)
 
-      // Track all event types
+      // 事件类型统计
       const etype = event.type || "unknown"
       eventTypeCount.set(etype, (eventTypeCount.get(etype) || 0) + 1)
 
-      // Log all events for debugging (especially child session events)
+      // 关键事件日志
       const props = event.properties || {}
-      const sessionID = props.sessionID || event.sessionID || "?"
-      const partType = props.part?.type
-      const toolName = props.part?.tool || props.tool
-      const hasParentID = props.info?.parentID
-
-      // Log key event types with details
-      if (
-        event.type?.startsWith("session.") ||
-        event.type?.startsWith("message.") ||
-        event.type?.startsWith("permission.") ||
-        event.type?.startsWith("question.")
-      ) {
-        const logData = {
-          sessionID,
-          eventType: event.type,
+      if (LOGGED_EVENT_PREFIXES.some(p => etype.startsWith(p)) && !SKIP_LOG_EVENTS.has(etype)) {
+        logger.info(`SSE: ${etype}`, {
+          sessionID: props.sessionID || event.sessionID || "?",
+          eventType: etype,
           seq: eventCount,
-          ...(partType ? { partType } : {}),
-          ...(toolName ? { tool: toolName } : {}),
-          ...(hasParentID ? { parentID: hasParentID } : {}),
-        }
-        if (event.type !== "message.part.delta" && event.type !== "message.part.updated") {
-          logger.info(`SSE: ${event.type}`, logData)
-        }
+          partType: props.part?.type,
+          tool: props.part?.tool || props.tool,
+          parentID: props.info?.parentID,
+        })
       }
 
-      // 自动注册 OpenCode task 工具创建的子会话
-      if (event.type === "session.created" && props.info) {
-        const info = props.info
-        const childSid = info.id
-        const parentSid = info.parentID
-        if (childSid && parentSid && !sessionMeta.has(childSid)) {
-          if (validateOwnership(userId, parentSid)) {
-            const title = info.title || "子任务"
-            sessionMeta.set(childSid, {
-              ip,
-              createdAt: Date.now(),
-              title,
-              messageCount: 0,
-              agent: null,
-            })
-            logger.info(`子会话已注册: ${childSid}`, { parent: parentSid, userId: userId.slice(0, 8), title })
-          }
-        }
-      }
-
-      // 会话删除时清理本地记录
-      if (event.type === "session.deleted" && props.info?.id) {
-        const deletedSid = props.info.id
-        if (sessionMeta.has(deletedSid)) {
-          sessionMeta.delete(deletedSid)
-          for (const [, sessions] of userSessions) {
-            sessions.delete(deletedSid)
-          }
-          logger.info(`会话已清理: ${deletedSid}`)
-        }
-      }
+      // 事件分发
+      const handler = eventHandlers[etype]
+      if (handler) handler(props)
 
       safeWrite(`event: message\ndata: ${JSON.stringify(event)}\n\n`)
     }
