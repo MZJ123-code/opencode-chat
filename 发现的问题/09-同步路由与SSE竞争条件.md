@@ -3,6 +3,7 @@
 > **严重度**：🟠 中等
 > **涉及文件**：`server/routes/chat.js:80-136`、`client/src/hooks/useEvents.ts`
 > **类型**：后端
+> **状态**：✅ 已解决
 
 ## 问题描述
 
