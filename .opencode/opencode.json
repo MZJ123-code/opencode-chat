@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "screenshot": {
+      "type": "local",
+      "command": ["npx", "-y", "@bradydouthit/screenshot-mcp"],
+      "enabled": true
+    },
+    "browser-lens": {
+      "type": "local",
+      "command": ["npx", "-y", "browser-lens-mcp@latest"],
+      "enabled": true
+    }
+  },
+  "plugin": [
+    "opencode-browser"
+  ]
+}
