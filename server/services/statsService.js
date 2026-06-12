@@ -1,43 +1,28 @@
-import fs from "fs"
-import path from "path"
-import { LOG_DIR } from "../config.js"
 import { stats, sessionMeta, userSessions } from "../storage/store.js"
-
-const statsPath = path.join(LOG_DIR, "_stats.json")
+import { getDatabase } from "../storage/database.js"
 
 /**
- * 从磁盘文件恢复统计数据和活跃 IP 列表
+ * 从 SQLite 恢复仅有内存的统计计数器
+ * SQLite 的 sessions 表提供总会话数，question/feedback 表提供对应计数
  */
 export function restoreStats() {
   try {
-    const raw = fs.readFileSync(statsPath, "utf-8")
-    const data = JSON.parse(raw)
-    if (data.activeIPs) stats.visitors = new Set(data.activeIPs)
-    if (data.totalSessions) stats.totalSessions = data.totalSessions
-    if (data.totalQuestions) stats.totalQuestions = data.totalQuestions
-    if (data.satisfied) stats.satisfied = data.satisfied
-    if (data.unsatisfied) stats.unsatisfied = data.unsatisfied
-    if (data.blockedAccess) stats.blockedAccess = data.blockedAccess
-  } catch {
-    // 首次运行或无文件，使用默认值
-  }
+    const db = getDatabase()
+    const s = db.prepare("SELECT COUNT(*) AS c FROM sessions").get()
+    stats.totalSessions = s.c
+  } catch {}
 }
 
 /**
- * 记录一次提问（消息计数递增）
+ * 记录一次提问（保留向后兼容，计数查询走 SQLite）
  */
-export function incrementQuestions() {
-  stats.totalQuestions++
-}
+export function incrementQuestions() {}
 
 /**
- * 记录用户满意度反馈
- * @param {boolean} satisfied - 是否满意
+ * 记录用户满意度反馈（保留向后兼容，计数查询走 SQLite）
+ * @param {boolean} satisfied
  */
-export function recordFeedback(satisfied) {
-  if (satisfied) stats.satisfied++
-  else stats.unsatisfied++
-}
+export function recordFeedback(satisfied) {}
 
 /**
  * 记录一次被限流拦截的访问
@@ -48,7 +33,8 @@ export function recordBlockedAccess() {
 
 /**
  * 获取当前平台统计快照
- * @returns {{ visitors: number, totalSessions: number, activeSessions: number, totalQuestions: number, satisfied: number, unsatisfied: number, agentDistribution: Record<string, number> }}
+ * 提问/反馈数据从 SQLite 聚合查询，确保与看板数据一致
+ * @returns {{ visitors: number, totalSessions: number, activeSessions: number, totalQuestions: number, satisfied: number, unsatisfied: number, blockedAccess: number, agentDistribution: Record<string, number> }}
  */
 export function getStats() {
   let activeSessions = 0
@@ -58,68 +44,39 @@ export function getStats() {
     const a = meta.agent || "default"
     agentDistribution[a] = (agentDistribution[a] || 0) + 1
   }
+
+  let totalQuestions = 0
+  let satisfied = 0
+  let unsatisfied = 0
+  try {
+    const db = getDatabase()
+    const q = db.prepare("SELECT COUNT(*) AS c FROM questions").get()
+    totalQuestions = q.c
+    const f = db.prepare(
+      "SELECT SUM(CASE WHEN satisfied = 1 THEN 1 ELSE 0 END) AS likes, SUM(CASE WHEN satisfied = 0 THEN 1 ELSE 0 END) AS dislikes FROM feedback"
+    ).get()
+    satisfied = f.likes || 0
+    unsatisfied = f.dislikes || 0
+  } catch {}
+
   return {
     visitors: userSessions.size,
     totalSessions: stats.totalSessions,
     activeSessions,
-    totalQuestions: stats.totalQuestions,
-    satisfied: stats.satisfied,
-    unsatisfied: stats.unsatisfied,
+    totalQuestions,
+    satisfied,
+    unsatisfied,
+    blockedAccess: stats.blockedAccess,
     agentDistribution,
   }
 }
 
 /**
- * 构建完整的统计快照对象，包含所有会话详情
- * @returns {Record<string, unknown>} 统计快照
+ * 持久化统计（保留向后兼容，现为无操作——SQLite 负责持久化）
  */
-function buildSnapshot() {
-  const sessionAgents = {}
-  for (const [id, meta] of sessionMeta) {
-    sessionAgents[id] = {
-      agent: meta.agent || null,
-      title: meta.title,
-      messageCount: meta.messageCount,
-      createdAt: new Date(meta.createdAt).toISOString().replace("T", " ").slice(0, 23),
-    }
-  }
-  return {
-    updated: new Date().toISOString().replace("T", " ").slice(0, 23),
-    visitors: stats.visitors.size,
-    totalSessions: stats.totalSessions,
-    totalQuestions: stats.totalQuestions,
-    satisfied: stats.satisfied,
-    unsatisfied: stats.unsatisfied,
-    blockedAccess: stats.blockedAccess,
-    activeIPs: [...stats.visitors],
-    sessions: sessionAgents,
-  }
-}
+export function saveStatsSync() {}
 
 /**
- * 将统计快照写入磁盘文件
+ * 异步写入统计（保留向后兼容，现为无操作）
  */
-function writeStatsSnapshot() {
-  fs.writeFileSync(statsPath, JSON.stringify(buildSnapshot(), null, 2), "utf-8")
-}
-
-/**
- * 同步写入统计到磁盘（进程退出时保证落盘）
- */
-export function saveStatsSync() {
-  try { writeStatsSnapshot() } catch { /* 静默失败，不阻塞退出 */ }
-}
-
-/**
- * 异步 debounce 写入统计到磁盘（运行时定时落盘，最多每 10 秒一次）
- */
-let writeTimer = null
-const WRITE_INTERVAL = 10_000
-
-export function saveStats() {
-  if (writeTimer) return
-  writeTimer = setTimeout(() => {
-    writeTimer = null
-    try { writeStatsSnapshot() } catch { /* 静默失败 */ }
-  }, WRITE_INTERVAL).unref()
-}
+export function saveStats() {}

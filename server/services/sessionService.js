@@ -196,6 +196,7 @@ export function getSessionMeta(sessionId) {
 
 /**
  * 记录会话消息数递增，超过上限时告警
+ * 同步更新内存和 SQLite
  * @param {string} sessionId - 会话 ID
  */
 export function recordMessage(sessionId) {
@@ -209,6 +210,10 @@ export function recordMessage(sessionId) {
     return
   }
   meta.messageCount++
+  try {
+    const db = getDatabase()
+    db.run("UPDATE sessions SET message_count = ? WHERE id = ?", [meta.messageCount, sessionId])
+  } catch {}
 }
 
 /**
