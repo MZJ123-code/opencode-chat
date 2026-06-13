@@ -1,5 +1,36 @@
 # OpenCode Chat
 
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "f823c4a601b3475c91b8c9bdd3d20bd3.vUknwELLm1r1jLpj",
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-5.1",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME": "glm-5.1",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.1",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME": "glm-5.1",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.1",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME": "glm-5.1",
+    "ANTHROPIC_MODEL": "glm-5.1"
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "hasCompletedOnboarding": true,
+  "theme": "light-daltonized",
+}
+模型url换成咱们黄区的模型试试
+
 > **本地部署 · 文件即知识库 · 免认证 · 开箱即用的 AI 对话平台**
 
 [🇺🇸 English](./README.en.md)
