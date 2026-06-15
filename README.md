@@ -162,9 +162,8 @@ Agent 配置文件同时需要安装在全局目录 `.config/opencode/agents/` �
 bun install
 cd client && bun install && cd ..
 
-# 开发模式
-bun run dev               # 后端 --watch 自动重启
-cd client && bun run dev  # 前端 Vite HMR @ :5173
+# 开发模式（同时启动后端 Express + 前端 Vite HMR）
+bun run dev
 
 # 生产构建
 cd client && bun run build && cd ..
@@ -283,9 +282,10 @@ opencode-chat/
 │       ├── hooks/             # useEvents (SSE 重连+退避) / useFeedback / useMediaQuery
 │       └── types/             # message / session / api 类型定义
 ├── 发现的问题/                # 问题跟踪与解决记录
-├── scripts/                   # 数据库查看工具
+├── scripts/                   # 开发启动脚本 + 数据库查看工具
 ├── logs/                      # 运行时日志 + analytics.db (SQLite)
-└── AGENTS.md                  # 编码规范指引
+├── AGENTS.md                  # 编码规范指引
+└── CHANGELOG.md               # 版本变更日志
 ```
 
 ---

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 统一单命令开发模式：`bun run dev` 同时启动 Express 后端（--watch）+ Vite HMR 前端
 - UUID Token + Cookie 用户身份标识，替代 IP 识别
 - SQLite 数据持久化（sessions 表 + 启动自动恢复）
 - 数据库迁移机制（_migrations 表 + 版本化迁移）

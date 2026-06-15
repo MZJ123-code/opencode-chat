@@ -111,9 +111,8 @@ Add, remove, or modify Agents freely in `config.json` under `agentOptions`.
 bun install
 cd client && bun install && cd ..
 
-# Development mode
-bun run dev               # Backend --watch auto-restart
-cd client && bun run dev  # Frontend Vite HMR @ :5173
+# Development mode (starts both Express backend + Vite HMR frontend)
+bun run dev
 
 # Production build
 cd client && bun run build && cd ..
@@ -233,9 +232,10 @@ opencode-chat/
 │       ├── hooks/             # useEvents (SSE reconnect+backoff) / useFeedback / useMediaQuery
 │       └── types/             # message / session / api type definitions
 ├── public/index.html          # Vanilla JS zero-build fallback frontend
-├── scripts/                   # Database inspection tools
+├── scripts/                   # Dev launcher + database inspection tools
 ├── logs/                      # Runtime logs + analytics.db (SQLite)
-└── AGENTS.md                  # Coding standards & guidelines
+├── AGENTS.md                  # Coding standards & guidelines
+└── CHANGELOG.md               # Version changelog
 ```
 
 ---
