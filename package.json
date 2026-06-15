@@ -4,9 +4,9 @@
   "type": "module",
   "description": "Multi-user AI chat service based on OpenCode SDK",
   "scripts": {
-    "dev": "PATH=\"$HOME/.opencode/bin:$PATH\" bun --watch server/index.js",
+    "dev": "bun scripts/dev.js",
     "start": "PATH=\"$HOME/.opencode/bin:$PATH\" bun server/index.js",
-    "dev:external": "OPENCODE_EXTERNAL_URL=${OPENCODE_EXTERNAL_URL:-http://127.0.0.1:50882} bun --watch server/index.js",
+    "dev:external": "OPENCODE_EXTERNAL_URL=${OPENCODE_EXTERNAL_URL:-http://127.0.0.1:50882} bun scripts/dev.js",
     "start:external": "OPENCODE_EXTERNAL_URL=${OPENCODE_EXTERNAL_URL:-http://127.0.0.1:50882} bun server/index.js",
     "test": "vitest run",
     "test:watch": "vitest",

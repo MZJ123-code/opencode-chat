@@ -106,7 +106,6 @@ export async function createSession(userId, ip, title, agent = null) {
       }
     }
     if (oldestId) {
-      const oldestMeta = sessionMeta.get(oldestId)
       for (const [, sessions] of userSessions) {
         sessions.delete(oldestId)
       }

@@ -44,14 +44,10 @@ router.get("/", async (req, res) => {
    * @param {string} data - SSE 数据字符串
    * @returns {boolean} 是否成功写入
    */
-  let drainPromise = null
   function safeWrite(data) {
     if (closed || !res.writable) return false
     try {
-      const ok = res.write(data)
-      if (!ok && !drainPromise) {
-        drainPromise = new Promise((resolve) => res.once('drain', () => { drainPromise = null; resolve() }))
-      }
+      res.write(data)
       return true
     } catch {
       closed = true

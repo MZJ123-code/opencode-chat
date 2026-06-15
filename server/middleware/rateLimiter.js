@@ -20,7 +20,7 @@ export const rateLimiter = rateLimit({
   validate: { keyGeneratorIpFallback: false },
   skip: (req) => req.path.startsWith("/api/events"),
   message: { error: "请求过于频繁，请稍后再试" },
-  handler: (req, res, next, options) => {
+  handler: (req, res, _, options) => {
     logger.warn(`请求限流: ${req.clientIP}`, { path: req.path, method: req.method, windowMs, maxRequests })
     res.status(429).json(options.message)
   },
