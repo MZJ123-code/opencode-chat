@@ -22,17 +22,6 @@ export interface SessionCreateResult {
 
 // ====== Stats ======
 
-export interface StatsResponse {
-  visitors: number
-  totalSessions: number
-  activeSessions: number
-  totalQuestions: number
-  satisfied: number
-  unsatisfied: number
-  blockedAccess: number
-  agentDistribution: Record<string, number>
-}
-
 export interface BasicStats {
   visitors: number
   totalQuestions: number
@@ -87,28 +76,6 @@ export interface FeedbackDetailItem {
 export interface PaginatedResponse<T> {
   items: T[]
   total: number
-}
-
-// ====== Health ======
-
-export interface HealthResponse {
-  status: "ok" | "degraded"
-  uptime: number
-  opencode: "ok" | "error"
-  database: "ok" | "error"
-  memory: { heapUsed: number; heapTotal: number }
-  pid: number
-}
-
-// ====== Chat ======
-
-export interface ChatAsyncResult {
-  ok: true
-  sessionId: string
-}
-
-export interface FeedbackResult {
-  ok: true
 }
 
 // ====== Agents ======

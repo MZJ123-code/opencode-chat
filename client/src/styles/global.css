@@ -65,8 +65,6 @@
 
   /* Sci-Fi Frost color system */
   --sidebar-bg: linear-gradient(180deg, #070b14 0%, #0d1525 50%, #0a1628 100%);
-  --sidebar-hover: rgba(0, 240, 255, 0.08);
-  --sidebar-active: rgba(0, 240, 255, 0.15);
   --bg: #f0f4f8;
   --chat-bg: #ffffff;
   --user-bubble: #00b4d8;
@@ -135,8 +133,6 @@
 
   /* Deep Space color system */
   --sidebar-bg: linear-gradient(180deg, #020408 0%, #060d1a 50%, #030710 100%);
-  --sidebar-hover: rgba(0, 240, 255, 0.1);
-  --sidebar-active: rgba(0, 240, 255, 0.18);
   --bg: #030710;
   --chat-bg: #060d1a;
   --user-bubble-gradient: linear-gradient(135deg, #00b4d8 0%, #0077b6 40%, #023e8a 100%);
@@ -220,29 +216,9 @@ body {
 /* ==============================
    Keyframe animations
    ============================== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-6px); }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(0, 240, 255, 0.3), 0 0 16px rgba(0, 240, 255, 0.1); }
-  50% { box-shadow: 0 0 16px rgba(0, 240, 255, 0.5), 0 0 32px rgba(0, 240, 255, 0.2); }
-}
-
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
 }
 
 @keyframes gradient-shift {
@@ -251,50 +227,9 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-@keyframes pulse-ring {
-  0% { transform: scale(0.9); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* === Sci-Fi Animations === */
-
 @keyframes scan-line {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
-}
-
-@keyframes neural-pulse {
-  0%, 100% {
-    box-shadow: 0 0 4px rgba(0, 240, 255, 0.4), 0 0 12px rgba(0, 240, 255, 0.1);
-    border-color: rgba(0, 240, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 8px rgba(0, 240, 255, 0.6), 0 0 24px rgba(0, 240, 255, 0.2), 0 0 48px rgba(0, 240, 255, 0.05);
-    border-color: rgba(0, 240, 255, 0.6);
-  }
-}
-
-@keyframes holographic {
-  0% { background-position: 0% 50%; opacity: 0.85; }
-  25% { opacity: 0.95; }
-  50% { background-position: 100% 50%; opacity: 0.85; }
-  75% { opacity: 0.95; }
-  100% { background-position: 0% 50%; opacity: 0.85; }
-}
-
-@keyframes data-stream {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 -200px; }
 }
 
 @keyframes neon-flicker {
@@ -304,39 +239,6 @@ body {
   94% { opacity: 1; }
   96% { opacity: 0.8; }
   97% { opacity: 1; }
-}
-
-@keyframes border-flow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
-
-@keyframes orb-glow {
-  0%, 100% { filter: brightness(1) drop-shadow(0 0 6px rgba(0, 240, 255, 0.4)); }
-  50% { filter: brightness(1.2) drop-shadow(0 0 14px rgba(0, 240, 255, 0.7)); }
-}
-
-/* ==============================
-   Glassmorphism utilities — Deep Frost
-   ============================== */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-.glass-subtle {
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(0, 240, 255, 0.08);
-}
-
-.dark .glass-subtle {
-  background: rgba(6, 13, 26, 0.55);
-  border-color: rgba(0, 240, 255, 0.08);
 }
 
 /* ==============================
@@ -436,38 +338,6 @@ body {
 
 .card-spotlight:hover::after {
   opacity: 1;
-}
-
-/* ==============================
-   Neon border — animated gradient border
-   ============================== */
-.neon-border {
-  position: relative;
-  border: 1px solid transparent;
-  background-clip: padding-box;
-}
-
-.neon-border::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 240, 255, 0.4),
-    rgba(0, 119, 255, 0.3),
-    rgba(139, 92, 246, 0.3),
-    rgba(0, 240, 255, 0.4)
-  );
-  background-size: 200% 100%;
-  animation: border-flow 4s linear infinite;
-  z-index: -1;
-  border-radius: inherit;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  padding: 1px;
 }
 
 /* ==============================

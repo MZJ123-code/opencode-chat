@@ -6,7 +6,7 @@ const TOKEN_KEY = 'user_token'
  * 读取用户唯一标识 Token
  * 优先从 localStorage 读取，不存在时返回 null
  */
-export function getUserToken(): string | null {
+function getUserToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
 

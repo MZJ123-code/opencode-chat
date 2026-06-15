@@ -228,11 +228,6 @@ export function useMessageStore(currentSessionRef: React.MutableRefObject<string
     }
   }, [currentSessionRef, getSessionMessages])
 
-  const setTaskCallToChild = useCallback((map: Map<string, string>) => {
-    taskCallToChildRef.current = map
-    dispatch({ type: 'SET_TASK_MAP', payload: map })
-  }, [])
-
   return {
     allMessages: state.allMessages,
     sessionMeta: state.sessionMeta,
@@ -254,6 +249,5 @@ export function useMessageStore(currentSessionRef: React.MutableRefObject<string
     injectPartToSession,
     syncMessages,
     rebuildTaskCallToChildMapping,
-    setTaskCallToChild,
   }
 }

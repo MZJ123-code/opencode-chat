@@ -190,14 +190,7 @@ export function DashboardPage({ onBack }: DashboardPageProps) {
     items = makeTextFilter(items, fbFilters, {
       satisfied: f => f.satisfied ? '赞' : '踩',
     })
-    items.sort((a, b) => {
-      let va: string | number = (a as any)[fbSortKey] ?? ''
-      let vb: string | number = (b as any)[fbSortKey] ?? ''
-      if (fbSortKey === 'satisfied') { va = va ? 1 : 0; vb = vb ? 1 : 0 }
-      if (typeof va === 'string') va = va.toLowerCase()
-      if (typeof vb === 'string') vb = vb.toLowerCase()
-      return va < vb ? -1 : va > vb ? 1 : 0
-    })
+    items.sort(makeSorter(fbSortKey))
     if (fbSortDir === 'desc') items.reverse()
     return items
   }, [feedback, filters, fbFilters, fbSortKey, fbSortDir])
