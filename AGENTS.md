@@ -28,7 +28,7 @@ bun run dev:external     # 连接已有外部 OpenCode 进程
 
 - **根目录**是 Express ESM 服务端，`client/` 是 React 19 + Vite + TypeScript 前端
 - **配置**：`server/config.json`（环境变量覆盖 `PORT`/`NODE_ENV`/`MODEL`）
-- **静态文件**：优先 `dist/index.html`，fallback `public/index.html`（Vanilla JS）
+- **静态文件**：生产模式 `dist/index.html`，开发模式由 Vite HMR 提供
 - **SDK**：`@opencode-ai/sdk/v2` → `createOpencode()` 自动拉起 OpenCode 进程（`:4096`）
 - **数据**：SQLite 持久化（`data/opencode-chat.db`，`sessions` 表 + `_migrations` 表），启动自动恢复；统计写入 `logs/_stats.json`
 - **会话 TTL**：7 天未活跃清理（每小时检查），SQLite 同步清理

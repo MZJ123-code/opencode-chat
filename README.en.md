@@ -56,10 +56,7 @@ AI replies stream via Server-Sent Events with **20+ event types** (text delta, t
 
 | Frontend | Description |
 |----------|-------------|
-| **React SPA (primary)** | React 19 + Vite 6 + Tailwind CSS v4, full-featured |
-| **Vanilla JS (fallback)** | Pure JavaScript, zero build, embedded in HTML |
-
-The server loads the built bundle first and falls back to the vanilla version — even if the frontend build fails entirely, the chat interface still works.
+| **React SPA** | React 19 + Vite 6 + Tailwind CSS v4, full-featured |
 
 ### 🔄 AI Sub-Session Navigation
 
@@ -173,7 +170,7 @@ The `tools` field in `server/config.json` controls which tools the AI can use:
 ## Architecture
 
 ```
-User → Browser (React SPA / Vanilla JS)
+User → Browser (React SPA)
         ↓ HTTP/SSE
    Express Server (:3000) ← config.json controls behavior
         ↓
@@ -231,7 +228,6 @@ opencode-chat/
 │       ├── contexts/          # ChatContext (SSE/multi-session/navigation) + ThemeContext
 │       ├── hooks/             # useEvents (SSE reconnect+backoff) / useFeedback / useMediaQuery
 │       └── types/             # message / session / api type definitions
-├── public/index.html          # Vanilla JS zero-build fallback frontend
 ├── scripts/                   # Dev launcher + database inspection tools
 ├── logs/                      # Runtime logs + analytics.db (SQLite)
 ├── AGENTS.md                  # Coding standards & guidelines

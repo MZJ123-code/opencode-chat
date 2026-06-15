@@ -46,7 +46,7 @@ if (isProduction) {
     }
     const indexPath = path.join(PUBLIC_DIR, "index.html")
     if (!fs.existsSync(indexPath)) {
-      res.status(503).type("html").send(`<h1>前端构建未就绪</h1><p>React 前端未构建，请运行：<code>cd client && bun run build</code></p>`)
+      res.status(503).type("html").send(`<h1>前端构建未就绪</h1><p>请运行：<code>cd client && bun run build && cd ..</code></p>`)
       return
     }
     res.sendFile(indexPath)

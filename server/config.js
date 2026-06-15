@@ -45,11 +45,8 @@ export const AGENT_DIR_MAP = new Map(
 export const isProduction = process.env.NODE_ENV === "production"
 
 const distDir = path.join(__dirname, "..", "dist")
-const publicDir = path.join(__dirname, "..", "public")
-/** @type {string} 静态文件目录，优先 dist/，回退 public/ */
-export const PUBLIC_DIR = fs.existsSync(path.join(distDir, "index.html"))
-  ? distDir
-  : publicDir
+/** @type {string} 静态文件目录（构建产物），仅生产环境使用 */
+export const PUBLIC_DIR = distDir
 
 // SDK Config — 优先环境变量覆盖，其次 config.json
 /**
