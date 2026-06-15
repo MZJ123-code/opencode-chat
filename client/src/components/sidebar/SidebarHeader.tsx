@@ -7,29 +7,54 @@ interface SidebarHeaderProps {
 }
 
 /**
- * 侧边栏头部组件
- * @param props - 组件属性
- * @param props.onCreateClick - 创建新对话回调
- * @param props.isCreating - 是否正在创建中
+ * 侧边栏头部组件 — Sci-Fi 风格
  */
 export function SidebarHeader({ onCreateClick, isCreating }: SidebarHeaderProps) {
   return (
-    <div className="px-5 pt-6 pb-5 border-b border-white/10">
+    <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid rgba(0, 240, 255, 0.1)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <span className="text-white text-lg">✦</span>
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center relative"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 119, 255, 0.3) 100%)',
+              border: '1px solid rgba(0, 240, 255, 0.3)',
+              boxShadow: '0 0 12px rgba(0, 240, 255, 0.15), inset 0 0 8px rgba(0, 240, 255, 0.1)',
+            }}
+          >
+            <span className="text-lg" style={{ color: '#00f0ff' }}>✦</span>
           </div>
-          <h2 className="text-base font-semibold text-white m-0 tracking-tight">
-            AI 咨询平台
-          </h2>
+          <div>
+            <h2 className="text-sm font-bold m-0 tracking-wide neon-text-subtle" style={{ color: '#00f0ff' }}>
+              AI 咨询平台
+            </h2>
+            <div className="text-[10px] mt-0.5 tracking-widest uppercase" style={{ color: 'rgba(0, 240, 255, 0.4)' }}>
+              NEURAL INTERFACE
+            </div>
+          </div>
         </div>
         <ThemeToggle />
       </div>
       <Button
-        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium py-2.5 rounded-xl shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 btn-shimmer"
+        className="w-full font-medium py-2.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 btn-shimmer"
         onClick={onCreateClick}
         disabled={isCreating}
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 119, 255, 0.2) 100%)',
+          border: '1px solid rgba(0, 240, 255, 0.3)',
+          color: '#00f0ff',
+          boxShadow: '0 0 15px rgba(0, 240, 255, 0.1), inset 0 1px 0 rgba(0, 240, 255, 0.1)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 240, 255, 0.25) 0%, rgba(0, 119, 255, 0.35) 100%)'
+          e.currentTarget.style.boxShadow = '0 0 25px rgba(0, 240, 255, 0.2), inset 0 1px 0 rgba(0, 240, 255, 0.15)'
+          e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.5)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 119, 255, 0.2) 100%)'
+          e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 240, 255, 0.1), inset 0 1px 0 rgba(0, 240, 255, 0.1)'
+          e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.3)'
+        }}
       >
         {isCreating ? (
           <span className="flex items-center gap-2">
@@ -37,7 +62,7 @@ export function SidebarHeader({ onCreateClick, isCreating }: SidebarHeaderProps)
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            创建中...
+            初始化中...
           </span>
         ) : (
           <span className="flex items-center gap-2">

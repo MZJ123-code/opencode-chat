@@ -9,26 +9,33 @@ interface EmptyStateProps {
 }
 
 /**
- * 空状态占位组件
- * @param props - 组件属性
- * @param props.hasSession - 当前是否存在会话
- * @param props.isStreaming - 是否正在流式输出
- * @param props.mood - 太乙真人表情状态
+ * 空状态占位组件 — Sci-Fi 风格
  */
 export function EmptyState({ hasSession, isStreaming = false, mood }: EmptyStateProps) {
   const currentMood: TaiyiMood = mood ?? (isStreaming ? 'thinking' : 'idle')
 
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
+      {/* 光圈效果 */}
+      <div className="relative">
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 70%)',
+          }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+          <TaiyiAvatar mood={currentMood} size={140} interactive />
+        </motion.div>
+      </div>
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <TaiyiAvatar mood={currentMood} size={140} interactive />
-      </motion.div>
-      <motion.div
-        className="text-xl font-bold text-[var(--text)] mb-3 mt-6"
+        className="text-xl font-bold text-[var(--text)] mb-3 mt-6 neon-text-subtle"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}

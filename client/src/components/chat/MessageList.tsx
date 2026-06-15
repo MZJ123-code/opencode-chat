@@ -48,15 +48,7 @@ function isNearBottom(el: HTMLElement, threshold = 30): boolean {
 }
 
 /**
- * 消息列表组件
- * @param props - 组件属性
- * @param props.messages - 消息列表
- * @param props.isLoading - 是否加载中
- * @param props.isStreaming - 是否正在流式输出
- * @param props.sessionId - 当前会话 ID
- * @param props.feedbackStates - 反馈状态映射
- * @param props.onSubmitFeedback - 提交反馈回调
- * @param props.onStop - 停止生成回调
+ * 消息列表组件 — Sci-Fi 风格
  */
 export function MessageList({
   messages,
@@ -138,7 +130,13 @@ export function MessageList({
             initial="hidden"
             animate="visible"
           >
-            <div className={`px-4 py-[10px] rounded-[var(--bubble-radius)] text-[15px] leading-[1.5] whitespace-pre-wrap break-words bg-[var(--user-bubble-gradient)] text-white rounded-br-[5px] shadow-[0_4px_14px_rgba(0,122,255,0.3)] user-bubble-md`}>
+            <div
+              className="px-4 py-[10px] rounded-[var(--bubble-radius)] text-[15px] leading-[1.5] whitespace-pre-wrap break-words text-white rounded-br-[5px] user-bubble-md"
+              style={{
+                background: 'var(--user-bubble-gradient)',
+                boxShadow: '0 4px 18px rgba(0, 180, 216, 0.3), 0 0 25px rgba(0, 119, 182, 0.1)',
+              }}
+            >
               <MarkdownRenderer content={userText} />
             </div>
           </motion.div>
@@ -181,11 +179,31 @@ export function MessageList({
                 animate="visible"
                 style={{ alignSelf: 'flex-start', width: '100%', maxWidth: '85%', marginBottom: 8 }}
               >
-                <details className="block w-full border border-[var(--border)] rounded-[10px] text-[15px] bg-[var(--card)]">
-                  <summary className="flex items-center gap-2 px-[14px] py-[10px] cursor-pointer select-none bg-[var(--muted)] rounded-[10px] text-[var(--foreground)] [&::-webkit-details-marker]:hidden open:rounded-[10px_10px_0_0]">
-                    <span className="text-xs text-[var(--muted-foreground)] transition-transform duration-[150ms] open:rotate-90">▶</span>
+                <details
+                  className="block w-full text-[15px]"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid rgba(0, 240, 255, 0.1)',
+                    borderRadius: '10px',
+                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06), 0 0 15px rgba(0, 240, 255, 0.03)',
+                  }}
+                >
+                  <summary
+                    className="flex items-center gap-2 px-[14px] py-[10px] cursor-pointer select-none rounded-[10px] [&::-webkit-details-marker]:hidden open:rounded-[10px_10px_0_0]"
+                    style={{
+                      background: 'var(--muted)',
+                      color: 'var(--foreground)',
+                    }}
+                  >
+                    <span className="text-xs transition-transform duration-[150ms] open:rotate-90" style={{ color: 'rgba(0, 240, 255, 0.5)' }}>▶</span>
                     <span className="text-base">🛠</span>
-                    <span className="text-xs font-semibold px-[10px] py-[2px] rounded-full">调用 {count} 次</span>
+                    <span className="text-xs font-semibold px-[10px] py-[2px] rounded-full" style={{
+                      background: 'rgba(0, 240, 255, 0.1)',
+                      color: '#00d4ff',
+                      border: '1px solid rgba(0, 240, 255, 0.2)',
+                    }}>
+                      调用 {count} 次
+                    </span>
                     <span className="font-semibold text-[var(--accent-foreground)] font-[var(--font)] text-sm">{toolName}</span>
                   </summary>
                   <div className="flex flex-col">
@@ -266,12 +284,21 @@ export function MessageList({
       <AnimatePresence>
         {isStreaming && (
           <motion.button
-            className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 px-[22px] py-2 border-none rounded-full bg-[var(--danger)] text-white text-[13px] font-semibold cursor-pointer shadow-[0_4px_14px_rgba(239,68,68,0.35)] transition-all duration-150 leading-[1.4] hover:bg-[#dc2626] hover:shadow-[0_6px_20px_rgba(239,68,68,0.5)] hover:-translate-x-1/2 hover:-translate-y-[1px]"
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 px-[22px] py-2 border-none rounded-full text-white text-[13px] font-semibold cursor-pointer transition-all duration-150 leading-[1.4]"
+            style={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35), 0 0 20px rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+            }}
             onClick={onStop}
             variants={stopBtnVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            whileHover={{
+              boxShadow: '0 6px 20px rgba(239, 68, 68, 0.5), 0 0 30px rgba(239, 68, 68, 0.2)',
+              y: -1,
+            }}
           >
             停止
           </motion.button>
@@ -281,13 +308,22 @@ export function MessageList({
       <AnimatePresence>
         {showScrollBtn && (
           <motion.button
-            className="absolute bottom-4 right-6 w-9 h-9 rounded-full border border-[var(--border)] bg-[var(--chat-bg)] text-[var(--muted-foreground)] cursor-pointer flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.12)] z-10 transition-all duration-150 text-base leading-none hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)] hover:bg-[var(--accent)]"
+            className="absolute bottom-4 right-6 w-9 h-9 rounded-full text-base leading-none flex items-center justify-center z-10 transition-all duration-150"
+            style={{
+              background: 'var(--chat-bg)',
+              border: '1px solid rgba(0, 240, 255, 0.2)',
+              color: 'rgba(0, 240, 255, 0.6)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), 0 0 10px rgba(0, 240, 255, 0.06)',
+            }}
             onClick={scrollToBottom}
             title="滚动到底部"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{
+              scale: 1.1,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.18), 0 0 15px rgba(0, 240, 255, 0.12)',
+            }}
             whileTap={{ scale: 0.9 }}
           >
             ↓

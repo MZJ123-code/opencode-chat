@@ -9,14 +9,11 @@ interface ChatHeaderProps {
 }
 
 /**
- * 聊天区域头部组件
- * @param props - 组件属性
- * @param props.title - 标题文字
- * @param props.onMenuClick - 可选的菜单按钮点击回调
+ * 聊天区域头部组件 — Sci-Fi 风格
  */
 const connectionStatusConfig: Record<string, { color: string; title: string }> = {
-  connected: { color: '#22c55e', title: '已连接' },
-  connecting: { color: '#eab308', title: '正在重连…' },
+  connected: { color: '#00e5a0', title: '已连接' },
+  connecting: { color: '#f59e0b', title: '正在重连…' },
   disconnected: { color: '#ef4444', title: '连接断开' },
 }
 
@@ -27,9 +24,10 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
   const showBack = navigationStack.length > 0 || parentSessionId
 
   return (
-    <div className="flex items-center px-5 h-16 shrink-0 gap-3 border-b border-[var(--border)]" style={{ 
+    <div className="flex items-center px-5 h-16 shrink-0 gap-3" style={{
       background: 'var(--chat-bg)',
-      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+      borderBottom: '1px solid rgba(0, 240, 255, 0.08)',
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 0 15px rgba(0, 240, 255, 0.02)',
     }}>
       {onMenuClick && <MobileMenuButton onClick={onMenuClick} />}
 
@@ -42,10 +40,17 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
               navigateToParent()
             }
           }}
-          className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--text)] transition-colors shrink-0 px-2 py-1 rounded-lg hover:bg-[var(--accent)]"
+          className="flex items-center gap-1.5 text-xs hover:text-[var(--text)] transition-colors shrink-0 px-2 py-1 rounded-lg"
+          style={{ color: 'rgba(0, 240, 255, 0.6)' }}
           title={parentTitle ? `返回 ${parentTitle}` : '返回'}
           whileHover={{ x: -2 }}
           whileTap={{ scale: 0.95 }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 240, 255, 0.08)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+          }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -57,7 +62,7 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
       )}
 
       {showBack && (
-        <span className="text-[var(--muted-foreground)] text-xs shrink-0">/</span>
+        <span style={{ color: 'rgba(0, 240, 255, 0.2)' }} className="text-xs shrink-0">/</span>
       )}
 
       <span className="text-sm font-semibold text-[var(--text)] truncate flex-1">{title}</span>
@@ -80,7 +85,7 @@ export function ChatHeader({ title, onMenuClick }: ChatHeaderProps) {
             />
           )}
         </div>
-        <ThemeToggle className="text-[var(--muted-foreground)] hover:text-[var(--text)] border-[var(--border)] hover:bg-[var(--accent)]" />
+        <ThemeToggle />
       </div>
     </div>
   )

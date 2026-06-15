@@ -44,7 +44,6 @@ export default function App() {
       if (window.location.hash === '#dashboard') {
         setView('dashboard')
       } else {
-        // 只有当前在看板时才切回聊天，避免干扰正常使用
         setView(v => v === 'dashboard' ? 'chat' : v)
       }
     }
@@ -157,7 +156,7 @@ export default function App() {
         )}
       </ChatArea>
 
-      {/* 浮动太乙真人头像 */}
+      {/* 浮动太乙真人头像 — Sci-Fi 光环 */}
       {currentSessionId && (
         <motion.div
           className="fixed bottom-24 right-6 z-50"
@@ -165,11 +164,22 @@ export default function App() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.5 }}
         >
-          <TaiyiAvatar
-            mood={getTaiyiMood()}
-            size={80}
-            interactive
-          />
+          {/* 外层光环 */}
+          <div className="relative">
+            <motion.div
+              className="absolute -inset-2 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(0, 240, 255, 0.06) 0%, transparent 70%)',
+              }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <TaiyiAvatar
+              mood={getTaiyiMood()}
+              size={80}
+              interactive
+            />
+          </div>
         </motion.div>
       )}
     </>

@@ -9,12 +9,7 @@ interface ChatInputProps {
 }
 
 /**
- * 聊天输入框组件（已记忆化）
- * @param props - 组件属性
- * @param props.value - 输入框值
- * @param props.onChange - 值变化回调
- * @param props.onSend - 发送消息回调
- * @param props.disabled - 是否禁用
+ * 聊天输入框组件 — Sci-Fi 风格
  */
 export const ChatInput = memo(function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -39,15 +34,25 @@ export const ChatInput = memo(function ChatInput({ value, onChange, onSend, disa
   }, [isComposing, disabled, onSend])
 
   return (
-    <div className="px-5 py-4 border-t border-[var(--border)]" style={{ 
+    <div className="px-5 py-4" style={{
       background: 'var(--chat-bg)',
+      borderTop: '1px solid rgba(0, 240, 255, 0.08)',
       boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)',
     }}>
-      <div className={`flex items-end gap-3 p-2 rounded-2xl border transition-all duration-300 ${
-        isFocused 
-          ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' 
-          : 'border-[var(--border)]'
-      }`} style={{ background: 'var(--input-bg)' }}>
+      <div
+        className={`flex items-end gap-3 p-2 rounded-2xl transition-all duration-300 ${
+          isFocused ? '' : ''
+        }`}
+        style={{
+          background: 'var(--input-bg)',
+          border: isFocused
+            ? '1px solid rgba(0, 240, 255, 0.4)'
+            : '1px solid var(--border)',
+          boxShadow: isFocused
+            ? '0 0 15px rgba(0, 240, 255, 0.1), 0 0 30px rgba(0, 240, 255, 0.04), inset 0 0 15px rgba(0, 240, 255, 0.03)'
+            : 'none',
+        }}
+      >
         <textarea
           ref={textareaRef}
           className="flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none disabled:opacity-50 placeholder:text-[var(--text-secondary)] text-[var(--text)] transition-all duration-300"
@@ -67,11 +72,33 @@ export const ChatInput = memo(function ChatInput({ value, onChange, onSend, disa
           onClick={onSend}
           disabled={disabled || !value.trim()}
           size="default"
-          className={`h-10 px-5 rounded-xl font-medium transition-all duration-300 ${
+          className="h-10 px-5 rounded-xl font-medium transition-all duration-300"
+          style={
             value.trim() && !disabled
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5'
-              : 'bg-[var(--secondary)] text-[var(--text-secondary)]'
-          }`}
+              ? {
+                  background: 'linear-gradient(135deg, #00b4d8 0%, #0077b6 50%, #023e8a 100%)',
+                  color: 'white',
+                  boxShadow: '0 0 15px rgba(0, 240, 255, 0.25), 0 4px 12px rgba(0, 119, 182, 0.3)',
+                  border: '1px solid rgba(0, 240, 255, 0.3)',
+                }
+              : {
+                  background: 'var(--secondary)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)',
+                }
+          }
+          onMouseEnter={(e) => {
+            if (value.trim() && !disabled) {
+              e.currentTarget.style.boxShadow = '0 0 25px rgba(0, 240, 255, 0.35), 0 4px 16px rgba(0, 119, 182, 0.4)'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (value.trim() && !disabled) {
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 240, 255, 0.25), 0 4px 12px rgba(0, 119, 182, 0.3)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }
+          }}
         >
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

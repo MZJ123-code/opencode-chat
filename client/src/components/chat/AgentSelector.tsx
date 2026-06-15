@@ -10,11 +10,11 @@ interface AgentSelectorProps {
   creating: boolean
 }
 
-const agentColors: Record<string, string> = {
-  knowledge: 'from-emerald-500 to-teal-600',
-  build: 'from-indigo-500 to-violet-600',
-  plan: 'from-amber-500 to-orange-600',
-  explore: 'from-rose-500 to-pink-600',
+const agentColors: Record<string, { gradient: string; border: string; glow: string; text: string }> = {
+  knowledge: { gradient: 'from-cyan-400 to-blue-500', border: 'rgba(0, 240, 255, 0.3)', glow: 'rgba(0, 240, 255, 0.15)', text: '#00f0ff' },
+  build: { gradient: 'from-blue-500 to-violet-600', border: 'rgba(0, 119, 255, 0.3)', glow: 'rgba(0, 119, 255, 0.15)', text: '#0077ff' },
+  plan: { gradient: 'from-amber-400 to-orange-500', border: 'rgba(245, 158, 11, 0.3)', glow: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b' },
+  explore: { gradient: 'from-pink-400 to-rose-500', border: 'rgba(236, 72, 153, 0.3)', glow: 'rgba(236, 72, 153, 0.15)', text: '#ec4899' },
 }
 
 const agentIcons: Record<string, string> = {
@@ -40,12 +40,7 @@ const cardVariants = {
 }
 
 /**
- * AI Agent 选择器组件（已记忆化）
- * @param props - 组件属性
- * @param props.agents - Agent 选项列表
- * @param props.loading - 是否加载中
- * @param props.onSelect - 选择 Agent 回调
- * @param props.creating - 是否正在创建会话
+ * AI Agent 选择器组件 — Sci-Fi 全息卡片风格
  */
 export const AgentSelector = memo(function AgentSelector({ agents, loading, onSelect, creating }: AgentSelectorProps) {
   if (loading) {
@@ -64,15 +59,20 @@ export const AgentSelector = memo(function AgentSelector({ agents, loading, onSe
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <motion.div
-        className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-6"
+        className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 119, 255, 0.15) 100%)',
+          border: '1px solid rgba(0, 240, 255, 0.2)',
+          boxShadow: '0 0 25px rgba(0, 240, 255, 0.1), inset 0 0 15px rgba(0, 240, 255, 0.05)',
+        }}
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
       >
-        <span className="text-4xl">✨</span>
+        <span className="text-4xl">✦</span>
       </motion.div>
       <motion.div
-        className="text-2xl font-bold text-[var(--text)] mb-2"
+        className="text-2xl font-bold text-[var(--text)] mb-2 neon-text-subtle"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -89,13 +89,13 @@ export const AgentSelector = memo(function AgentSelector({ agents, loading, onSe
       </motion.div>
       <div className="grid grid-cols-2 gap-5 px-6 max-w-2xl w-full">
         {agents.map((opt, i) => {
-          const gradient = agentColors[opt.agent] || 'from-indigo-500 to-violet-600'
+          const colors = agentColors[opt.agent] || agentColors.build
           const icon = agentIcons[opt.agent] || '🤖'
           return (
-            <SpotlightCard
+            <HolographicCard
               key={opt.agent}
               index={i}
-              gradient={gradient}
+              colors={colors}
               icon={icon}
               label={opt.label}
               description={opt.description}
@@ -109,9 +109,9 @@ export const AgentSelector = memo(function AgentSelector({ agents, loading, onSe
   )
 })
 
-function SpotlightCard({
+function HolographicCard({
   index,
-  gradient,
+  colors,
   icon,
   label,
   description,
@@ -119,7 +119,7 @@ function SpotlightCard({
   onClick,
 }: {
   index: number
-  gradient: string
+  colors: { gradient: string; border: string; glow: string; text: string }
   icon: string
   label: string
   description: string
@@ -148,13 +148,26 @@ function SpotlightCard({
       animate="visible"
       whileHover={{ y: -8, scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
-      className="card-spotlight group relative flex flex-col items-start p-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] cursor-pointer text-left transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:border-transparent"
+      className="card-spotlight group relative flex flex-col items-start p-6 rounded-2xl cursor-pointer text-left transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        background: 'var(--card)',
+        border: `1px solid ${colors.border}`,
+        boxShadow: `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 20px ${colors.glow}`,
       }}
     >
+      {/* 扫描线装饰 */}
+      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div className="absolute inset-0" style={{
+          background: `linear-gradient(180deg, transparent 0%, ${colors.glow} 45%, ${colors.glow} 55%, transparent 100%)`,
+          animation: 'scan-line 6s linear infinite',
+        }} />
+      </div>
+
       <motion.div
-        className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} text-white text-2xl mb-4 shadow-lg`}
+        className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${colors.gradient} text-white text-2xl mb-4`}
+        style={{
+          boxShadow: `0 4px 15px ${colors.glow}, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
+        }}
         whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
         transition={{ duration: 0.4 }}
       >
@@ -168,7 +181,7 @@ function SpotlightCard({
       </div>
       <motion.div
         className="mt-4 text-sm font-semibold relative z-10 flex items-center gap-1.5"
-        style={{ color: 'var(--primary)' }}
+        style={{ color: colors.text }}
         initial={{ opacity: 0, x: -10 }}
         whileHover={{ opacity: 1, x: 0 }}
       >
@@ -177,6 +190,11 @@ function SpotlightCard({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </motion.div>
+
+      {/* 底部装饰线 */}
+      <div className="absolute bottom-0 left-4 right-4 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
+        background: `linear-gradient(90deg, transparent, ${colors.text}, transparent)`,
+      }} />
     </motion.button>
   )
 }

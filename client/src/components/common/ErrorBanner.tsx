@@ -6,27 +6,34 @@ interface ErrorBannerProps {
 }
 
 /**
- * 错误提示横幅组件
- * @param props - 组件属性
- * @param props.message - 错误消息（null 时不显示）
- * @param props.onDismiss - 关闭回调
+ * 错误提示横幅组件 — Sci-Fi 风格
  */
 export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
   return (
     <AnimatePresence>
       {message && (
         <motion.div
-          className="flex items-center justify-between px-4 py-2 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 text-sm border-b border-red-100 dark:border-red-900/50"
+          className="flex items-center justify-between px-4 py-2 text-sm"
+          style={{
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.08) 100%)',
+            color: '#ef4444',
+            borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+            boxShadow: '0 0 15px rgba(239, 68, 68, 0.05)',
+          }}
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <span>{message}</span>
+          <span className="flex items-center gap-2">
+            <span style={{ textShadow: '0 0 8px rgba(239, 68, 68, 0.5)' }}>⚠</span>
+            {message}
+          </span>
           <motion.span
-            className="ml-4 cursor-pointer font-medium hover:text-red-900 dark:hover:text-red-200 shrink-0"
+            className="ml-4 cursor-pointer font-medium shrink-0 transition-colors"
+            style={{ color: 'rgba(239, 68, 68, 0.7)' }}
             onClick={onDismiss}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, color: '#ef4444' }}
             whileTap={{ scale: 0.95 }}
           >
             关闭
