@@ -40,7 +40,7 @@ export function EmptyState({ hasSession, isStreaming = false, mood }: EmptyState
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        {hasSession ? '开始提问吧' : '与太乙真人对话'}
+        {hasSession ? '开始提问吧' : '与 AI 助手对话'}
       </motion.div>
       {!hasSession && (
         <motion.div
@@ -49,7 +49,7 @@ export function EmptyState({ hasSession, isStreaming = false, mood }: EmptyState
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          点击太乙真人可以和他互动哦～选择一个 AI 助手开始咨询
+          点击机器人可以和他互动哦～选择一个 AI 助手开始咨询
         </motion.div>
       )}
     </div>

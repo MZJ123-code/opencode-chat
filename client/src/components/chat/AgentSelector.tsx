@@ -17,11 +17,49 @@ const agentColors: Record<string, { gradient: string; border: string; glow: stri
   explore: { gradient: 'from-pink-400 to-rose-500', border: 'rgba(236, 72, 153, 0.3)', glow: 'rgba(236, 72, 153, 0.15)', text: '#ec4899' },
 }
 
-const agentIcons: Record<string, string> = {
-  knowledge: '📚',
-  build: '⚡',
-  plan: '📐',
-  explore: '🔍',
+/** Agent SVG 图标组件 */
+function AgentIcon({ agent, className }: { agent: string; className?: string }) {
+  switch (agent) {
+    case 'knowledge':
+      return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      )
+    case 'build':
+      return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      )
+    case 'plan':
+      return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      )
+    case 'explore':
+      return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <circle cx="11" cy="11" r="3" />
+        </svg>
+      )
+    default:
+      return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+      )
+  }
 }
 
 const cardVariants = {
@@ -90,18 +128,17 @@ export const AgentSelector = memo(function AgentSelector({ agents, loading, onSe
       <div className="grid grid-cols-2 gap-5 px-6 max-w-2xl w-full">
         {agents.map((opt, i) => {
           const colors = agentColors[opt.agent] || agentColors.build
-          const icon = agentIcons[opt.agent] || '🤖'
           return (
-            <HolographicCard
-              key={opt.agent}
-              index={i}
-              colors={colors}
-              icon={icon}
-              label={opt.label}
-              description={opt.description}
-              disabled={creating}
-              onClick={() => onSelect(opt.agent)}
-            />
+              <HolographicCard
+                key={opt.agent}
+                index={i}
+                colors={colors}
+                agent={opt.agent}
+                label={opt.label}
+                description={opt.description}
+                disabled={creating}
+                onClick={() => onSelect(opt.agent)}
+              />
           )
         })}
       </div>
@@ -112,7 +149,7 @@ export const AgentSelector = memo(function AgentSelector({ agents, loading, onSe
 function HolographicCard({
   index,
   colors,
-  icon,
+  agent,
   label,
   description,
   disabled,
@@ -120,7 +157,7 @@ function HolographicCard({
 }: {
   index: number
   colors: { gradient: string; border: string; glow: string; text: string }
-  icon: string
+  agent: string
   label: string
   description: string
   disabled: boolean
@@ -164,14 +201,14 @@ function HolographicCard({
       </div>
 
       <motion.div
-        className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${colors.gradient} text-white text-2xl mb-4`}
+        className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${colors.gradient} text-white mb-4`}
         style={{
           boxShadow: `0 4px 15px ${colors.glow}, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
         }}
         whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
         transition={{ duration: 0.4 }}
       >
-        {icon}
+        <AgentIcon agent={agent} className="w-7 h-7" />
       </motion.div>
       <div className="text-base font-bold text-[var(--text)] mb-2 relative z-10">
         {label}

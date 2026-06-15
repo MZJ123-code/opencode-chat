@@ -22,7 +22,9 @@ export function SidebarHeader({ onCreateClick, isCreating }: SidebarHeaderProps)
               boxShadow: '0 0 12px rgba(0, 240, 255, 0.15), inset 0 0 8px rgba(0, 240, 255, 0.1)',
             }}
           >
-            <span className="text-lg" style={{ color: '#00f0ff' }}>✦</span>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
           </div>
           <div>
             <h2 className="text-sm font-bold m-0 tracking-wide neon-text-subtle" style={{ color: '#00f0ff' }}>
