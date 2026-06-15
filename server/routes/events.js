@@ -133,14 +133,19 @@ router.get("/", async (req, res) => {
       // 关键事件日志
       const props = event.properties || {}
       if (LOGGED_EVENT_PREFIXES.some(p => etype.startsWith(p)) && !SKIP_LOG_EVENTS.has(etype)) {
-        logger.info(`SSE: ${etype}`, {
+        const logData = {
           sessionID: props.sessionID || event.sessionID || "?",
           eventType: etype,
           seq: eventCount,
           partType: props.part?.type,
           tool: props.part?.tool || props.tool,
           parentID: props.info?.parentID,
-        })
+        }
+        // session.error 事件附加错误详情
+        if (etype === "session.error") {
+          logData.error = props.error || props
+        }
+        logger.info(`SSE: ${etype}`, logData)
       }
 
       // 事件分发

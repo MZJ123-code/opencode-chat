@@ -8,8 +8,8 @@
     "hostname": "127.0.0.1"
   },
 
-  "model": "deepseek/deepseek-chat",
-  "small_model": "deepseek/deepseek-chat",
+  "model": "",
+  "small_model": "",
   "logLevel": "INFO",
   "autoupdate": false,
 
