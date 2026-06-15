@@ -35,46 +35,57 @@
 }
 
 /* ==============================
-   Light theme (default) — Sci-Fi Frost
+   Theme — CSS light-dark() 自适应
+   无需 .dark 覆盖块，color-scheme 自动切换
    ============================== */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0.042 265.755);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.965 0.001 286.375);
-  --secondary-foreground: oklch(0.205 0.042 265.755);
-  --muted: oklch(0.965 0.001 286.375);
-  --muted-foreground: oklch(0.556 0.011 286.375);
-  --accent: oklch(0.965 0.001 286.375);
-  --accent-foreground: oklch(0.205 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0.004 286.375);
-  --input: oklch(0.922 0.004 286.375);
-  --ring: oklch(0.205 0.042 265.755);
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+:root {
+  /* shadcn/ui tokens */
+  --background: light-dark(oklch(1 0 0), oklch(0.07 0.01 250));
+  --foreground: light-dark(oklch(0.145 0 0), oklch(0.95 0.02 200));
+  --card: light-dark(oklch(1 0 0), oklch(0.1 0.015 250));
+  --card-foreground: light-dark(oklch(0.145 0 0), oklch(0.95 0.02 200));
+  --popover: light-dark(oklch(1 0 0), oklch(0.1 0.015 250));
+  --popover-foreground: light-dark(oklch(0.145 0 0), oklch(0.95 0.02 200));
+  --primary: light-dark(oklch(0.205 0.042 265.755), oklch(0.75 0.18 200));
+  --primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.1 0.02 250));
+  --secondary: light-dark(oklch(0.965 0.001 286.375), oklch(0.16 0.02 250));
+  --secondary-foreground: light-dark(oklch(0.205 0.042 265.755), oklch(0.95 0.02 200));
+  --muted: light-dark(oklch(0.965 0.001 286.375), oklch(0.16 0.02 250));
+  --muted-foreground: light-dark(oklch(0.556 0.011 286.375), oklch(0.6 0.03 220));
+  --accent: light-dark(oklch(0.965 0.001 286.375), oklch(0.18 0.03 220));
+  --accent-foreground: light-dark(oklch(0.205 0.042 265.755), oklch(0.95 0.02 200));
+  --destructive: light-dark(oklch(0.577 0.245 27.325), oklch(0.704 0.191 22.216));
+  --destructive-foreground: light-dark(oklch(0.577 0.245 27.325), oklch(0.637 0.237 25.331));
+  --border: light-dark(oklch(0.922 0.004 286.375), oklch(0.22 0.025 250));
+  --input: light-dark(oklch(0.922 0.004 286.375), oklch(0.16 0.02 250));
+  --ring: light-dark(oklch(0.205 0.042 265.755), oklch(0.75 0.18 200));
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Sci-Fi Frost color system */
-  --sidebar-bg: linear-gradient(180deg, #070b14 0%, #0d1525 50%, #0a1628 100%);
-  --bg: #f0f4f8;
-  --chat-bg: #ffffff;
-  --user-bubble: #00b4d8;
+  /* Sci-Fi color system */
+  --sidebar-bg: light-dark(
+    linear-gradient(180deg, #070b14 0%, #0d1525 50%, #0a1628 100%),
+    linear-gradient(180deg, #020408 0%, #060d1a 50%, #030710 100%)
+  );
+  --bg: light-dark(#f0f4f8, #030710);
+  --chat-bg: light-dark(#ffffff, #060d1a);
   --user-bubble-gradient: linear-gradient(135deg, #00b4d8 0%, #0077b6 40%, #023e8a 100%);
-  --ai-bubble: #f1f5f9;
-  --ai-border: transparent;
-  --text: #0a0e1a;
-  --text-secondary: #5a6a80;
-  --input-bg: #ffffff;
-  --border: #d0d8e4;
+  --ai-bubble: light-dark(#f1f5f9, #0c1629);
+  --text: light-dark(#0a0e1a, #e0f0ff);
+  --text-secondary: light-dark(#5a6a80, #6b8db5);
+  --input-bg: light-dark(#ffffff, #0a1225);
+  --border: light-dark(#d0d8e4, #1a2744);
   --danger: #ef4444;
   --success: #00e5a0;
   --radius: 16px;
@@ -82,7 +93,7 @@
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", "SF Mono", "Cascadia Code", "Consolas", monospace;
 
-  /* Sci-Fi neon palette */
+  /* Neon palette (theme-agnostic) */
   --neon-cyan: #00f0ff;
   --neon-blue: #0077ff;
   --neon-purple: #8b5cf6;
@@ -90,77 +101,35 @@
   --neon-green: #00e5a0;
   --neon-amber: #f59e0b;
 
-  /* Glassmorphism — Frosted Glass */
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(0, 240, 255, 0.2);
-  --glass-shadow: 0 8px 32px rgba(0, 119, 182, 0.1), 0 0 1px rgba(0, 240, 255, 0.3);
+  /* Glassmorphism */
+  --glass-bg: light-dark(rgba(255, 255, 255, 0.65), rgba(6, 13, 26, 0.85));
+  --glass-border: light-dark(rgba(0, 240, 255, 0.2), rgba(0, 240, 255, 0.12));
+  --glass-shadow: light-dark(
+    0 8px 32px rgba(0, 119, 182, 0.1), 0 0 1px rgba(0, 240, 255, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 240, 255, 0.2)
+  );
 
-  /* AI glow */
-  --ai-glow: rgba(0, 240, 255, 0.12);
+  --ai-glow: light-dark(rgba(0, 240, 255, 0.12), rgba(0, 240, 255, 0.15));
 
-  /* Modern shadows — sci-fi depth */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.2), 0 0 40px rgba(0, 240, 255, 0.08);
-  --shadow-neon: 0 0 10px rgba(0, 240, 255, 0.3), 0 0 30px rgba(0, 240, 255, 0.15), 0 0 60px rgba(0, 240, 255, 0.05);
-}
-
-/* ==============================
-   Dark theme — Deep Space Cyberpunk
-   ============================== */
-.dark {
-  --background: oklch(0.07 0.01 250);
-  --foreground: oklch(0.95 0.02 200);
-  --card: oklch(0.1 0.015 250);
-  --card-foreground: oklch(0.95 0.02 200);
-  --popover: oklch(0.1 0.015 250);
-  --popover-foreground: oklch(0.95 0.02 200);
-  --primary: oklch(0.75 0.18 200);
-  --primary-foreground: oklch(0.1 0.02 250);
-  --secondary: oklch(0.16 0.02 250);
-  --secondary-foreground: oklch(0.95 0.02 200);
-  --muted: oklch(0.16 0.02 250);
-  --muted-foreground: oklch(0.6 0.03 220);
-  --accent: oklch(0.18 0.03 220);
-  --accent-foreground: oklch(0.95 0.02 200);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.22 0.025 250);
-  --input: oklch(0.16 0.02 250);
-  --ring: oklch(0.75 0.18 200);
-
-  /* Deep Space color system */
-  --sidebar-bg: linear-gradient(180deg, #020408 0%, #060d1a 50%, #030710 100%);
-  --bg: #030710;
-  --chat-bg: #060d1a;
-  --user-bubble-gradient: linear-gradient(135deg, #00b4d8 0%, #0077b6 40%, #023e8a 100%);
-  --ai-bubble: #0c1629;
-  --text: #e0f0ff;
-  --text-secondary: #6b8db5;
-  --input-bg: #0a1225;
-  --border: #1a2744;
-  --glass-bg: rgba(6, 13, 26, 0.85);
-  --glass-border: rgba(0, 240, 255, 0.12);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 240, 255, 0.2);
-  --ai-glow: rgba(0, 240, 255, 0.15);
-
-  /* Deep space shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 25px rgba(0, 240, 255, 0.25), 0 0 50px rgba(0, 240, 255, 0.1);
-  --shadow-neon: 0 0 12px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.2), 0 0 80px rgba(0, 240, 255, 0.06);
+  /* Shadows */
+  --shadow-sm: light-dark(0 1px 2px 0 rgba(0,0,0,0.05), 0 1px 2px 0 rgba(0,0,0,0.4));
+  --shadow-md: light-dark(0 4px 6px -1px rgba(0,0,0,0.1), 0 4px 6px -1px rgba(0,0,0,0.5));
+  --shadow-lg: light-dark(0 10px 15px -3px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.5));
+  --shadow-xl: light-dark(0 20px 25px -5px rgba(0,0,0,0.1), 0 20px 25px -5px rgba(0,0,0,0.6));
+  --shadow-glow: light-dark(
+    0 0 20px rgba(0,240,255,0.2), 0 0 40px rgba(0,240,255,0.08),
+    0 0 25px rgba(0,240,255,0.25), 0 0 50px rgba(0,240,255,0.1)
+  );
+  --shadow-neon: light-dark(
+    0 0 10px rgba(0,240,255,0.3), 0 0 30px rgba(0,240,255,0.15), 0 0 60px rgba(0,240,255,0.05),
+    0 0 12px rgba(0,240,255,0.4), 0 0 40px rgba(0,240,255,0.2), 0 0 80px rgba(0,240,255,0.06)
+  );
 }
 
 /* ==============================
    Base
    ============================== */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -180,34 +149,18 @@ body {
   display: flex;
 }
 
-/* Scrollbar — sci-fi thin */
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.2);
+  background: light-dark(rgba(0, 240, 255, 0.2), rgba(0, 240, 255, 0.15));
   border-radius: 3px;
   transition: background 0.2s;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.4);
+  background: light-dark(rgba(0, 240, 255, 0.4), rgba(0, 240, 255, 0.35));
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.15);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.35);
-}
-
-/* Selection — neon cyan */
 ::selection {
   background: rgba(0, 240, 255, 0.25);
   color: inherit;
@@ -220,18 +173,15 @@ body {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
-
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
 @keyframes scan-line {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
 }
-
 @keyframes neon-flicker {
   0%, 100% { opacity: 1; }
   92% { opacity: 1; }
@@ -240,44 +190,60 @@ body {
   96% { opacity: 0.8; }
   97% { opacity: 1; }
 }
+@keyframes message-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes view-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* ==============================
-   Animated background mesh — Nebula
+   View Transitions — SPA 导航动画
+   ============================== */
+::view-transition-old(root) {
+  animation: 150ms ease-out both fadeOut;
+}
+::view-transition-new(root) {
+  animation: 150ms ease-out both view-enter;
+}
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+/* ==============================
+   Animated background mesh
    ============================== */
 .bg-mesh {
   position: relative;
   overflow: hidden;
 }
-
 .bg-mesh::before {
   content: '';
   position: absolute;
   inset: -50%;
   z-index: 0;
-  background:
+  background: light-dark(
     radial-gradient(ellipse at 20% 50%, rgba(0, 180, 216, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(0, 119, 255, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(0, 240, 255, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse at 50% 80%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 119, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(0, 180, 216, 0.04) 0%, transparent 50%)
+  );
   animation: gradient-shift 25s ease infinite;
   background-size: 200% 200%;
   pointer-events: none;
 }
 
-.dark .bg-mesh::before {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(0, 119, 255, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(0, 180, 216, 0.04) 0%, transparent 50%);
-}
-
 /* ==============================
-   Shimmer button effect — Data Stream
+   Shimmer button effect
    ============================== */
 .btn-shimmer {
   position: relative;
   overflow: hidden;
 }
-
 .btn-shimmer::after {
   content: '';
   position: absolute;
@@ -286,45 +252,35 @@ body {
   width: 200%;
   height: 100%;
   background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 240, 255, 0.1) 25%,
-    rgba(0, 240, 255, 0.2) 50%,
-    rgba(0, 240, 255, 0.1) 75%,
-    transparent 100%
+    90deg, transparent 0%, rgba(0, 240, 255, 0.1) 25%,
+    rgba(0, 240, 255, 0.2) 50%, rgba(0, 240, 255, 0.1) 75%, transparent 100%
   );
   animation: shimmer 3s ease-in-out infinite;
   pointer-events: none;
 }
 
 /* ==============================
-   Spotlight card — Holographic Grid
+   Spotlight card
    ============================== */
 .card-spotlight {
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .card-spotlight::before {
   content: '';
   position: absolute;
   inset: 0;
   background: radial-gradient(
     500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(0, 240, 255, 0.08),
-    transparent 40%
+    rgba(0, 240, 255, 0.08), transparent 40%
   );
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
   z-index: 1;
 }
-
-.card-spotlight:hover::before {
-  opacity: 1;
-}
-
+.card-spotlight:hover::before { opacity: 1; }
 .card-spotlight::after {
   content: '';
   position: absolute;
@@ -335,55 +291,55 @@ body {
   box-shadow: var(--shadow-glow);
   pointer-events: none;
 }
-
-.card-spotlight:hover::after {
-  opacity: 1;
-}
+.card-spotlight:hover::after { opacity: 1; }
 
 /* ==============================
-   Sci-Fi utility classes
+   Utility classes
    ============================== */
 .neon-text {
   text-shadow: 0 0 8px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.2);
 }
-
 .neon-text-subtle {
   text-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
 }
-
 .scan-overlay {
   position: relative;
   overflow: hidden;
 }
-
 .scan-overlay::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(0, 240, 255, 0.03) 45%,
-    rgba(0, 240, 255, 0.08) 50%,
-    rgba(0, 240, 255, 0.03) 55%,
-    transparent 100%
+    180deg, transparent 0%, rgba(0, 240, 255, 0.03) 45%,
+    rgba(0, 240, 255, 0.08) 50%, rgba(0, 240, 255, 0.03) 55%, transparent 100%
   );
   animation: scan-line 8s linear infinite;
   pointer-events: none;
   z-index: 1;
 }
-
 .grid-bg {
-  background-image:
+  background-image: light-dark(
     linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px)
+  );
   background-size: 40px 40px;
 }
 
-.dark .grid-bg {
-  background-image:
-    linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+/* ==============================
+   Message entry animation (@starting-style)
+   ============================== */
+@starting-style {
+  .msg-enter {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+
+.msg-enter {
+  animation: message-enter 0.3s ease-out both;
 }
 
 /* ==============================
@@ -399,8 +355,8 @@ body {
 .markdown-body h4 { font-size: 15px; }
 .markdown-body p { margin-bottom: 12px; color: var(--text); }
 .markdown-body p:last-child { margin-bottom: 0; }
-.markdown-body a { color: #0077b6; text-decoration: none; border-bottom: 1px solid transparent; transition: all .2s ease; }
-.markdown-body a:hover { border-bottom-color: #0077b6; }
+.markdown-body a { color: light-dark(#0077b6, #00d4ff); text-decoration: none; border-bottom: 1px solid transparent; transition: all .2s ease; }
+.markdown-body a:hover { border-bottom-color: light-dark(#0077b6, #00d4ff); }
 .markdown-body ul, .markdown-body ol { padding-left: 24px; margin: 10px 0; }
 .markdown-body li { margin-bottom: 6px; }
 .markdown-body li::marker { color: #6b8db5; }
@@ -409,8 +365,12 @@ body {
 .markdown-body .task-list-item input[type="checkbox"] { margin-top: 4px; width: 16px; height: 16px; accent-color: #00b4d8; flex-shrink: 0; cursor: default; }
 .markdown-body blockquote {
   position: relative; border: none; padding: 12px 16px 12px 20px; margin: 16px 0;
-  background: linear-gradient(135deg, rgba(0, 180, 216, 0.05) 0%, rgba(0, 119, 182, 0.05) 100%); border-radius: 12px; color: #5a6a80;
+  background: linear-gradient(135deg, rgba(0, 180, 216, 0.05) 0%, rgba(0, 119, 182, 0.05) 100%);
+  border-radius: 12px; color: var(--text-secondary);
   box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.1);
+}
+.dark .markdown-body blockquote {
+  background: linear-gradient(135deg, rgba(0, 180, 216, 0.06) 0%, rgba(0, 119, 182, 0.04) 100%);
 }
 .markdown-body blockquote::before {
   content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
@@ -426,32 +386,11 @@ body {
 .markdown-body tr:nth-child(even) { background: var(--secondary); }
 .markdown-body tr:hover { background: var(--accent); }
 .markdown-body img { max-width: 100%; border-radius: 12px; margin: 12px 0; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
-.markdown-body code { background: rgba(0, 180, 216, 0.1); padding: 2px 8px; border-radius: 6px; font-family: var(--mono); font-size: 13px; color: #0077b6; border: 1px solid rgba(0, 180, 216, 0.15); }
+.markdown-body code { background: light-dark(rgba(0, 180, 216, 0.1), rgba(0, 240, 255, 0.1)); padding: 2px 8px; border-radius: 6px; font-family: var(--mono); font-size: 13px; color: light-dark(#0077b6, #00e5ff); border: 1px solid light-dark(rgba(0, 180, 216, 0.15), rgba(0, 240, 255, 0.2)); }
 .markdown-body del { color: #94a3b8; text-decoration: line-through; }
 .markdown-body mark { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; padding: 2px 6px; border-radius: 4px; }
 
-/* Dark markdown overrides */
-.dark .markdown-body blockquote {
-  background: linear-gradient(135deg, rgba(0, 180, 216, 0.06) 0%, rgba(0, 119, 182, 0.04) 100%);
-  color: var(--text-secondary);
-  box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.1);
-}
-.dark .markdown-body a {
-  color: #00d4ff;
-}
-.dark .markdown-body a:hover {
-  border-bottom-color: #00d4ff;
-}
-.dark .markdown-body code {
-  background: rgba(0, 240, 255, 0.1);
-  color: #00e5ff;
-  border-color: rgba(0, 240, 255, 0.2);
-}
-.dark .markdown-body hr {
-  background: linear-gradient(to right, transparent, var(--border), transparent);
-}
-
-/* Code blocks — Terminal */
+/* Code blocks */
 .markdown-body .code-block-wrap { margin: 16px 0; border: 1px solid rgba(0, 240, 255, 0.15); border-radius: 12px; overflow: hidden; background: #060d1a; box-shadow: var(--shadow-lg), 0 0 30px rgba(0, 240, 255, 0.05); }
 .markdown-body .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: linear-gradient(180deg, #0a1628 0%, #060d1a 100%); border-bottom: 1px solid rgba(0, 240, 255, 0.1); }
 .markdown-body .code-lang-badge { font-size: 11px; font-weight: 600; color: #00d4ff; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -462,9 +401,7 @@ body {
 .markdown-body .code-block-wrap pre code { background: none; padding: 0; font-size: 13px; line-height: 1.7; color: #c0d8f0; border: none; font-family: var(--mono); white-space: pre; tab-size: 2; }
 .markdown-body pre { background: linear-gradient(135deg, rgba(0, 180, 216, 0.04) 0%, rgba(0, 119, 182, 0.04) 100%); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 10px 0; box-shadow: var(--shadow-sm); }
 .markdown-body pre code { background: none; padding: 0; font-size: 13px; line-height: 1.6; color: var(--text); border: none; }
-
 .dark .markdown-body pre { background: linear-gradient(135deg, rgba(6, 13, 26, 0.8) 0%, rgba(3, 7, 16, 0.8) 100%); border-color: rgba(0, 240, 255, 0.08); }
-.dark .markdown-body pre code { color: var(--text); }
 .dark .markdown-body .code-block-wrap { border-color: rgba(0, 240, 255, 0.12); box-shadow: var(--shadow-xl), 0 0 40px rgba(0, 240, 255, 0.04); }
 
 /* highlight.js overrides */
@@ -478,7 +415,7 @@ body {
   tab-size: 2;
 }
 
-/* JSON syntax highlighting — cyan theme */
+/* JSON syntax highlighting */
 .json-key { color: #00d4ff; }
 .json-str { color: #00e5a0; }
 .json-num { color: #f59e0b; }

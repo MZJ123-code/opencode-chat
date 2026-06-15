@@ -15,7 +15,7 @@ export function MessageBubble({ role, parts, children }: MessageBubbleProps) {
   const isUser = role === 'user'
 
   return (
-    <div className={isUser ? 'max-w-[75%] shrink-0 self-end' : 'max-w-[75%] shrink-0 self-start'}>
+    <div className={`msg-enter ${isUser ? 'max-w-[75%] shrink-0 self-end' : 'max-w-[75%] shrink-0 self-start'}`}>
       <div className={
         isUser
           ? 'px-[18px] py-3 rounded-[var(--bubble-radius)] text-[15px] leading-[1.6] break-words transition-all duration-200 text-white border-none rounded-br-[6px] user-bubble-md'

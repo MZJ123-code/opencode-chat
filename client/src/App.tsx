@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { motion } from 'framer-motion'
 import { Sidebar } from './components/layout/Sidebar'
 import { ChatArea } from './components/layout/ChatArea'
@@ -38,23 +39,29 @@ export default function App() {
     recordVisit()
   }, [])
 
+  const navigate = useCallback((nextView: View) => {
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        flushSync(() => setView(nextView))
+      })
+    } else {
+      setView(nextView)
+    }
+  }, [])
+
   // 监听 hash 变化切换看板
   useEffect(() => {
     const onHashChange = () => {
-      if (window.location.hash === '#dashboard') {
-        setView('dashboard')
-      } else {
-        setView(v => v === 'dashboard' ? 'chat' : v)
-      }
+      navigate(window.location.hash === '#dashboard' ? 'dashboard' : 'chat')
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
+  }, [navigate])
 
   const handleHideDashboard = useCallback(() => {
     window.history.replaceState(null, '', window.location.pathname)
-    setView('chat')
-  }, [])
+    navigate('chat')
+  }, [navigate])
 
   const handleCreateSession = useCallback(async (agent?: string) => {
     const id = await createSession(agent)
