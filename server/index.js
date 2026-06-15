@@ -37,29 +37,37 @@ try {
 
 const app = createApp()
 
-// 静态文件服务 & SPA fallback
-app.use(express.static(PUBLIC_DIR))
-app.get("*", (req, res) => {
-  if (req.path.startsWith("/api")) {
-    logger.warn(`API 路由未命中，返回 SPA fallback: ${req.method} ${req.path}`, { ip: req.clientIP })
-  }
-  const indexPath = path.join(PUBLIC_DIR, "index.html")
-  if (!fs.existsSync(indexPath)) {
-    res.status(503).type("html").send(`<h1>前端构建未就绪</h1><p>React 前端未构建，请运行：<code>cd client && bun run build</code></p>`)
-    return
-  }
-  res.sendFile(indexPath)
-})
+// 开发模式下前端由 Vite HMR 提供，Express 只暴露 API
+if (isProduction) {
+  app.use(express.static(PUBLIC_DIR))
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api")) {
+      logger.warn(`API 路由未命中，返回 SPA fallback: ${req.method} ${req.path}`, { ip: req.clientIP })
+    }
+    const indexPath = path.join(PUBLIC_DIR, "index.html")
+    if (!fs.existsSync(indexPath)) {
+      res.status(503).type("html").send(`<h1>前端构建未就绪</h1><p>React 前端未构建，请运行：<code>cd client && bun run build</code></p>`)
+      return
+    }
+    res.sendFile(indexPath)
+  })
+}
 
 // 启动 HTTP 服务
 let httpServer
 httpServer = app.listen(PORT, HOSTNAME, () => {
-  const banner = [
+  const banner = isProduction ? [
     `\n========================================`,
     `  AI 咨询平台已启动`,
     `  本机访问: http://localhost:${PORT}`,
-    `  环境: ${isProduction ? "production" : "development"}`,
-    `  静态目录: ${PUBLIC_DIR}`,
+    `  环境: production`,
+    `  按 Ctrl+C 停止`,
+    `========================================\n`,
+  ] : [
+    `\n========================================`,
+    `  API 服务已启动 (端口 ${PORT})`,
+    `  前端由 Vite HMR 提供 (见上方 URL)`,
+    `  环境: development`,
     `  按 Ctrl+C 停止`,
     `========================================\n`,
   ]
